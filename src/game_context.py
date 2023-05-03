@@ -5,6 +5,7 @@ import pygame as pg
 
 from src.controls import UserControl
 from src.direction import Direction
+from src.train import Train
 
 
 class Phase(Enum):
@@ -49,6 +50,7 @@ class Ctx:
     prev_movement = Direction.NONE
 
     train = None
+    angle = 0
     cell_sprites = pg.sprite.Group()
     train_sprites = pg.sprite.Group()
 
@@ -66,5 +68,10 @@ class Ctx:
             Ctx.delete_mode = False
 
     def update_trains():
-        Ctx.train.rect.x = round(Ctx.train.rect.x + Ctx.train.velocity.x)
-        Ctx.train.rect.y = round(Ctx.train.rect.y + Ctx.train.velocity.y)
+        if not Ctx.train.on_track:
+            Ctx.train.velocity.x = 0
+            Ctx.train.velocity.y = 0
+        Ctx.train.pos.x = Ctx.train.pos.x + Ctx.train.velocity.x
+        Ctx.train.pos.y = Ctx.train.pos.y + Ctx.train.velocity.y
+        Ctx.train.rect.x = Ctx.train.pos.x
+        Ctx.train.rect.y = Ctx.train.pos.y
