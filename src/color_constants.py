@@ -1,4 +1,4 @@
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
 
 Color = namedtuple("RGB", "red, green, blue")
 colors = {}  # dict of colors

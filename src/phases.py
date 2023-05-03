@@ -1,13 +1,14 @@
-from math import sqrt
 import sys
+from math import sqrt
+
 import pygame as pg
 from pygame.locals import QUIT
-from src.controls import UserControl
-from src.game_context import Phase, Ctx, Direction, Resources
-from src.utils import setup_logging
-from src.field import Field
+
 from src.color_constants import *
-from src.field import TrackItem
+from src.controls import UserControl
+from src.field import Field, TrackType, place_track_item
+from src.game_context import Ctx, Direction, Phase, Resources
+from src.utils import setup_logging
 
 logger = setup_logging(log_level="DEBUG")
 
@@ -34,91 +35,17 @@ def gameplay_phase() -> None:
     else:
         Ctx.screen_surface.fill(NORMAL_MODE_BG_COLOR)
 
-
-    Ctx.train_on_track = False
+    Ctx.cell_sprites.draw(Ctx.screen_surface)
 
     # Iterate over all the cells on the map.
-    for (cell_index, cell) in enumerate(Field.grid):
-        # 1. Draw background rects.
-        pg.draw.rect(
-            surface=Ctx.screen_surface,
-            color=cell.color,
-            rect=cell.base_rect,
-            width=cell.line_width,
-        )
+    for (_, cell) in enumerate(Field.grid):
 
         # 2. Draw track images on top of the cells.
-        for (index, track_item) in enumerate(cell.track_items):
-            # TODO: Instead, set some cell track level value to "active" / "inactive", toggled, or so.
-            # TODO: Handle the case where there is no overlap, eg. "c0 c180"
-            if len(cell.track_items) > 1 and index == 0:
-                track_item.surface.set_alpha(100)
-            else:
-                track_item.surface.set_alpha(255)
-            Ctx.screen_surface.blit(track_item.surface, (cell.base_rect.x, cell.base_rect.y))
-
-            # Move the train according to the track.
-            #if cell.base_rect.collidepoint(Ctx.train_pos + (32, 32)):
-            if cell.base_rect.colliderect(pg.Rect(Ctx.train_pos.x + 31, Ctx.train_pos.y + 31, 2, 2)):
-                Ctx.train_on_track = True
-                if all(direction in track_item.directions for direction in [Direction.UP, Direction.DOWN]):
-                    if Ctx.train_dir == Direction.UP:
-                        Ctx.train_vel.x = 0
-                        Ctx.train_vel.y = -1
-                    elif Ctx.train_dir == Direction.DOWN:
-                        Ctx.train_vel.x = 0
-                        Ctx.train_vel.y = 1
-                elif all(direction in track_item.directions for direction in [Direction.RIGHT, Direction.LEFT]):
-                    if Ctx.train_dir == Direction.RIGHT:
-                        Ctx.train_vel.x = 1
-                        Ctx.train_vel.y = 0
-                    elif Ctx.train_dir == Direction.LEFT:
-                        Ctx.train_vel.x = -1
-                        Ctx.train_vel.y = 0
-                elif all(direction in track_item.directions for direction in [Direction.RIGHT, Direction.UP]):
-                    if Ctx.train_dir == Direction.LEFT:
-                        Ctx.train_vel.x = -sqrt(2)/2
-                        Ctx.train_vel.y = -sqrt(2)/2
-                        Ctx.train_dir = Direction.UP
-                    elif Ctx.train_dir == Direction.DOWN:
-                        Ctx.train_vel.x = sqrt(2)/2
-                        Ctx.train_vel.y = sqrt(2)/2
-                        Ctx.train_dir = Direction.RIGHT
-                elif all(direction in track_item.directions for direction in [Direction.UP, Direction.LEFT]):
-                    if Ctx.train_dir == Direction.RIGHT:
-                        Ctx.train_vel.x = sqrt(2)/2
-                        Ctx.train_vel.y = -sqrt(2)/2
-                        Ctx.train_dir = Direction.UP
-                    elif Ctx.train_dir == Direction.DOWN:
-                        Ctx.train_vel.x = -sqrt(2)/2
-                        Ctx.train_vel.y = sqrt(2)/2
-                        Ctx.train_dir = Direction.LEFT
-                elif all(direction in track_item.directions for direction in [Direction.LEFT, Direction.DOWN]):
-                    if Ctx.train_dir == Direction.RIGHT:
-                        Ctx.train_vel.x = sqrt(2)/2
-                        Ctx.train_vel.y = sqrt(2)/2
-                        Ctx.train_dir = Direction.DOWN
-                    elif Ctx.train_dir == Direction.UP:
-                        Ctx.train_vel.x = -sqrt(2)/2
-                        Ctx.train_vel.y = -sqrt(2)/2
-                        Ctx.train_dir = Direction.LEFT
-                elif all(direction in track_item.directions for direction in [Direction.RIGHT, Direction.DOWN]):
-                    if Ctx.train_dir == Direction.LEFT:
-                        Ctx.train_vel.x = -sqrt(2)/2
-                        Ctx.train_vel.y = sqrt(2)/2
-                        Ctx.train_dir = Direction.DOWN
-                    elif Ctx.train_dir == Direction.UP:
-                        Ctx.train_vel.x = sqrt(2)/2
-                        Ctx.train_vel.y = -sqrt(2)/2
-                        Ctx.train_dir = Direction.RIGHT
-
-        SPEED_MODIFIER = 1
-        if Ctx.train_vel.length() > 1:
-            Ctx.train_vel = Ctx.train_vel.normalize()
-        Ctx.train_vel *= SPEED_MODIFIER
+        for (_, track) in enumerate(cell.tracks):
+            track.draw()
 
         # 3. If mouse not on rect, continue the for loop.
-        if not cell.base_rect.collidepoint(Ctx.mouse_pos):
+        if not cell.rect.collidepoint(Ctx.mouse_pos):
             if cell.mouse_on:
                 cell.mouse_exit()
             continue
@@ -127,42 +54,45 @@ def gameplay_phase() -> None:
         cell.mouse_enter()
         if Ctx.mouse_pressed[0] == True:
             if Ctx.delete_mode:
-                cell.track_items = []
+                cell.tracks.clear()
     
     # Stop the train if not on track cell.
-    if not Ctx.train_on_track:
-        Ctx.train_vel.x = 0
-        Ctx.train_vel.y = 0
+    if not Ctx.train.on_track:
+        Ctx.train.velocity.x = 0
+        Ctx.train.velocity.y = 0
 
     Ctx.update_trains()
 
     # 5. Draw the trains.
     train_variant = "train0"
-    if Ctx.train_dir == Direction.RIGHT:
+    if Ctx.train.direction == Direction.RIGHT:
         train_variant = "train0"
-    elif Ctx.train_dir == Direction.UP:
+    elif Ctx.train.direction == Direction.UP:
         train_variant = "train90"
-    elif Ctx.train_dir == Direction.LEFT:
+    elif Ctx.train.direction == Direction.LEFT:
         train_variant = "train180"
-    elif Ctx.train_dir == Direction.DOWN:
+    elif Ctx.train.direction == Direction.DOWN:
         train_variant = "train270"
-    Ctx.screen_surface.blit(Resources.train_surfaces[train_variant], Ctx.train_pos)
+    Ctx.train.image = Resources.train_surfaces[train_variant]
+
+    Ctx.train_sprites.draw(Ctx.screen_surface)
 
     # Place track on the cell based on the mouse movements.
     if Ctx.mouse_pressed[0] and not Ctx.delete_mode and Ctx.prev_cell_needs_checking:
         if Ctx.prev_cell is not None and Ctx.curr_cell is not None:
             if (Ctx.prev_movement == Direction.UP and Ctx.curr_movement == Direction.UP) or (Ctx.prev_movement == Direction.DOWN and Ctx.curr_movement == Direction.DOWN):
-                Field.place_track_item(TrackItem("s90"), Ctx.prev_cell)
+                place_track_item(TrackType.vert, Ctx.prev_cell)
             elif (Ctx.prev_movement == Direction.RIGHT and Ctx.curr_movement == Direction.RIGHT) or (Ctx.prev_movement == Direction.LEFT and Ctx.curr_movement == Direction.LEFT):
-                Field.place_track_item(TrackItem("s0"), Ctx.prev_cell)
+                place_track_item(TrackType.hori, Ctx.prev_cell)
             elif (Ctx.prev_movement == Direction.UP and Ctx.curr_movement == Direction.LEFT) or (Ctx.prev_movement == Direction.RIGHT and Ctx.curr_movement == Direction.DOWN):
-                Field.place_track_item(TrackItem("c0"), Ctx.prev_cell)
+                place_track_item(TrackType.bottomleft, Ctx.prev_cell)
             elif (Ctx.prev_movement == Direction.UP and Ctx.curr_movement == Direction.RIGHT) or (Ctx.prev_movement == Direction.LEFT and Ctx.curr_movement == Direction.DOWN):
-                Field.place_track_item(TrackItem("c90"), Ctx.prev_cell)
+                place_track_item(TrackType.bottomright, Ctx.prev_cell)
             elif (Ctx.prev_movement == Direction.DOWN and Ctx.curr_movement == Direction.RIGHT) or (Ctx.prev_movement == Direction.LEFT and Ctx.curr_movement == Direction.UP):
-                Field.place_track_item(TrackItem("c180"), Ctx.prev_cell)
+                place_track_item(TrackType.topright, Ctx.prev_cell)
             elif (Ctx.prev_movement == Direction.DOWN and Ctx.curr_movement == Direction.LEFT) or (Ctx.prev_movement == Direction.RIGHT and Ctx.curr_movement == Direction.UP):
-                Field.place_track_item(TrackItem("c270"), Ctx.prev_cell)
+                place_track_item(TrackType.topleft, Ctx.prev_cell)
+    
 
     # Back to main menu.
     if Ctx.pressed_keys[UserControl.MAIN_MENU]:

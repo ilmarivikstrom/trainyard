@@ -1,4 +1,5 @@
 import pygame as pg
+
 from src.utils import setup_logging
 
 logger = setup_logging(log_level="DEBUG")
