@@ -1,18 +1,13 @@
-import logging
-import pygame
-from pygame.locals import QUIT
-from .global_state import GameStatus, GlobalState
+import pygame as pg
+from src.utils import setup_logging
+
+logger = setup_logging(log_level="DEBUG")
 
 
 class UserControl:
-    MAIN_MENU = pygame.K_ESCAPE
-    EXIT = pygame.K_q
-    GAMEPLAY = pygame.K_RETURN
-    MOUSE_DOWN = pygame.MOUSEBUTTONDOWN
+    MAIN_MENU = pg.K_ESCAPE
+    EXIT = pg.K_q
+    GAMEPLAY = pg.K_RETURN
+    MOUSE_DOWN = pg.MOUSEBUTTONDOWN
+    DELETE_MODE = pg.K_LSHIFT
 
-
-def check_quit_event(logger: logging.Logger) -> None:
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            GlobalState.game_status = GameStatus.GAME_END
-            logger.info(f"Moving to state {GlobalState.game_status}")

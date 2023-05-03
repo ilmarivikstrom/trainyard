@@ -1,31 +1,44 @@
-import pygame
-from configparser import ConfigParser
+import pygame as pg
+from src.config import Config, read_config_file
+
+Config.setup(read_config_file())
+
+from src.field import Field
 from src.phases import exit_phase, gameplay_phase, main_menu_phase
-from src.global_state import GameStatus, GlobalState
+from src.game_context import Phase, Ctx, Resources
 from src.utils import setup_logging
 
+
 logger = setup_logging(log_level="DEBUG")
-config = ConfigParser()
-config.read("config.ini")
-
-pygame.init()
 
 
-def main():
-    pygame.display.set_caption("trainyard")
-    screen_surface = pygame.display.set_mode(
-        (int(config["SCREEN"]["WIDTH"]), int(config["SCREEN"]["HEIGHT"]))
-    )
-    GlobalState.screen_surface = screen_surface
+def main() -> None:
+    initial_setup()
+
     while True:
-        if GlobalState.game_status == GameStatus.MAIN_MENU:
+        if Ctx.game_phase == Phase.MAIN_MENU:
             main_menu_phase()
-        elif GlobalState.game_status == GameStatus.GAME_END:
+        elif Ctx.game_phase == Phase.GAME_END:
             exit_phase()
-        elif GlobalState.game_status == GameStatus.GAMEPLAY:
+        elif Ctx.game_phase == Phase.GAMEPLAY:
             gameplay_phase()
-        pygame.display.update()
-        pygame.time.Clock().tick(100)
+        pg.display.update()
+        pg.time.Clock().tick(Config.FPS)
+
+
+def initial_setup():
+    pg.init()
+    pg.display.set_caption("trainyard")
+    width = Config.padding_x + Config.cells_x * Config.cell_size + Config.padding_x
+    height = (
+        Config.padding_y
+        + Config.cells_y * Config.cell_size
+        + Config.padding_y
+        + Config.padding_y
+    )
+    Ctx.screen_surface = pg.display.set_mode((width, height))
+    Resources.load_resources()
+    Field.initialize_grid()
 
 
 if __name__ == "__main__":
