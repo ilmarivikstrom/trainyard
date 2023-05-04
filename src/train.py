@@ -11,8 +11,8 @@ class Train(pg.sprite.Sprite):
         self.j = j
         self.image = image
         self.rect = self.image.get_rect()
-        self.rect.x = i * Config.cell_size + Config.padding_x
-        self.rect.y = j * Config.cell_size + Config.padding_y
+        self.rect.x = (i * Config.cell_size + Config.padding_x + 16)
+        self.rect.y = (j * Config.cell_size + Config.padding_y + 16)
         self.pos = pg.Vector2(float(self.rect.x), float(self.rect.y))
 
         

@@ -62,7 +62,6 @@ def gameplay_phase() -> None:
 
         # TODO: Check if train is on the track, how to proceed then?
         # TODO: Why is there a 1 pixel shift every corner?
-        #if cell.rect.collidepoint(Ctx.train.rect.center):
         if cell.rect.colliderect(pg.Rect(Ctx.train.rect.centerx - 1, Ctx.train.rect.centery - 1, 2, 2)):
             for track in cell.tracks:
                 Ctx.train.on_track = True

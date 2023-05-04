@@ -3,9 +3,9 @@ from typing import List
 
 import pygame as pg
 
+from src.config import Config
 from src.controls import UserControl
 from src.direction import Direction
-from src.train import Train
 
 
 class Phase(Enum):
@@ -21,7 +21,7 @@ class Resources:
 
     def load_resources() -> List[pg.Surface]:
         Resources.img_surfaces = {
-            "train": pg.image.load("res/train0.png").convert_alpha(),
+            "train": pg.image.load("res/train1.png").convert_alpha(),
             "bg_tile": pg.image.load("res/bg_tile.png").convert_alpha(),
         }
         Resources.train_surfaces = {
@@ -66,6 +66,10 @@ class Ctx:
             Ctx.delete_mode = True
         else:
             Ctx.delete_mode = False
+        if Ctx.pressed_keys[pg.K_s]:
+            Config.FPS = 5
+        else:
+            Config.FPS = Config.orig_FPS
 
     def update_trains():
         if not Ctx.train.on_track:

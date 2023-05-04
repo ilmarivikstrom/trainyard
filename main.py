@@ -14,6 +14,7 @@ logger = setup_logging(log_level="DEBUG")
 
 def main() -> None:
     initial_setup()
+    clock = pg.time.Clock()
 
     while True:
         if Ctx.game_phase == Phase.MAIN_MENU:
@@ -23,7 +24,8 @@ def main() -> None:
         elif Ctx.game_phase == Phase.GAMEPLAY:
             gameplay_phase()
         pg.display.update()
-        pg.time.Clock().tick(Config.FPS)
+        clock.tick(Config.FPS)
+        logger.info(f"FPS: {clock.get_fps():.2f}/{Config.FPS}")
 
 
 def initial_setup():

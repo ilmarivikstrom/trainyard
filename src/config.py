@@ -12,6 +12,7 @@ class Config:
     screen_height = None
     padding_x = None
     padding_y = None
+    orig_FPS = None
     FPS = None
     cell_size = None
     cells_x = None
@@ -22,7 +23,8 @@ class Config:
         Config.screen_height = int(cfg["SCREEN"]["HEIGHT"])
         Config.padding_x = int(cfg["SCREEN"]["PADDING_X"])
         Config.padding_y = int(cfg["SCREEN"]["PADDING_Y"])
-        Config.FPS = int(cfg["SCREEN"]["FPS"])
+        Config.orig_FPS = int(cfg["SCREEN"]["FPS"])
+        Config.FPS = Config.orig_FPS
         Config.cell_size = int(cfg["SCREEN"]["CELL_SIZE"])
         Config.cells_x = int(cfg["SCREEN"]["CELLS_X"])
         Config.cells_y = int(cfg["SCREEN"]["CELLS_Y"])
