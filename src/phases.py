@@ -15,7 +15,7 @@ logger = setup_logging(log_level="DEBUG")
 
 def main_menu_phase() -> None:
     Ctx.screen_surface.fill((10, 10, 10))
-    check_quit_event()
+    check_events()
     pressed_keys = pg.key.get_pressed()
     if pressed_keys[UserControl.GAMEPLAY]:
         Ctx.game_phase = Phase.GAMEPLAY
@@ -25,18 +25,8 @@ def main_menu_phase() -> None:
         logger.info(f"Moving to state {Ctx.game_phase}")
 
 
-def rot_center(image, angle):
-    """rotate an image while keeping its center and size"""
-    orig_rect = image.get_rect()
-    rot_image = pg.transform.rotate(image, angle)
-    rot_rect = orig_rect.copy()
-    rot_rect.center = rot_image.get_rect().center
-    rot_image = rot_image.subsurface(rot_rect).copy()
-    return rot_image
-
-
 def gameplay_phase() -> None:
-    check_quit_event()
+    check_events()
     Ctx.update_gameplay_state()
 
     # Check if delete mode, change background color accordingly.
@@ -60,66 +50,92 @@ def gameplay_phase() -> None:
                     Ctx.train.at_endpoint = True
             track.draw()
 
-        # TODO: Check if train is on the track, how to proceed then?
-        # TODO: Why is there a 1 pixel shift every corner?
-        if cell.rect.colliderect(pg.Rect(Ctx.train.rect.centerx - 1, Ctx.train.rect.centery - 1, 2, 2)):
-            for track in cell.tracks:
-                Ctx.train.on_track = True
-                if track.track_type == TrackType.vert:
-                    if Ctx.train.direction == Direction.UP:
-                        Ctx.train.velocity.x = 0
-                        Ctx.train.velocity.y = -1
-                        Ctx.train.direction = Direction.UP
-                    elif Ctx.train.direction == Direction.DOWN:
-                        Ctx.train.velocity.x = 0
-                        Ctx.train.velocity.y = 1
-                        Ctx.train.direction = Direction.DOWN
-                elif track.track_type == TrackType.hori:
-                    if Ctx.train.direction == Direction.RIGHT:
-                        Ctx.train.velocity.x = 1
-                        Ctx.train.velocity.y = 0
-                        Ctx.train.direction = Direction.RIGHT
-                    elif Ctx.train.direction == Direction.LEFT:
-                        Ctx.train.velocity.x = -1
-                        Ctx.train.velocity.y = 0
-                        Ctx.train.direction = Direction.LEFT
-                elif track.track_type == TrackType.topright:
-                    if Ctx.train.direction == Direction.LEFT:
-                        Ctx.train.velocity.x = -1 * math.sqrt(2) / 2
-                        Ctx.train.velocity.y = -1 * math.sqrt(2) / 2
-                        Ctx.train.direction = Direction.UP
-                    elif Ctx.train.direction == Direction.DOWN:
-                        Ctx.train.velocity.x = 1 * math.sqrt(2) / 2
-                        Ctx.train.velocity.y = 1 * math.sqrt(2) / 2
-                        Ctx.train.direction = Direction.RIGHT
-                elif track.track_type == TrackType.topleft:
-                    if Ctx.train.direction == Direction.RIGHT:
-                        Ctx.train.velocity.x = 1 * math.sqrt(2) / 2
-                        Ctx.train.velocity.y = -1 * math.sqrt(2) / 2
-                        Ctx.train.direction = Direction.UP
-                    elif Ctx.train.direction == Direction.DOWN:
-                        Ctx.train.velocity.x = -1 * math.sqrt(2) / 2
-                        Ctx.train.velocity.y = 1 * math.sqrt(2) / 2
-                        Ctx.train.direction = Direction.LEFT
-                elif track.track_type == TrackType.bottomleft:
-                    if Ctx.train.direction == Direction.RIGHT:
-                        Ctx.train.velocity.x = 1 * math.sqrt(2) / 2
-                        Ctx.train.velocity.y = 1 * math.sqrt(2) / 2
-                        Ctx.train.direction = Direction.DOWN
-                    elif Ctx.train.direction == Direction.UP:
-                        Ctx.train.velocity.x = -1 * math.sqrt(2) / 2
-                        Ctx.train.velocity.y = -1 * math.sqrt(2) / 2
-                        Ctx.train.direction = Direction.LEFT
-                elif track.track_type == TrackType.bottomright:
-                    if Ctx.train.direction == Direction.LEFT:
-                        Ctx.train.velocity.x = -1 * math.sqrt(2) / 2
-                        Ctx.train.velocity.y = 1 * math.sqrt(2) / 2
-                        Ctx.train.direction = Direction.DOWN
-                    elif Ctx.train.direction == Direction.UP:
-                        Ctx.train.velocity.x = 1 * math.sqrt(2) / 2
-                        Ctx.train.velocity.y = -1 * math.sqrt(2) / 2
-                        Ctx.train.direction = Direction.RIGHT
+        if cell.rect.colliderect(pg.Rect(Ctx.train.rect.centerx - 1, Ctx.train.rect.centery - 1, 1, 1)):
+            if cell not in Ctx.train.last_collided_cells or Ctx.train.selected_track is None:
+                if len(cell.tracks) == 0:
+                    Ctx.train.on_track = False
+                    Ctx.train.selected_track = None
+                else:
+                    Ctx.train.tracks_ahead = cell.tracks
+                    possible_tracks = []
+                    if len(Ctx.train.tracks_ahead) > 0:
+                        for track_ahead in cell.tracks:
+                            for endpoint in track_ahead.endpoints:
+                                if Ctx.train.rect.collidepoint(endpoint):
+                                    possible_tracks.append(track_ahead)
+                        if len(possible_tracks) == 0:
+                            Ctx.train.on_track = False
+                        elif len(possible_tracks) == 1:
+                            Ctx.train.selected_track = possible_tracks[0]
+                        else:
+                            for possible_track in possible_tracks:
+                                if possible_track.bright:
+                                    Ctx.train.selected_track = possible_track
+                        print(f"Selected track: {Ctx.train.selected_track.directions}")
 
+                Ctx.train.last_collided_cells.append(cell)
+                Ctx.train.last_collided_cells = Ctx.train.last_collided_cells[-2:]
+            if cell.rect.contains(Ctx.train.rect) and Ctx.train.last_flipped_cell != cell:
+                if len(cell.tracks) > 1:
+                    cell.flip_tracks()
+                    Ctx.train.last_flipped_cell = cell
+            if Ctx.train.selected_track is not None:
+                for track in [Ctx.train.selected_track]:
+                    Ctx.train.on_track = True
+                    if track.track_type == TrackType.vert:
+                        if Ctx.train.direction == Direction.UP:
+                            Ctx.train.angle = math.radians(90)
+                        elif Ctx.train.direction == Direction.DOWN:
+                            Ctx.train.angle = math.radians(270)
+                    elif track.track_type == TrackType.hori:
+                        if Ctx.train.direction == Direction.RIGHT:
+                            Ctx.train.angle = math.radians(0)
+                        elif Ctx.train.direction == Direction.LEFT:
+                            Ctx.train.angle = math.radians(180)
+                    elif track.track_type == TrackType.topright:
+                        if Ctx.train.direction == Direction.LEFT:
+                            Ctx.train.angle -= Ctx.angular_vel
+                            if Ctx.train.angle <= math.radians(90) + 2 * Ctx.angular_vel:
+                                Ctx.train.direction = Direction.UP
+                                Ctx.train.angle = math.radians(90)
+                        elif Ctx.train.direction == Direction.DOWN:
+                            Ctx.train.angle += Ctx.angular_vel
+                            if Ctx.train.angle >= math.radians(360) - 2 * Ctx.angular_vel:
+                                Ctx.train.direction = Direction.RIGHT
+                                Ctx.train.angle = math.radians(0)
+                    elif track.track_type == TrackType.topleft:
+                        if Ctx.train.direction == Direction.RIGHT:
+                            Ctx.train.angle += Ctx.angular_vel
+                            if Ctx.train.angle >= math.radians(90) - 2 * Ctx.angular_vel:
+                                Ctx.train.direction = Direction.UP
+                                Ctx.train.angle = math.radians(90)
+                        elif Ctx.train.direction == Direction.DOWN:
+                            Ctx.train.angle -= Ctx.angular_vel
+                            if Ctx.train.angle <= math.radians(180) + 2 * Ctx.angular_vel:
+                                Ctx.train.direction = Direction.LEFT
+                                Ctx.train.angle = math.radians(180)
+                    elif track.track_type == TrackType.bottomleft:
+                        if Ctx.train.direction == Direction.RIGHT:
+                            Ctx.train.angle -= Ctx.angular_vel
+                            if Ctx.train.angle <= math.radians(-90) + 2 * Ctx.angular_vel:
+                                Ctx.train.direction = Direction.DOWN
+                                Ctx.train.angle = math.radians(270)
+                        elif Ctx.train.direction == Direction.UP:
+                            Ctx.train.angle += Ctx.angular_vel
+                            if Ctx.train.angle >= math.radians(180) - 2 * Ctx.angular_vel:
+                                Ctx.train.direction = Direction.LEFT
+                                Ctx.train.angle = math.radians(180)
+                    elif track.track_type == TrackType.bottomright:
+                        if Ctx.train.direction == Direction.LEFT:
+                            Ctx.train.angle += Ctx.angular_vel
+                            if Ctx.train.angle >= math.radians(270) - 2 * Ctx.angular_vel:
+                                Ctx.train.direction = Direction.DOWN
+                                Ctx.train.angle = math.radians(270)
+                        elif Ctx.train.direction == Direction.UP:
+                            Ctx.train.angle -= Ctx.angular_vel
+                            if Ctx.train.angle <= math.radians(0) + 2 * Ctx.angular_vel:
+                                Ctx.train.direction = Direction.RIGHT
+                                Ctx.train.angle = math.radians(0)
 
         # 3. If mouse not on rect, continue the for loop.
         if not cell.rect.collidepoint(Ctx.mouse_pos):
@@ -152,7 +168,6 @@ def gameplay_phase() -> None:
                 Field.place_track_item(TrackType.topright, Ctx.prev_cell)
             elif (Ctx.prev_movement == Direction.DOWN and Ctx.curr_movement == Direction.LEFT) or (Ctx.prev_movement == Direction.RIGHT and Ctx.curr_movement == Direction.UP):
                 Field.place_track_item(TrackType.topleft, Ctx.prev_cell)
-    
 
     # Back to main menu.
     if Ctx.pressed_keys[UserControl.MAIN_MENU]:
@@ -166,8 +181,13 @@ def exit_phase():
     sys.exit()
 
 
-def check_quit_event() -> None:
+def check_events() -> None:
     for event in pg.event.get():
         if event.type == QUIT:
             Ctx.game_phase = Phase.GAME_END
             logger.info(f"Moving to state {Ctx.game_phase}")
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if event.button == 3:
+                for cell in Field.grid:
+                    if cell.mouse_on:
+                        cell.flip_tracks()

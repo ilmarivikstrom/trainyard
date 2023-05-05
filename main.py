@@ -25,7 +25,6 @@ def main() -> None:
             gameplay_phase()
         pg.display.update()
         clock.tick(Config.FPS)
-        logger.info(f"FPS: {clock.get_fps():.2f}/{Config.FPS}")
 
 
 def initial_setup():

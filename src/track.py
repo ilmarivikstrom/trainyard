@@ -39,7 +39,7 @@ class Track:
         self.endpoints = pg.Vector2(0, 0)
 
         if self.track_type == TrackType.vert:
-            self.endpoints = [pg.Vector2(self.cell_rect.midtop, self.cell_rect.midbottom)]
+            self.endpoints = [pg.Vector2(self.cell_rect.midtop), pg.Vector2(self.cell_rect.midbottom)]
         elif self.track_type == TrackType.hori:
             self.endpoints = [pg.Vector2(self.cell_rect.midleft), pg.Vector2(self.cell_rect.midright)]
         elif self.track_type == TrackType.topright:
@@ -50,6 +50,9 @@ class Track:
             self.endpoints = [pg.Vector2(self.cell_rect.midleft), pg.Vector2(self.cell_rect.midbottom)]
         elif self.track_type == TrackType.bottomright:
             self.endpoints = [pg.Vector2(self.cell_rect.midbottom), pg.Vector2(self.cell_rect.midright)]
+
+    def toggle_bright(self):
+        self.bright = not self.bright
 
     def draw(self):
         if self.bright == True:

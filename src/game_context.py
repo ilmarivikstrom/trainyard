@@ -1,3 +1,4 @@
+import math
 from enum import Enum
 from typing import List
 
@@ -50,9 +51,9 @@ class Ctx:
     prev_movement = Direction.NONE
 
     train = None
-    angle = 0
     cell_sprites = pg.sprite.Group()
     train_sprites = pg.sprite.Group()
+    angular_vel = 0.03125
 
     def update_gameplay_state():
         Ctx.mouse_pos = pg.mouse.get_pos()
@@ -66,16 +67,32 @@ class Ctx:
             Ctx.delete_mode = True
         else:
             Ctx.delete_mode = False
-        if Ctx.pressed_keys[pg.K_s]:
-            Config.FPS = 5
-        else:
-            Config.FPS = Config.orig_FPS
+        if Ctx.pressed_keys[pg.K_1]:
+            Config.FPS = Config.FPS_list[0]
+        elif Ctx.pressed_keys[pg.K_2]:
+            Config.FPS = Config.FPS_list[1]
+        elif Ctx.pressed_keys[pg.K_3]:
+            Config.FPS = Config.FPS_list[2]
+        elif Ctx.pressed_keys[pg.K_4]:
+            Config.FPS = Config.FPS_list[3]
+        elif Ctx.pressed_keys[pg.K_5]:
+            Config.FPS = Config.FPS_list[4]
+        elif Ctx.pressed_keys[pg.K_6]:
+            Config.FPS = Config.FPS_list[5]
+        elif Ctx.pressed_keys[pg.K_7]:
+            Config.FPS = Config.FPS_list[6]
+        elif Ctx.pressed_keys[pg.K_8]:
+            Config.FPS = Config.FPS_list[7]
+        elif Ctx.pressed_keys[pg.K_9]:
+            Config.FPS = Config.FPS_list[8]
 
     def update_trains():
         if not Ctx.train.on_track:
-            Ctx.train.velocity.x = 0
-            Ctx.train.velocity.y = 0
-        Ctx.train.pos.x = Ctx.train.pos.x + Ctx.train.velocity.x
-        Ctx.train.pos.y = Ctx.train.pos.y + Ctx.train.velocity.y
+            Ctx.train.base_speed = 0
+        else:
+            Ctx.train.base_speed = 1
+
+        Ctx.train.pos.x = Ctx.train.pos.x + Ctx.train.base_speed * math.cos(Ctx.train.angle)
+        Ctx.train.pos.y = Ctx.train.pos.y - Ctx.train.base_speed * math.sin(Ctx.train.angle)
         Ctx.train.rect.x = Ctx.train.pos.x
         Ctx.train.rect.y = Ctx.train.pos.y

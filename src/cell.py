@@ -30,6 +30,12 @@ class Cell(pg.sprite.Sprite):
         if self.mouse_on:
             self.mouse_on = False
 
+    def flip_tracks(self):
+        if len(self.tracks) > 1:
+            for track in self.tracks:
+                track.toggle_bright()
+            self.tracks.reverse()
+
 
 
 def handle_mouse_cell_enter(cell) -> None:
