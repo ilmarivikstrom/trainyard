@@ -7,7 +7,7 @@ from pygame.locals import QUIT
 from src.color_constants import *
 from src.controls import UserControl
 from src.field import Field, TrackType
-from src.game_context import Ctx, Direction, Phase, Resources
+from src.game_context import Ctx, Direction, Phase
 from src.utils import setup_logging
 
 logger = setup_logging(log_level="DEBUG")
@@ -63,16 +63,18 @@ def gameplay_phase() -> None:
                             for endpoint in track_ahead.endpoints:
                                 if Ctx.train.rect.collidepoint(endpoint):
                                     possible_tracks.append(track_ahead)
-                        if len(possible_tracks) == 0:
-                            Ctx.train.on_track = False
-                        elif len(possible_tracks) == 1:
-                            Ctx.train.selected_track = possible_tracks[0]
+                        if len(possible_tracks) > 0:
+                            if len(possible_tracks) == 1:
+                                Ctx.train.selected_track = possible_tracks[0]
+                            elif len(possible_tracks) == 2:
+                                for possible_track in possible_tracks:
+                                    if possible_track.bright:
+                                        Ctx.train.selected_track = possible_track
+                            print(f"Selected track: {Ctx.train.selected_track.directions}")
                         else:
-                            for possible_track in possible_tracks:
-                                if possible_track.bright:
-                                    Ctx.train.selected_track = possible_track
-                        print(f"Selected track: {Ctx.train.selected_track.directions}")
-
+                            Ctx.train.on_track = False
+                            Ctx.train.selected_track = None
+                            print(f"No track to be selected. Train is not on track.")
                 Ctx.train.last_collided_cells.append(cell)
                 Ctx.train.last_collided_cells = Ctx.train.last_collided_cells[-2:]
             if cell.rect.contains(Ctx.train.rect) and Ctx.train.last_flipped_cell != cell:
