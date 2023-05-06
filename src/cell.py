@@ -2,7 +2,8 @@ import pygame as pg
 
 from src.config import Config
 from src.direction import Direction
-from src.game_state import State, Resources
+from src.game_state import State
+from src.resources import Resources
 from src.utils import setup_logging
 
 logger = setup_logging(log_level="DEBUG")

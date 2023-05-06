@@ -1,12 +1,11 @@
 import pygame as pg
 
-from src.config import Config, read_config_file
-
-Config.setup(read_config_file())
+from src.config import Config
 
 from src.field import Field
-from src.game_state import State, Phase, Resources
+from src.game_state import State, Phase
 from src.phases import exit_phase, gameplay_phase, main_menu_phase
+from src.resources import Resources
 from src.utils import setup_logging
 
 logger = setup_logging(log_level="DEBUG")

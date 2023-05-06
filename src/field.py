@@ -3,7 +3,8 @@ import pygame as pg
 from src.cell import Cell
 from src.color_constants import colors
 from src.config import Config
-from src.game_state import State, Resources
+from src.game_state import State
+from src.resources import Resources
 from src.track import Track, TrackType
 from src.train import Train
 from src.utils import setup_logging
