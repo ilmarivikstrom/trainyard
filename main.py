@@ -5,7 +5,7 @@ from src.config import Config, read_config_file
 Config.setup(read_config_file())
 
 from src.field import Field
-from src.game_context import Ctx, Phase, Resources
+from src.game_state import State, Phase, Resources
 from src.phases import exit_phase, gameplay_phase, main_menu_phase
 from src.utils import setup_logging
 
@@ -17,11 +17,11 @@ def main() -> None:
     clock = pg.time.Clock()
 
     while True:
-        if Ctx.game_phase == Phase.MAIN_MENU:
+        if State.game_phase == Phase.MAIN_MENU:
             main_menu_phase()
-        elif Ctx.game_phase == Phase.GAME_END:
+        elif State.game_phase == Phase.GAME_END:
             exit_phase()
-        elif Ctx.game_phase == Phase.GAMEPLAY:
+        elif State.game_phase == Phase.GAMEPLAY:
             gameplay_phase()
         pg.display.update()
         clock.tick(Config.FPS)
@@ -37,7 +37,7 @@ def initial_setup():
         + Config.padding_y
         + Config.padding_y
     )
-    Ctx.screen_surface = pg.display.set_mode((width, height))
+    State.screen_surface = pg.display.set_mode((width, height))
     Resources.load_resources()
     Field.initialize_grid()
 

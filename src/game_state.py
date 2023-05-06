@@ -33,7 +33,7 @@ class Resources:
         }
 
 
-class Ctx:
+class State:
     game_phase = Phase.MAIN_MENU
     screen_surface = None
     resources = None
@@ -56,43 +56,33 @@ class Ctx:
     angular_vel = 0.03125
 
     def update_gameplay_state():
-        Ctx.mouse_pos = pg.mouse.get_pos()
-        Ctx.pressed_keys = pg.key.get_pressed()
-        Ctx.mouse_pressed = pg.mouse.get_pressed()
-        if Ctx.mouse_pressed[0] is False:
-            Ctx.prev_movement = None
-            Ctx.curr_movement = None
-            Ctx.prev_cell = None
-        if Ctx.pressed_keys[UserControl.DELETE_MODE]:
-            Ctx.delete_mode = True
+        State.mouse_pos = pg.mouse.get_pos()
+        State.pressed_keys = pg.key.get_pressed()
+        State.mouse_pressed = pg.mouse.get_pressed()
+        if State.mouse_pressed[0] is False:
+            State.prev_movement = None
+            State.curr_movement = None
+            State.prev_cell = None
+        if State.pressed_keys[UserControl.DELETE_MODE]:
+            State.delete_mode = True
         else:
-            Ctx.delete_mode = False
-        if Ctx.pressed_keys[pg.K_1]:
+            State.delete_mode = False
+        if State.pressed_keys[pg.K_1]:
             Config.FPS = Config.FPS_list[0]
-        elif Ctx.pressed_keys[pg.K_2]:
+        elif State.pressed_keys[pg.K_2]:
             Config.FPS = Config.FPS_list[1]
-        elif Ctx.pressed_keys[pg.K_3]:
+        elif State.pressed_keys[pg.K_3]:
             Config.FPS = Config.FPS_list[2]
-        elif Ctx.pressed_keys[pg.K_4]:
+        elif State.pressed_keys[pg.K_4]:
             Config.FPS = Config.FPS_list[3]
-        elif Ctx.pressed_keys[pg.K_5]:
+        elif State.pressed_keys[pg.K_5]:
             Config.FPS = Config.FPS_list[4]
-        elif Ctx.pressed_keys[pg.K_6]:
+        elif State.pressed_keys[pg.K_6]:
             Config.FPS = Config.FPS_list[5]
-        elif Ctx.pressed_keys[pg.K_7]:
+        elif State.pressed_keys[pg.K_7]:
             Config.FPS = Config.FPS_list[6]
-        elif Ctx.pressed_keys[pg.K_8]:
+        elif State.pressed_keys[pg.K_8]:
             Config.FPS = Config.FPS_list[7]
-        elif Ctx.pressed_keys[pg.K_9]:
+        elif State.pressed_keys[pg.K_9]:
             Config.FPS = Config.FPS_list[8]
 
-    def update_trains():
-        if not Ctx.train.on_track:
-            Ctx.train.base_speed = 0
-        else:
-            Ctx.train.base_speed = 1
-
-        Ctx.train.pos.x = Ctx.train.pos.x + Ctx.train.base_speed * math.cos(Ctx.train.angle)
-        Ctx.train.pos.y = Ctx.train.pos.y - Ctx.train.base_speed * math.sin(Ctx.train.angle)
-        Ctx.train.rect.x = Ctx.train.pos.x
-        Ctx.train.rect.y = Ctx.train.pos.y

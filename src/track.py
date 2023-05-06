@@ -7,7 +7,7 @@ from src.color_constants import GRAY, WHITE
 from src.color_constants import *
 from src.config import Config
 from src.direction import Direction
-from src.game_context import Ctx
+from src.game_state import State
 
 
 class TrackType(Enum):
@@ -60,17 +60,17 @@ class Track:
         else:
             color = GRAY
         if self.track_type == TrackType.vert:
-            pg.draw.line(Ctx.screen_surface, color, self.cell_rect.midtop, self.cell_rect.midbottom)
+            pg.draw.line(State.screen_surface, color, self.cell_rect.midtop, self.cell_rect.midbottom)
         elif self.track_type == TrackType.hori:
-            pg.draw.line(Ctx.screen_surface, color, self.cell_rect.midleft, self.cell_rect.midright)
+            pg.draw.line(State.screen_surface, color, self.cell_rect.midleft, self.cell_rect.midright)
         elif self.track_type == TrackType.topright:
-            pygame.gfxdraw.arc(Ctx.screen_surface, self.cell_rect.right, self.cell_rect.top, int(Config.cell_size / 2), 90, 180, color)
+            pygame.gfxdraw.arc(State.screen_surface, self.cell_rect.right, self.cell_rect.top, int(Config.cell_size / 2), 90, 180, color)
         elif self.track_type == TrackType.topleft:
-            pygame.gfxdraw.arc(Ctx.screen_surface, self.cell_rect.left, self.cell_rect.top, int(Config.cell_size / 2), 0, 90, color)
+            pygame.gfxdraw.arc(State.screen_surface, self.cell_rect.left, self.cell_rect.top, int(Config.cell_size / 2), 0, 90, color)
         elif self.track_type == TrackType.bottomleft:
-            pygame.gfxdraw.arc(Ctx.screen_surface, self.cell_rect.left, self.cell_rect.bottom, int(Config.cell_size / 2), 270, 360, color)
+            pygame.gfxdraw.arc(State.screen_surface, self.cell_rect.left, self.cell_rect.bottom, int(Config.cell_size / 2), 270, 360, color)
         elif self.track_type == TrackType.bottomright:
-            pygame.gfxdraw.arc(Ctx.screen_surface, self.cell_rect.right, self.cell_rect.bottom, int(Config.cell_size / 2), 180, 270, color)
+            pygame.gfxdraw.arc(State.screen_surface, self.cell_rect.right, self.cell_rect.bottom, int(Config.cell_size / 2), 180, 270, color)
         
         for endpoint in self.endpoints:
-            pygame.gfxdraw.pixel(Ctx.screen_surface, int(endpoint.x), int(endpoint.y), RED1)
+            pygame.gfxdraw.pixel(State.screen_surface, int(endpoint.x), int(endpoint.y), RED1)

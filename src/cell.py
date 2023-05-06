@@ -2,7 +2,7 @@ import pygame as pg
 
 from src.config import Config
 from src.direction import Direction
-from src.game_context import Ctx, Resources
+from src.game_state import State, Resources
 from src.utils import setup_logging
 
 logger = setup_logging(log_level="DEBUG")
@@ -44,37 +44,37 @@ class Cell(pg.sprite.Sprite):
 
 
 def handle_mouse_cell_enter(cell) -> None:
-    previous_cell = Ctx.curr_cell
-    Ctx.prev_cell_needs_checking = True
-    Ctx.prev_cell = previous_cell
-    Ctx.curr_cell = pg.Vector2(cell.i, cell.j)
-    Ctx.prev_movement = Ctx.curr_movement
+    previous_cell = State.curr_cell
+    State.prev_cell_needs_checking = True
+    State.prev_cell = previous_cell
+    State.curr_cell = pg.Vector2(cell.i, cell.j)
+    State.prev_movement = State.curr_movement
 
     if (
-        Ctx.prev_cell is None
-        or Ctx.prev_cell.x is None
-        or Ctx.prev_cell.y is None
+        State.prev_cell is None
+        or State.prev_cell.x is None
+        or State.prev_cell.y is None
     ):
         logger.warn("Previous mouse cell was None. Returning from mouse handling.")
         return
-    if (Ctx.curr_cell.x - Ctx.prev_cell.x == 1) and (
-        Ctx.curr_cell.y == Ctx.prev_cell.y
+    if (State.curr_cell.x - State.prev_cell.x == 1) and (
+        State.curr_cell.y == State.prev_cell.y
     ):
-        Ctx.curr_movement = Direction.RIGHT
+        State.curr_movement = Direction.RIGHT
     elif (
-        Ctx.curr_cell.x - Ctx.prev_cell.x == -1
-    ) and (Ctx.curr_cell.y == Ctx.prev_cell.y):
-        Ctx.curr_movement = Direction.LEFT
-    elif (Ctx.curr_cell.x == Ctx.prev_cell.x) and (
-        Ctx.curr_cell.y - Ctx.prev_cell.y == 1
+        State.curr_cell.x - State.prev_cell.x == -1
+    ) and (State.curr_cell.y == State.prev_cell.y):
+        State.curr_movement = Direction.LEFT
+    elif (State.curr_cell.x == State.prev_cell.x) and (
+        State.curr_cell.y - State.prev_cell.y == 1
     ):
-        Ctx.curr_movement = Direction.DOWN
-    elif (Ctx.curr_cell.x == Ctx.prev_cell.x) and (
-        Ctx.curr_cell.y - Ctx.prev_cell.y == -1
+        State.curr_movement = Direction.DOWN
+    elif (State.curr_cell.x == State.prev_cell.x) and (
+        State.curr_cell.y - State.prev_cell.y == -1
     ):
-        Ctx.curr_movement = Direction.UP
+        State.curr_movement = Direction.UP
     else:
-        Ctx.curr_movement = None
+        State.curr_movement = None
         logger.info(
-            f"Mouse warped. Prev: ({Ctx.prev_cell.x}, {Ctx.prev_cell.y}), current: ({Ctx.curr_cell.x}, {Ctx.curr_cell.y})"
+            f"Mouse warped. Prev: ({State.prev_cell.x}, {State.prev_cell.y}), current: ({State.curr_cell.x}, {State.curr_cell.y})"
         )

@@ -3,7 +3,7 @@ import pygame as pg
 from src.cell import Cell
 from src.color_constants import colors
 from src.config import Config
-from src.game_context import Ctx, Direction, Resources
+from src.game_state import State, Resources
 from src.track import Track, TrackType
 from src.train import Train
 from src.utils import setup_logging
@@ -25,9 +25,9 @@ class Field:
             for i in range(0, Field.cells_x):
                 cell = Cell(i, j, pg.Color(colors["gray15"]))
                 Field.grid.append(cell)
-                Ctx.cell_sprites.add(cell)
-        Ctx.train = Train(1, 1, Resources.train_surfaces["train0"])
-        Ctx.train_sprites.add(Ctx.train)
+                State.cell_sprites.add(cell)
+        State.train = Train(1, 1, Resources.train_surfaces["train0"])
+        State.train_sprites.add(State.train)
 
 
     def _get_cell_index(i: int = 0, j: int = 0) -> int:
@@ -49,4 +49,4 @@ class Field:
             cell.tracks = cell.tracks[-2:]
         if len(cell.tracks) > 1:
             cell.tracks[0].bright = False
-        Ctx.prev_cell_needs_checking = False
+        State.prev_cell_needs_checking = False
