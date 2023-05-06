@@ -3,7 +3,7 @@
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
 # run arbitrary code.
-extension-pkg-allow-list=
+extension-pkg-allow-list=pygame.gfxdraw
 
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
@@ -102,7 +102,8 @@ disable=
         protected-access,
 	  too-many-instance-attributes,
 	  singleton-comparison,
-        broad-exception-caught # TODO: Fix the broad-exception-caught issue. Also, which version of pylint is running on the build agent? Should lock the version?
+        broad-exception-caught, # TODO: Fix the broad-exception-caught issue. Also, which version of pylint is running on the build agent? Should lock the version?
+        no-member
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

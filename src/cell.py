@@ -42,8 +42,6 @@ class Cell(pg.sprite.Sprite):
             pg.mixer.music.play()
 
 
-
-
 def handle_mouse_cell_enter(cell) -> None:
     previous_cell = State.curr_cell
     State.prev_cell_needs_checking = True
@@ -56,7 +54,7 @@ def handle_mouse_cell_enter(cell) -> None:
         or State.prev_cell.x is None
         or State.prev_cell.y is None
     ):
-        logger.warn("Previous mouse cell was None. Returning from mouse handling.")
+        logger.warning("Previous mouse cell was None. Returning from mouse handling.")
         return
     if (State.curr_cell.x - State.prev_cell.x == 1) and (
         State.curr_cell.y == State.prev_cell.y

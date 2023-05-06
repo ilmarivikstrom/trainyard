@@ -11,4 +11,3 @@ class UserControl:
     GAMEPLAY = pg.K_RETURN
     MOUSE_DOWN = pg.MOUSEBUTTONDOWN
     DELETE_MODE = pg.K_LSHIFT
-

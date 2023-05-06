@@ -13,11 +13,10 @@ class Train(pg.sprite.Sprite):
         self.image = image
         self.original_image = image
         self.rect = self.image.get_rect()
-        self.rect.x = (i * Config.cell_size - 0.5 * Config.cell_size + Config.padding_x + 16)
-        self.rect.y = (j * Config.cell_size + Config.padding_y + 16)
+        self.rect.x = i * Config.cell_size - 0.5 * Config.cell_size + Config.padding_x + 16
+        self.rect.y = j * Config.cell_size + Config.padding_y + 16
         self.pos = pg.Vector2(float(self.rect.x), float(self.rect.y))
 
-        
         self.direction = Direction.RIGHT
         self.angle = 0 * math.pi / 2
         self.base_speed = 1
@@ -29,7 +28,7 @@ class Train(pg.sprite.Sprite):
         self.track_ahead = []
         self.selected_track = None
 
-    
+
     def update(self):
         if not self.on_track:
             self.base_speed = 0

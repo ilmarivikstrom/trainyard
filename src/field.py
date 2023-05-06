@@ -12,8 +12,6 @@ from src.utils import setup_logging
 logger = setup_logging(log_level="DEBUG")
 
 
-
-
 class Field:
     cells_x = Config.cells_x
     cells_y = Config.cells_y
@@ -21,6 +19,7 @@ class Field:
     height_px = cells_y * Config.cell_size
     grid = []
 
+    @staticmethod
     def initialize_grid() -> None:
         for j in range(0, Field.cells_y):
             for i in range(0, Field.cells_x):
@@ -31,12 +30,15 @@ class Field:
         State.train_sprites.add(State.train)
 
 
+    @staticmethod
     def _get_cell_index(i: int = 0, j: int = 0) -> int:
         return int(j) * Field.cells_y + int(i)
 
+    @staticmethod
     def get_cell_at(i: int, j: int):
         return Field.grid[Field._get_cell_index(i, j)]
 
+    @staticmethod
     def place_track_item(
         requested_tracktype: TrackType, pos: pg.Vector2
     ) -> None:

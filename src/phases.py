@@ -4,7 +4,7 @@ import sys
 import pygame as pg
 from pygame.locals import QUIT
 
-from src.color_constants import *
+from src.color_constants import DELETE_MODE_BG_COLOR, NORMAL_MODE_BG_COLOR
 from src.controls import UserControl
 from src.field import Field, TrackType
 from src.game_state import State, Direction, Phase
@@ -74,7 +74,7 @@ def gameplay_phase() -> None:
                         else:
                             State.train.on_track = False
                             State.train.selected_track = None
-                            print(f"No track to be selected. Train is not on track.")
+                            print("No track to be selected. Train is not on track.")
                 State.train.last_collided_cells.append(cell)
                 State.train.last_collided_cells = State.train.last_collided_cells[-2:]
             if cell.rect.contains(State.train.rect) and State.train.last_flipped_cell != cell:
@@ -84,17 +84,17 @@ def gameplay_phase() -> None:
             if State.train.selected_track is not None:
                 for track in [State.train.selected_track]:
                     State.train.on_track = True
-                    if track.track_type == TrackType.vert:
+                    if track.track_type == TrackType.VERT:
                         if State.train.direction == Direction.UP:
                             State.train.angle = math.radians(90)
                         elif State.train.direction == Direction.DOWN:
                             State.train.angle = math.radians(270)
-                    elif track.track_type == TrackType.hori:
+                    elif track.track_type == TrackType.HORI:
                         if State.train.direction == Direction.RIGHT:
                             State.train.angle = math.radians(0)
                         elif State.train.direction == Direction.LEFT:
                             State.train.angle = math.radians(180)
-                    elif track.track_type == TrackType.topright:
+                    elif track.track_type == TrackType.TOP_RIGHT:
                         if State.train.direction == Direction.LEFT:
                             State.train.angle -= State.angular_vel
                             if State.train.angle <= math.radians(90) + 2 * State.angular_vel:
@@ -105,7 +105,7 @@ def gameplay_phase() -> None:
                             if State.train.angle >= math.radians(360) - 2 * State.angular_vel:
                                 State.train.direction = Direction.RIGHT
                                 State.train.angle = math.radians(0)
-                    elif track.track_type == TrackType.topleft:
+                    elif track.track_type == TrackType.TOP_LEFT:
                         if State.train.direction == Direction.RIGHT:
                             State.train.angle += State.angular_vel
                             if State.train.angle >= math.radians(90) - 2 * State.angular_vel:
@@ -116,7 +116,7 @@ def gameplay_phase() -> None:
                             if State.train.angle <= math.radians(180) + 2 * State.angular_vel:
                                 State.train.direction = Direction.LEFT
                                 State.train.angle = math.radians(180)
-                    elif track.track_type == TrackType.bottomleft:
+                    elif track.track_type == TrackType.BOTTOM_LEFT:
                         if State.train.direction == Direction.RIGHT:
                             State.train.angle -= State.angular_vel
                             if State.train.angle <= math.radians(-90) + 2 * State.angular_vel:
@@ -127,7 +127,7 @@ def gameplay_phase() -> None:
                             if State.train.angle >= math.radians(180) - 2 * State.angular_vel:
                                 State.train.direction = Direction.LEFT
                                 State.train.angle = math.radians(180)
-                    elif track.track_type == TrackType.bottomright:
+                    elif track.track_type == TrackType.BOTTOM_RIGHT:
                         if State.train.direction == Direction.LEFT:
                             State.train.angle += State.angular_vel
                             if State.train.angle >= math.radians(270) - 2 * State.angular_vel:
@@ -159,17 +159,17 @@ def gameplay_phase() -> None:
     if State.mouse_pressed[0] and not State.delete_mode and State.prev_cell_needs_checking:
         if State.prev_cell is not None and State.curr_cell is not None:
             if (State.prev_movement == Direction.UP and State.curr_movement == Direction.UP) or (State.prev_movement == Direction.DOWN and State.curr_movement == Direction.DOWN):
-                Field.place_track_item(TrackType.vert, State.prev_cell)
+                Field.place_track_item(TrackType.VERT, State.prev_cell)
             elif (State.prev_movement == Direction.RIGHT and State.curr_movement == Direction.RIGHT) or (State.prev_movement == Direction.LEFT and State.curr_movement == Direction.LEFT):
-                Field.place_track_item(TrackType.hori, State.prev_cell)
+                Field.place_track_item(TrackType.HORI, State.prev_cell)
             elif (State.prev_movement == Direction.UP and State.curr_movement == Direction.LEFT) or (State.prev_movement == Direction.RIGHT and State.curr_movement == Direction.DOWN):
-                Field.place_track_item(TrackType.bottomleft, State.prev_cell)
+                Field.place_track_item(TrackType.BOTTOM_LEFT, State.prev_cell)
             elif (State.prev_movement == Direction.UP and State.curr_movement == Direction.RIGHT) or (State.prev_movement == Direction.LEFT and State.curr_movement == Direction.DOWN):
-                Field.place_track_item(TrackType.bottomright, State.prev_cell)
+                Field.place_track_item(TrackType.BOTTOM_RIGHT, State.prev_cell)
             elif (State.prev_movement == Direction.DOWN and State.curr_movement == Direction.RIGHT) or (State.prev_movement == Direction.LEFT and State.curr_movement == Direction.UP):
-                Field.place_track_item(TrackType.topright, State.prev_cell)
+                Field.place_track_item(TrackType.TOP_RIGHT, State.prev_cell)
             elif (State.prev_movement == Direction.DOWN and State.curr_movement == Direction.LEFT) or (State.prev_movement == Direction.RIGHT and State.curr_movement == Direction.UP):
-                Field.place_track_item(TrackType.topleft, State.prev_cell)
+                Field.place_track_item(TrackType.TOP_LEFT, State.prev_cell)
 
     # Back to main menu.
     if State.pressed_keys[UserControl.MAIN_MENU]:

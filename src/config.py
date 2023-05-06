@@ -1,6 +1,3 @@
-from configparser import ConfigParser
-
-
 class Config:
     screen_width = 512
     screen_height = 512

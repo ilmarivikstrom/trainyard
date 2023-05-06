@@ -35,7 +35,8 @@ class State:
     train_sprites = pg.sprite.Group()
     angular_vel = 0.03125
 
-    def update_gameplay_state():
+    @staticmethod
+    def update_gameplay_state() -> None:
         State.mouse_pos = pg.mouse.get_pos()
         State.pressed_keys = pg.key.get_pressed()
         State.mouse_pressed = pg.mouse.get_pressed()
@@ -65,4 +66,3 @@ class State:
             Config.FPS = Config.FPS_list[7]
         elif State.pressed_keys[pg.K_9]:
             Config.FPS = Config.FPS_list[8]
-

@@ -6,6 +6,7 @@ class Resources:
     track_surfaces = {}
     train_surfaces = {}
 
+    @staticmethod
     def load_resources() -> List[pg.Surface]:
         Resources.img_surfaces = {
             "train": pg.image.load("res/train1.png").convert_alpha(),
