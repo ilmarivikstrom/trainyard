@@ -21,15 +21,6 @@ class Cell(pg.sprite.Sprite):
         self.mouse_on = False
         self.tracks = []
 
-    def mouse_enter(self):
-        if not self.mouse_on:
-            logger.debug(f"Mouse entered Cell at {(self.i, self.j)}")
-            self.mouse_on = True
-            handle_mouse_cell_enter(self)
-
-    def mouse_exit(self):
-        if self.mouse_on:
-            self.mouse_on = False
 
     def flip_tracks(self):
         if len(self.tracks) > 1:
@@ -40,6 +31,16 @@ class Cell(pg.sprite.Sprite):
             pg.mixer.music.load("res/click.wav")
             pg.mixer.music.set_volume(1.0)
             pg.mixer.music.play()
+
+
+    def check_mouse_collision(self):
+        if self.rect.collidepoint(State.mouse_pos):
+            if not self.mouse_on:
+                logger.debug(f"Mouse entered Cell at {(self.i, self.j)}")
+                handle_mouse_cell_enter(self)
+            self.mouse_on = True
+        else:
+            self.mouse_on = False
 
 
 def handle_mouse_cell_enter(cell) -> None:
