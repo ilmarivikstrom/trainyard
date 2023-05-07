@@ -35,6 +35,10 @@ class State:
     train_sprites = pg.sprite.Group()
     angular_vel = 0.03125
 
+    spacebar_down = False
+    train_go = False
+    wait_for_space_up = False
+
     @staticmethod
     def update_gameplay_state() -> None:
         State.mouse_pos = pg.mouse.get_pos()
@@ -66,3 +70,12 @@ class State:
             Config.FPS = Config.FPS_list[7]
         elif State.pressed_keys[pg.K_9]:
             Config.FPS = Config.FPS_list[8]
+
+        if State.pressed_keys[pg.K_SPACE] and not State.wait_for_space_up:
+            State.train_go = not State.train_go
+            State.wait_for_space_up = True
+            print("Space down.")
+        if State.wait_for_space_up:
+            if not State.pressed_keys[pg.K_SPACE]:
+                State.wait_for_space_up = False
+                print("Space released.")
