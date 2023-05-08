@@ -39,6 +39,10 @@ class State:
     train_go = False
     wait_for_space_up = False
 
+    departure_station = None
+    arrival_station = None
+    station_sprites = pg.sprite.Group()
+
     @staticmethod
     def update_gameplay_state() -> None:
         State.mouse_pos = pg.mouse.get_pos()

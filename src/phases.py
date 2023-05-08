@@ -178,6 +178,9 @@ def gameplay_phase() -> None:
     # Draw the train sprites.
     State.train_sprites.draw(State.screen_surface)
 
+    # Draw the station sprites.
+    State.station_sprites.draw(State.screen_surface)
+
     # Place track on the cell based on the mouse movements.
     if State.mouse_pressed[0] and not State.delete_mode and State.prev_cell_needs_checking:
         if State.prev_cell is not None and State.curr_cell is not None:

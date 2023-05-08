@@ -3,8 +3,10 @@ import pygame as pg
 from src.cell import Cell
 from src.color_constants import colors
 from src.config import Config
+from src.direction import Direction
 from src.game_state import State
 from src.resources import Resources
+from src.station import ArrivalStation, DepartureStation
 from src.track import Track, TrackType
 from src.train import Train
 from src.utils import setup_logging
@@ -26,8 +28,12 @@ class Field:
                 cell = Cell(i, j, pg.Color(colors["gray15"]))
                 Field.grid.append(cell)
                 State.cell_sprites.add(cell)
-        State.train = Train(1, 1, Resources.train_surfaces["train0"])
+        State.train = Train(1, 1, Resources.img_surfaces["train"])
         State.train_sprites.add(State.train)
+        State.departure_station = DepartureStation(3, 3, Resources.img_surfaces["departure"], Direction.UP.value)
+        State.arrival_station = ArrivalStation(5, 5, Resources.img_surfaces["arrival"], Direction.DOWN.value)
+        State.station_sprites.add(State.departure_station)
+        State.station_sprites.add(State.arrival_station)
 
 
     @staticmethod

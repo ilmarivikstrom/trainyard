@@ -11,10 +11,6 @@ class Resources:
         Resources.img_surfaces = {
             "train": pg.image.load("res/train1.png").convert_alpha(),
             "bg_tile": pg.image.load("res/bg_tile.png").convert_alpha(),
-        }
-        Resources.train_surfaces = {
-            "train0": pg.transform.rotate(Resources.img_surfaces["train"], 0),
-            "train90": pg.transform.rotate(Resources.img_surfaces["train"], 90),
-            "train180": pg.transform.rotate(Resources.img_surfaces["train"], 180),
-            "train270": pg.transform.rotate(Resources.img_surfaces["train"], 270),
+            "departure": pg.image.load("res/departure_station.png").convert_alpha(),
+            "arrival": pg.image.load("res/arrival_station.png").convert_alpha()
         }
