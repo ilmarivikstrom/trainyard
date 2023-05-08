@@ -171,10 +171,13 @@ def gameplay_phase() -> None:
         cell.check_mouse_collision()
         # If mouse is on the cell, the mouse is pressed, and the delete mode is on.
         if cell.mouse_on and State.mouse_pressed[0] and State.delete_mode:
+            for track in cell.tracks:
+                State.track_sprites.remove(track)
             cell.tracks.clear()
 
     # Update trains.
     State.train.update(State.train_go)
+
     # Draw the train sprites.
     State.train_sprites.draw(State.screen_surface)
 

@@ -52,10 +52,12 @@ class Field:
         cell = Field.get_cell_at(pos.x, pos.y)
         track_to_be_added = Track(pos.x, pos.y, cell.rect, requested_tracktype)
         if requested_tracktype in [existing_track.track_type for existing_track in cell.tracks]:
-            cell.tracks = [track_to_be_added]
+            cell.tracks.clear()
+            cell.tracks.append(track_to_be_added)
         else:
             cell.tracks.append(track_to_be_added)
             cell.tracks = cell.tracks[-2:]
         if len(cell.tracks) > 1:
             cell.tracks[0].bright = False
+            cell.tracks[0].image = cell.tracks[0].images["dark"]
         State.prev_cell_needs_checking = False

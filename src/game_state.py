@@ -22,8 +22,6 @@ class State:
     mouse_pressed = (False, False, False)
     pressed_keys = []
 
-    delete_mode = False
-
     curr_cell = pg.Vector2(-1, -1)
     prev_cell = pg.Vector2(-1, -1)
     prev_cell_needs_checking = False
