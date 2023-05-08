@@ -1,17 +1,29 @@
+from enum import Enum
 import math
 import pygame as pg
 
 from src.config import Config
 from src.direction import Direction
+from src.resources import Resources
+
+class TrainColor(Enum):
+    RED = "train_red"
+    BLUE = "train_blue"
+    YELLOW = "train_yellow"
+
+    ORANGE = "train_orange"
+    VIOLET = "train_violet"
+    GREEN = "train_green"
+
 
 
 class Train(pg.sprite.Sprite):
-    def __init__(self, i: int, j: int, image: pg.Surface):
+    def __init__(self, i: int, j: int, color: TrainColor):
         super().__init__()
         self.i = i
         self.j = j
-        self.image = image
-        self.original_image = image
+        self.image = Resources.img_surfaces[color.value]
+        self.original_image = self.image
         self.rect = self.image.get_rect()
         self.rect.x = i * Config.cell_size - 0.5 * Config.cell_size + Config.padding_x + 48
         self.rect.y = j * Config.cell_size + Config.padding_y + 16
@@ -33,6 +45,7 @@ class Train(pg.sprite.Sprite):
 
     def reset(self):
         self.pos = self.original_pos.copy()
+        self.image = self.original_image
         self.rect.x = self.pos.x
         self.rect.y = self.pos.y
         self.angle = 0
@@ -42,7 +55,17 @@ class Train(pg.sprite.Sprite):
         self.is_reset = True
 
 
+    def rot_center(self, angle):
+        """rotate an image while keeping its center and size"""
+        orig_rect = self.original_image.get_rect()
+        rot_image = pg.transform.rotate(self.original_image, angle * 180 / math.pi)
+        rot_rect = orig_rect.copy()
+        rot_rect.center = rot_image.get_rect().center
+        rot_image = rot_image.subsurface(rot_rect).copy()
+        return rot_image
+
     def move(self):
+        self.image = self.rot_center(self.angle)
         self.pos.x = self.pos.x + self.base_speed * math.cos(self.angle)
         self.pos.y = self.pos.y - self.base_speed * math.sin(self.angle)
         self.rect.x = self.pos.x

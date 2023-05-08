@@ -28,7 +28,7 @@ class State:
     curr_movement = Direction.NONE
     prev_movement = Direction.NONE
 
-    train = None
+    trains = []
     cell_sprites = pg.sprite.Group()
     train_sprites = pg.sprite.Group()
     angular_vel = 0.03125

@@ -9,7 +9,10 @@ class Resources:
     @staticmethod
     def load_resources() -> List[pg.Surface]:
         Resources.img_surfaces = {
-            "train": pg.image.load("res/train_green.png").convert_alpha(),
+            "train_red": pg.image.load("res/train_red.png").convert_alpha(),
+            "train_blue": pg.image.load("res/train_blue.png").convert_alpha(),
+            "train_yellow": pg.image.load("res/train_yellow.png").convert_alpha(),
+            #"train_green": pg.image.load("res/train_green.png").convert_alpha(),
             "bg_tile": pg.image.load("res/bg_tile.png").convert_alpha(),
             "track_s_bright": pg.image.load("res/track_s_bright.png").convert_alpha(),
             "track_c_bright": pg.image.load("res/track_c_bright.png").convert_alpha(),

@@ -8,7 +8,7 @@ from src.game_state import State
 from src.resources import Resources
 from src.station import ArrivalStation, DepartureStation
 from src.track import Track, TrackType
-from src.train import Train
+from src.train import Train, TrainColor
 from src.utils import setup_logging
 
 logger = setup_logging(log_level="DEBUG")
@@ -28,8 +28,9 @@ class Field:
                 cell = Cell(i, j, pg.Color(colors["gray15"]))
                 Field.grid.append(cell)
                 State.cell_sprites.add(cell)
-        State.train = Train(1, 1, Resources.img_surfaces["train"])
-        State.train_sprites.add(State.train)
+        for index in range(1, 4):
+            State.trains.append(Train(i=index*1+1, j=index*1, color=TrainColor.YELLOW))
+        State.train_sprites.add(State.trains)
         State.departure_station = DepartureStation(3, 3, Resources.img_surfaces["departure"], Direction.UP.value)
         State.arrival_station = ArrivalStation(5, 5, Resources.img_surfaces["arrival"], Direction.DOWN.value)
         State.station_sprites.add(State.departure_station)
