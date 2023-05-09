@@ -29,13 +29,8 @@ def main() -> None:
 def initial_setup():
     pg.init()
     pg.display.set_caption("trainyard")
-    width = Config.padding_x + Config.cells_x * Config.cell_size + Config.padding_x
-    height = (
-        Config.padding_y
-        + Config.cells_y * Config.cell_size
-        + Config.padding_y
-        + Config.padding_y
-    )
+    width = Config.screen_width
+    height = Config.screen_height
     State.screen_surface = pg.display.set_mode((width, height))
     Resources.load_resources()
     Field.initialize_grid()

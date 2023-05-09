@@ -28,7 +28,7 @@ class Field:
                 cell = Cell(i, j, pg.Color(colors["gray15"]))
                 Field.grid.append(cell)
                 State.cell_sprites.add(cell)
-        for index in range(1, 4):
+        for index in range(1, 6):
             State.trains.append(Train(i=index*1+1, j=index*1, color=TrainColor.YELLOW))
         State.train_sprites.add(State.trains)
         State.departure_station = DepartureStation(3, 3, Resources.img_surfaces["departure"], Direction.UP.value)

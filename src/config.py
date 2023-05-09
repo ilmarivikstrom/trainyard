@@ -1,6 +1,6 @@
 class Config:
-    screen_width = 512
-    screen_height = 512
+    screen_width = 1280
+    screen_height = 720
     padding_x = 64
     padding_y = 64
     FPS = 100

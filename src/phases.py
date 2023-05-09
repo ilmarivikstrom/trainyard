@@ -4,7 +4,7 @@ import sys
 import pygame as pg
 from pygame.locals import QUIT
 
-from src.color_constants import DELETE_MODE_BG_COLOR, NORMAL_MODE_BG_COLOR, GRAY10
+from src.color_constants import DELETE_MODE_BG_COLOR, NORMAL_MODE_BG_COLOR, GRAY10, WHITESMOKE
 from src.controls import UserControl
 from src.field import Field, TrackType
 from src.game_state import State, Direction, Phase
@@ -30,7 +30,7 @@ def gameplay_phase() -> None:
     State.update_gameplay_state()
 
     # Check if delete mode, change background color accordingly.
-    if State.delete_mode:
+    if State.trains_released:
         State.screen_surface.fill(DELETE_MODE_BG_COLOR)
     else:
         State.screen_surface.fill(NORMAL_MODE_BG_COLOR)
@@ -54,7 +54,7 @@ def gameplay_phase() -> None:
             track.draw()
 
         # If train 'release' command has been given.
-        if State.train_go:
+        if State.trains_released:
             for train in State.trains:
                 # If the cell in question intersects with the center of the train.
                 if cell.rect.colliderect(pg.Rect(train.rect.centerx - 1, train.rect.centery - 1, 1, 1)):
@@ -113,14 +113,18 @@ def gameplay_phase() -> None:
                         if train.selected_track.track_type == TrackType.VERT:
                             if train.direction == Direction.UP:
                                 train.angle = math.radians(90)
+                                train.pos = round(train.pos)
                             elif train.direction == Direction.DOWN:
                                 train.angle = math.radians(270)
+                                train.pos = round(train.pos)
                         # If the selected track is horizontal.
                         elif train.selected_track.track_type == TrackType.HORI:
                             if train.direction == Direction.RIGHT:
                                 train.angle = math.radians(0)
+                                train.pos = round(train.pos)
                             elif train.direction == Direction.LEFT:
                                 train.angle = math.radians(180)
+                                train.pos = round(train.pos)
                         # If the selected track is top-right.
                         elif train.selected_track.track_type == TrackType.TOP_RIGHT:
                             if train.direction == Direction.LEFT:
@@ -128,11 +132,13 @@ def gameplay_phase() -> None:
                                 if train.angle <= math.radians(90) + 0.5 * State.angular_vel:
                                     train.direction = Direction.UP
                                     train.angle = math.radians(90)
+                                    train.pos = round(train.pos)
                             elif train.direction == Direction.DOWN:
                                 train.angle += State.angular_vel
                                 if train.angle >= math.radians(360) - 0.5 * State.angular_vel:
                                     train.direction = Direction.RIGHT
                                     train.angle = math.radians(0)
+                                    train.pos = round(train.pos)
                         # If the selected track is top-left.
                         elif train.selected_track.track_type == TrackType.TOP_LEFT:
                             if train.direction == Direction.RIGHT:
@@ -140,11 +146,13 @@ def gameplay_phase() -> None:
                                 if train.angle >= math.radians(90) - 0.5 * State.angular_vel:
                                     train.direction = Direction.UP
                                     train.angle = math.radians(90)
+                                    train.pos = round(train.pos)
                             elif train.direction == Direction.DOWN:
                                 train.angle -= State.angular_vel
                                 if train.angle <= math.radians(180) + 0.5 * State.angular_vel:
                                     train.direction = Direction.LEFT
                                     train.angle = math.radians(180)
+                                    train.pos = round(train.pos)
                         # If the selected track is bottom-left.
                         elif train.selected_track.track_type == TrackType.BOTTOM_LEFT:
                             if train.direction == Direction.RIGHT:
@@ -152,11 +160,13 @@ def gameplay_phase() -> None:
                                 if train.angle <= math.radians(-90) + 0.5 * State.angular_vel:
                                     train.direction = Direction.DOWN
                                     train.angle = math.radians(270)
+                                    train.pos = round(train.pos)
                             elif train.direction == Direction.UP:
                                 train.angle += State.angular_vel
                                 if train.angle >= math.radians(180) - 0.5 * State.angular_vel:
                                     train.direction = Direction.LEFT
                                     train.angle = math.radians(180)
+                                    train.pos = round(train.pos)
                         # If the selected track is bottom-right.
                         elif train.selected_track.track_type == TrackType.BOTTOM_RIGHT:
                             if train.direction == Direction.LEFT:
@@ -164,11 +174,13 @@ def gameplay_phase() -> None:
                                 if train.angle >= math.radians(270) - 0.5 * State.angular_vel:
                                     train.direction = Direction.DOWN
                                     train.angle = math.radians(270)
+                                    train.pos = round(train.pos)
                             elif train.direction == Direction.UP:
                                 train.angle -= State.angular_vel
                                 if train.angle <= math.radians(0) + 0.5 * State.angular_vel:
                                     train.direction = Direction.RIGHT
                                     train.angle = math.radians(0)
+                                    train.pos = round(train.pos)
 
         # Update the cell according to mouse position.
         cell.check_mouse_collision()
@@ -178,7 +190,17 @@ def gameplay_phase() -> None:
 
     # Update trains.
     for train in State.trains:
-        train.update(State.train_go)
+        train.update(State.trains_released)
+
+    # TODO: Merge trains if the centers collide, and the angles are the same.
+    for train_1 in State.trains:
+        other_trains = State.trains.copy()
+        other_trains.remove(train_1)
+        other_trains_pos = [x.pos for x in other_trains]
+        other_trains_pos_dict = dict(zip(other_trains, other_trains_pos))
+        if train_1.pos in other_trains_pos_dict.values():
+            train_2 = [key for key, val in other_trains_pos_dict.items() if val == train.pos][0]
+            State.merge_trains(train_1, train_2)
 
     # Draw the train sprites.
     State.train_sprites.draw(State.screen_surface)
@@ -187,7 +209,7 @@ def gameplay_phase() -> None:
     State.station_sprites.draw(State.screen_surface)
 
     # Place track on the cell based on the mouse movements.
-    if State.mouse_pressed[0] and not State.delete_mode and State.prev_cell_needs_checking:
+    if State.mouse_pressed[0] and not State.delete_mode and State.prev_cell_needs_checking and not State.trains_released:
         if State.prev_cell is not None and State.curr_cell is not None:
             if (State.prev_movement == Direction.UP and State.curr_movement == Direction.UP) or (State.prev_movement == Direction.DOWN and State.curr_movement == Direction.DOWN):
                 Field.place_track_item(TrackType.VERT, State.prev_cell)
@@ -204,11 +226,13 @@ def gameplay_phase() -> None:
 
     # Go back to main menu if requested by the user.
     if State.pressed_keys[UserControl.MAIN_MENU]:
-        State.train_go = False
+        State.trains_released = False
         for train in State.trains:
             train.reset()
         State.game_phase = Phase.MAIN_MENU
         logger.info(f"Moving to state {State.game_phase}")
+
+    pg.draw.line(State.screen_surface, WHITESMOKE, (State.screen_surface.get_width() / 2, 64), (State.screen_surface.get_width() / 2, 64 + 8 * 64))
 
 
 # Exit phase.

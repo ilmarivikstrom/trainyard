@@ -5,7 +5,7 @@ import pygame as pg
 from src.config import Config
 from src.controls import UserControl
 from src.direction import Direction
-
+from src.train import Train
 
 class Phase(Enum):
     MAIN_MENU = 0
@@ -34,8 +34,9 @@ class State:
     angular_vel = 0.03125
 
     spacebar_down = False
-    train_go = False
+    trains_released = False
     wait_for_space_up = False
+    delete_mode = False
 
     departure_station = None
     arrival_station = None
@@ -74,10 +75,17 @@ class State:
             Config.FPS = Config.FPS_list[8]
 
         if State.pressed_keys[pg.K_SPACE] and not State.wait_for_space_up:
-            State.train_go = not State.train_go
+            State.trains_released = not State.trains_released
             State.wait_for_space_up = True
             print("Space down.")
         if State.wait_for_space_up:
             if not State.pressed_keys[pg.K_SPACE]:
                 State.wait_for_space_up = False
                 print("Space released.")
+
+
+    @staticmethod
+    def merge_trains(train_1: Train, train_2: Train) -> None:
+        State.trains.remove(train_2)
+        train_2.kill()
+        print(f"Removed a train! Trains remaining: {len(State.trains)} or {len(State.train_sprites)}")

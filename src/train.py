@@ -1,5 +1,6 @@
 from enum import Enum
 import math
+import typing
 import pygame as pg
 
 from src.config import Config
