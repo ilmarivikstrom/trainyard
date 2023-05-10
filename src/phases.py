@@ -202,6 +202,16 @@ def gameplay_phase() -> None:
             State.train_sprites.remove(train)
             State.trains.remove(train)
 
+    # TODO: Check the colors of the trains on merge.
+    for train_1 in State.trains:
+        other_trains = State.trains.copy()
+        other_trains.remove(train_1)
+        other_trains_pos = [x.pos for x in other_trains]
+        other_trains_pos_dict = dict(zip(other_trains, other_trains_pos))
+        if train_1.pos in other_trains_pos_dict.values():
+            train_2 = [key for key, val in other_trains_pos_dict.items() if val == train_1.pos][0]
+            State.merge_trains(train_1, train_2)
+
     # Update trains.
     for train in State.trains:
         train.update(State.trains_released)
@@ -212,15 +222,7 @@ def gameplay_phase() -> None:
         if train.rect.colliderect(State.arrival_station):
             State.arrival_station.catch(train)
 
-    # TODO: Merge trains if the centers collide, and the angles are the same.
-    for train_1 in State.trains:
-        other_trains = State.trains.copy()
-        other_trains.remove(train_1)
-        other_trains_pos = [x.pos for x in other_trains]
-        other_trains_pos_dict = dict(zip(other_trains, other_trains_pos))
-        if train_1.pos in other_trains_pos_dict.values():
-            train_2 = [key for key, val in other_trains_pos_dict.items() if val == train_1.pos][0]
-            State.merge_trains(train_1, train_2)
+
 
     # Draw the train sprites.
     State.train_sprites.draw(State.screen_surface)
