@@ -1,29 +1,113 @@
 import pygame as pg
 from src.config import Config
+from src.direction import Direction
+from src.game_state import State
+from src.resources import Resources
+from src.train import Train, TrainColor
+
+class DepartureSprite(pg.sprite.Sprite):
+    def __init__(self, color: str, place: int, parent_rect: pg.Rect):
+        super().__init__()
+        self.image = Resources.img_surfaces[f"{color}_train_{place}"]
+        self.rect = parent_rect
+
 
 class DepartureStation(pg.sprite.Sprite):
-    def __init__(self, i: int, j: int, image: pg.Surface, angle: float = 0):
+    def __init__(self, i: int, j: int, angle: float, number_of_trains_to_release: int, train_color: TrainColor):
         super().__init__()
         self.i = i
         self.j = j
-        self.image = image
+        self.angle = angle
+        self.number_of_trains_to_release = number_of_trains_to_release
+        self.train_color = train_color
+
+        self.original_number_of_trains_to_release = number_of_trains_to_release
+
+        self.image = pg.transform.rotate(Resources.img_surfaces["departure"], self.angle)
+
         self.rect = self.image.get_rect()
         self.rect.x = i * Config.cell_size + Config.padding_x
         self.rect.y = j * Config.cell_size + Config.padding_y
 
-        self.angle = angle
-        self.image = pg.transform.rotate(self.image, self.angle)
+        self.departures = []
+        self.departure_sprites = pg.sprite.Group()
+
+        self.create_departure_sprites()
+
+        self.is_reset = True
+
+        self.last_release_tick = None
+
+
+    def update(self):
+        if State.trains_released:
+            if self.number_of_trains_to_release > 0:
+                self.is_reset = False
+                if self.last_release_tick is None or State.current_tick - self.last_release_tick == 60:
+                    train_to_release = Train(self.i, self.j, self.train_color, Direction.UP)
+                    State.trains.append(train_to_release)
+                    State.train_sprites.add(train_to_release)
+                    self.number_of_trains_to_release -= 1
+                    # Kill the departure sprite.
+                    self.departures[-1].kill()
+                    self.departures.pop(-1)
+                    print("Train released.")
+                    self.last_release_tick = State.current_tick
+
+
+    def reset(self):
+        if not self.is_reset:
+            self.number_of_trains_to_release = self.original_number_of_trains_to_release
+            self.create_departure_sprites()
+            self.is_reset = True
+            self.last_release_tick = None
+
+    def create_departure_sprites(self):
+        self.departures = [DepartureSprite("blue", i+1, self.rect) for i in range(self.number_of_trains_to_release)]
+        self.departure_sprites.add(self.departures)
+
 
 
 class ArrivalStation(pg.sprite.Sprite):
-    def __init__(self, i: int, j: int, image: pg.Surface, angle: float = 0):
+    def __init__(self, i: int, j: int, angle: int, number_of_trains_to_catch: int, train_color: TrainColor):
         super().__init__()
         self.i = i
         self.j = j
-        self.image = image
+        self.angle = angle
+        self.number_of_trains_to_catch = number_of_trains_to_catch
+        self.train_color = train_color
+
+        self.original_number_of_trains_to_catch = number_of_trains_to_catch
+
+        self.image = pg.transform.rotate(Resources.img_surfaces["arrival"], self.angle)
+
+        self.arrivals = []
+        self.arrival_sprites = pg.sprite.Group()
+
         self.rect = self.image.get_rect()
         self.rect.x = i * Config.cell_size + Config.padding_x
         self.rect.y = j * Config.cell_size + Config.padding_y
 
-        self.angle = angle
-        self.image = pg.transform.rotate(self.image, self.angle)
+        self.is_reset = False
+
+    def catch(self, train):
+        if train.color == self.train_color and len(self.arrivals) > 0:
+            self.number_of_trains_to_catch -= 1
+            self.arrivals[-1].kill()
+            self.arrivals.pop(-1)
+            print(f"Caught a train! Number of trains still expecting: {self.number_of_trains_to_catch}")
+        else:
+            print("CRASH! Wrong color train or not expecting further arrivals.")
+        train.kill()
+        State.trains.remove(train)
+
+    def reset(self):
+        if not self.is_reset:
+            self.number_of_trains_to_catch = self.original_number_of_trains_to_catch
+            self.create_arrival_sprites()
+            self.is_reset = True
+
+
+    def create_arrival_sprites(self):
+        self.arrivals = [DepartureSprite("blue", i+1, self.rect) for i in range(self.number_of_trains_to_catch)]
+        self.arrival_sprites.add(self.arrivals)

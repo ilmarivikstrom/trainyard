@@ -40,7 +40,10 @@ class State:
 
     departure_station = None
     arrival_station = None
-    station_sprites = pg.sprite.Group()
+    departure_station_sprites = pg.sprite.Group()
+    arrival_station_sprites = pg.sprite.Group()
+
+    current_tick = 0
 
     @staticmethod
     def update_gameplay_state() -> None:
@@ -82,6 +85,9 @@ class State:
             if not State.pressed_keys[pg.K_SPACE]:
                 State.wait_for_space_up = False
                 print("Space released.")
+        if not State.trains_released:
+            State.departure_station.reset()
+            State.arrival_station.reset()
 
 
     @staticmethod

@@ -185,12 +185,18 @@ def gameplay_phase() -> None:
         # Update the cell according to mouse position.
         cell.check_mouse_collision()
         # If mouse is on the cell, the mouse is pressed, and the delete mode is on.
-        if cell.mouse_on and State.mouse_pressed[0] and State.delete_mode:
+        if cell.mouse_on and State.mouse_pressed[0] and State.delete_mode and not State.trains_released:
             cell.tracks.clear()
 
     # Update trains.
     for train in State.trains:
         train.update(State.trains_released)
+
+
+    # Check if collided with arrival station.
+    for train in State.trains:
+        if train.rect.colliderect(State.arrival_station):
+            State.arrival_station.catch(train)
 
     # TODO: Merge trains if the centers collide, and the angles are the same.
     for train_1 in State.trains:
@@ -206,7 +212,12 @@ def gameplay_phase() -> None:
     State.train_sprites.draw(State.screen_surface)
 
     # Draw the station sprites.
-    State.station_sprites.draw(State.screen_surface)
+    State.departure_station_sprites.draw(State.screen_surface)
+    State.arrival_station_sprites.draw(State.screen_surface)
+
+    # Draw the blob sprites.
+    State.departure_station.departure_sprites.draw(State.screen_surface)
+    State.arrival_station.arrival_sprites.draw(State.screen_surface)
 
     # Place track on the cell based on the mouse movements.
     if State.mouse_pressed[0] and not State.delete_mode and State.prev_cell_needs_checking and not State.trains_released:
@@ -234,10 +245,13 @@ def gameplay_phase() -> None:
 
     pg.draw.line(State.screen_surface, WHITESMOKE, (State.screen_surface.get_width() / 2, 64), (State.screen_surface.get_width() / 2, 64 + 8 * 64))
 
+    # Update the departure station.
+    State.departure_station.update()
+
 
 # Exit phase.
 def exit_phase():
-    logger.info("Exiting game...")
+    logger.info("Exiting...")
     pg.quit()
     sys.exit()
 

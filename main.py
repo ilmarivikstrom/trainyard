@@ -16,6 +16,7 @@ def main() -> None:
     clock = pg.time.Clock()
 
     while True:
+        State.current_tick += 1
         if State.game_phase == Phase.MAIN_MENU:
             main_menu_phase()
         elif State.game_phase == Phase.GAME_END:

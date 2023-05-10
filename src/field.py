@@ -5,10 +5,9 @@ from src.color_constants import colors
 from src.config import Config
 from src.direction import Direction
 from src.game_state import State
-from src.resources import Resources
 from src.station import ArrivalStation, DepartureStation
 from src.track import Track, TrackType
-from src.train import Train, TrainColor
+from src.train import TrainColor
 from src.utils import setup_logging
 
 logger = setup_logging(log_level="DEBUG")
@@ -28,13 +27,11 @@ class Field:
                 cell = Cell(i, j, pg.Color(colors["gray15"]))
                 Field.grid.append(cell)
                 State.cell_sprites.add(cell)
-        for index in range(1, 6):
-            State.trains.append(Train(i=index*1+1, j=index*1, color=TrainColor.YELLOW))
-        State.train_sprites.add(State.trains)
-        State.departure_station = DepartureStation(3, 3, Resources.img_surfaces["departure"], Direction.UP.value)
-        State.arrival_station = ArrivalStation(5, 5, Resources.img_surfaces["arrival"], Direction.DOWN.value)
-        State.station_sprites.add(State.departure_station)
-        State.station_sprites.add(State.arrival_station)
+        # Manually set the locations... for now...
+        State.departure_station = DepartureStation(i=3, j=3, angle=Direction.UP.value, number_of_trains_to_release=4, train_color=TrainColor.BLUE)
+        State.arrival_station = ArrivalStation(i=5, j=5, angle=Direction.DOWN.value, number_of_trains_to_catch=4, train_color=TrainColor.BLUE)
+        State.departure_station_sprites.add(State.departure_station)
+        State.arrival_station_sprites.add(State.arrival_station)
 
 
     @staticmethod

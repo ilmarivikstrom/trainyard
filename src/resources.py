@@ -19,5 +19,9 @@ class Resources:
             "track_s_dark": pg.image.load("res/track_s_dark.png").convert_alpha(),
             "track_c_dark": pg.image.load("res/track_c_dark.png").convert_alpha(),
             "departure": pg.image.load("res/departure_station.png").convert_alpha(),
-            "arrival": pg.image.load("res/arrival_station.png").convert_alpha()
+            "arrival": pg.image.load("res/arrival_station.png").convert_alpha(),
+            "blue_train_1": pg.image.load("res/blue_train_1.png").convert_alpha(),
+            "blue_train_2": pg.image.load("res/blue_train_2.png").convert_alpha(),
+            "blue_train_3": pg.image.load("res/blue_train_3.png").convert_alpha(),
+            "blue_train_4": pg.image.load("res/blue_train_4.png").convert_alpha()
         }

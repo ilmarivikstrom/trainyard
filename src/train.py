@@ -19,10 +19,15 @@ class TrainColor(Enum):
 
 
 class Train(pg.sprite.Sprite):
-    def __init__(self, i: int, j: int, color: TrainColor):
+    def __init__(self, i: int, j: int, color: TrainColor, direction: Direction = Direction.RIGHT):
         super().__init__()
         self.i = i
         self.j = j
+        self.color = color
+        self.direction = direction
+
+        self.original_direction = direction
+
         self.image = Resources.img_surfaces[color.value]
         self.original_image = self.image
         self.rect = self.image.get_rect()
@@ -30,7 +35,6 @@ class Train(pg.sprite.Sprite):
         self.rect.y = j * Config.cell_size + Config.padding_y + 16
         self.pos = pg.Vector2(float(self.rect.x), float(self.rect.y))
 
-        self.direction = Direction.RIGHT
         self.angle = 0 * math.pi / 2
         self.base_speed = 1
         self.on_track = False
@@ -50,7 +54,7 @@ class Train(pg.sprite.Sprite):
         self.rect.x = self.pos.x
         self.rect.y = self.pos.y
         self.angle = 0
-        self.direction = Direction.RIGHT
+        self.direction = self.original_direction
         self.last_collided_cells = []
         self.last_flipped_cell = None
         self.is_reset = True
