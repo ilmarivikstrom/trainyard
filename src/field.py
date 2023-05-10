@@ -10,7 +10,7 @@ from src.track import Track, TrackType
 from src.train import TrainColor
 from src.utils import setup_logging
 
-logger = setup_logging(log_level="DEBUG")
+logger = setup_logging(log_level=Config.log_level)
 
 
 class Field:
@@ -28,9 +28,10 @@ class Field:
                 Field.grid.append(cell)
                 State.cell_sprites.add(cell)
         # Manually set the locations... for now...
-        State.departure_station = DepartureStation(i=3, j=3, angle=Direction.UP.value, number_of_trains_to_release=4, train_color=TrainColor.BLUE)
-        State.arrival_station = ArrivalStation(i=5, j=5, angle=Direction.DOWN.value, number_of_trains_to_catch=4, train_color=TrainColor.BLUE)
-        State.departure_station_sprites.add(State.departure_station)
+        State.departure_stations.append(DepartureStation(i=2, j=2, angle=Direction.UP.value, number_of_trains_to_release=4, train_color=TrainColor.BLUE))
+        State.departure_stations.append(DepartureStation(i=3, j=2, angle=Direction.UP.value, number_of_trains_to_release=4, train_color=TrainColor.BLUE))
+        State.arrival_station = ArrivalStation(i=6, j=6, angle=Direction.DOWN.value, number_of_trains_to_catch=3, train_color=TrainColor.BLUE)
+        State.departure_station_sprites.add(State.departure_stations)
         State.arrival_station_sprites.add(State.arrival_station)
 
 

@@ -1,4 +1,5 @@
 from enum import Enum
+import math
 
 import pygame as pg
 
@@ -6,6 +7,9 @@ from src.config import Config
 from src.controls import UserControl
 from src.direction import Direction
 from src.train import Train
+from src.utils import setup_logging
+
+logger = setup_logging(log_level=Config.log_level)
 
 class Phase(Enum):
     MAIN_MENU = 0
@@ -31,14 +35,15 @@ class State:
     trains = []
     cell_sprites = pg.sprite.Group()
     train_sprites = pg.sprite.Group()
-    angular_vel = 0.03125
+    #angular_vel = 0.03125 # With 50.265 ticks per 90 degrees.
+    angular_vel = math.pi / (2*48) # With 48 ticks per 90 degrees...
 
     spacebar_down = False
     trains_released = False
     wait_for_space_up = False
     delete_mode = False
 
-    departure_station = None
+    departure_stations = []
     arrival_station = None
     departure_station_sprites = pg.sprite.Group()
     arrival_station_sprites = pg.sprite.Group()
@@ -80,18 +85,21 @@ class State:
         if State.pressed_keys[pg.K_SPACE] and not State.wait_for_space_up:
             State.trains_released = not State.trains_released
             State.wait_for_space_up = True
-            print("Space down.")
+            logger.debug("Space down.")
         if State.wait_for_space_up:
             if not State.pressed_keys[pg.K_SPACE]:
                 State.wait_for_space_up = False
-                print("Space released.")
+                logger.debug("Space released.")
         if not State.trains_released:
-            State.departure_station.reset()
+            for departure_station in State.departure_stations:
+                departure_station.reset()
             State.arrival_station.reset()
+            State.trains.clear()
+            State.train_sprites.empty()
 
 
     @staticmethod
     def merge_trains(train_1: Train, train_2: Train) -> None:
         State.trains.remove(train_2)
         train_2.kill()
-        print(f"Removed a train! Trains remaining: {len(State.trains)} or {len(State.train_sprites)}")
+        logger.info(f"Removed a train! Trains remaining: {len(State.trains)} or {len(State.train_sprites)}")

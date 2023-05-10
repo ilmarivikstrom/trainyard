@@ -5,12 +5,13 @@ import pygame as pg
 from pygame.locals import QUIT
 
 from src.color_constants import DELETE_MODE_BG_COLOR, NORMAL_MODE_BG_COLOR, GRAY10, WHITESMOKE
+from src.config import Config
 from src.controls import UserControl
 from src.field import Field, TrackType
 from src.game_state import State, Direction, Phase
 from src.utils import setup_logging
 
-logger = setup_logging(log_level="DEBUG")
+logger = setup_logging(log_level=Config.log_level)
 
 
 def main_menu_phase() -> None:
@@ -68,8 +69,7 @@ def gameplay_phase() -> None:
                         # If there are no tracks in this cell.
                         if len(cell.tracks) == 0:
                             # Stop the train. Should mean 'crash'.
-                            train.on_track = False
-                            train.selected_track = None
+                            train.crash()
                         else:
                             # If there are some tracks in this cell.
                             train.tracks_ahead = cell.tracks
@@ -92,18 +92,11 @@ def gameplay_phase() -> None:
                                     for possible_track in possible_tracks:
                                         if possible_track.bright:
                                             train.selected_track = possible_track
-                                print(f"Selected track: {train.selected_track.directions}")
+                                logger.debug(f"Selected track: {train.selected_track.directions}")
                             else:
                                 # If there are no possible tracks available. Should 'crash'.
-                                train.on_track = False
-                                train.selected_track = None
-                                print("No track to be selected. Train is not on track.")
-                    # If the cell wholly contains the train, and the last flipped cell was some other cell.
-                    if cell.rect.contains(train.rect) and train.last_flipped_cell != cell:
-                        # If there are 2 tracks, flip them now. TOOD: Should only flip if they intersect.
-                        if len(cell.tracks) == 2:
-                            cell.flip_tracks()
-                            train.last_flipped_cell = cell
+                                train.crash()
+                                logger.debug("No track to be selected. Train is not on track.")
 
 
                     # If the train has selected a track.
@@ -132,13 +125,15 @@ def gameplay_phase() -> None:
                                 if train.angle <= math.radians(90) + 0.5 * State.angular_vel:
                                     train.direction = Direction.UP
                                     train.angle = math.radians(90)
-                                    train.pos = round(train.pos)
+                                    train.rect.center = pg.Vector2(cell.rect.midtop)
+                                    train.pos = pg.Vector2(train.rect.topleft)
                             elif train.direction == Direction.DOWN:
                                 train.angle += State.angular_vel
                                 if train.angle >= math.radians(360) - 0.5 * State.angular_vel:
                                     train.direction = Direction.RIGHT
                                     train.angle = math.radians(0)
-                                    train.pos = round(train.pos)
+                                    train.rect.center = pg.Vector2(cell.rect.midright)
+                                    train.pos = pg.Vector2(train.rect.topleft)
                         # If the selected track is top-left.
                         elif train.selected_track.track_type == TrackType.TOP_LEFT:
                             if train.direction == Direction.RIGHT:
@@ -146,13 +141,15 @@ def gameplay_phase() -> None:
                                 if train.angle >= math.radians(90) - 0.5 * State.angular_vel:
                                     train.direction = Direction.UP
                                     train.angle = math.radians(90)
-                                    train.pos = round(train.pos)
+                                    train.rect.center = pg.Vector2(cell.rect.midtop)
+                                    train.pos = pg.Vector2(train.rect.topleft)
                             elif train.direction == Direction.DOWN:
                                 train.angle -= State.angular_vel
                                 if train.angle <= math.radians(180) + 0.5 * State.angular_vel:
                                     train.direction = Direction.LEFT
                                     train.angle = math.radians(180)
-                                    train.pos = round(train.pos)
+                                    train.rect.center = pg.Vector2(cell.rect.midleft)
+                                    train.pos = pg.Vector2(train.rect.topleft)
                         # If the selected track is bottom-left.
                         elif train.selected_track.track_type == TrackType.BOTTOM_LEFT:
                             if train.direction == Direction.RIGHT:
@@ -160,13 +157,15 @@ def gameplay_phase() -> None:
                                 if train.angle <= math.radians(-90) + 0.5 * State.angular_vel:
                                     train.direction = Direction.DOWN
                                     train.angle = math.radians(270)
-                                    train.pos = round(train.pos)
+                                    train.rect.center = pg.Vector2(cell.rect.midbottom)
+                                    train.pos = pg.Vector2(train.rect.topleft)
                             elif train.direction == Direction.UP:
                                 train.angle += State.angular_vel
                                 if train.angle >= math.radians(180) - 0.5 * State.angular_vel:
                                     train.direction = Direction.LEFT
                                     train.angle = math.radians(180)
-                                    train.pos = round(train.pos)
+                                    train.rect.center = pg.Vector2(cell.rect.midleft)
+                                    train.pos = pg.Vector2(train.rect.topleft)
                         # If the selected track is bottom-right.
                         elif train.selected_track.track_type == TrackType.BOTTOM_RIGHT:
                             if train.direction == Direction.LEFT:
@@ -174,19 +173,34 @@ def gameplay_phase() -> None:
                                 if train.angle >= math.radians(270) - 0.5 * State.angular_vel:
                                     train.direction = Direction.DOWN
                                     train.angle = math.radians(270)
-                                    train.pos = round(train.pos)
+                                    train.rect.center = pg.Vector2(cell.rect.midbottom)
+                                    train.pos = pg.Vector2(train.rect.topleft)
                             elif train.direction == Direction.UP:
                                 train.angle -= State.angular_vel
                                 if train.angle <= math.radians(0) + 0.5 * State.angular_vel:
                                     train.direction = Direction.RIGHT
                                     train.angle = math.radians(0)
-                                    train.pos = round(train.pos)
+                                    train.rect.center = pg.Vector2(cell.rect.midright)
+                                    train.pos = pg.Vector2(train.rect.topleft)
+
+                    # If the cell wholly contains the train, and the last flipped cell was some other cell.
+                    if cell.rect.contains(train.rect) and train.last_flipped_cell != cell:
+                        # If there are 2 tracks, flip them now. TOOD: Should only flip if they intersect.
+                        if len(cell.tracks) == 2:
+                            cell.flip_tracks()
+                            train.last_flipped_cell = cell
 
         # Update the cell according to mouse position.
         cell.check_mouse_collision()
         # If mouse is on the cell, the mouse is pressed, and the delete mode is on.
         if cell.mouse_on and State.mouse_pressed[0] and State.delete_mode and not State.trains_released:
             cell.tracks.clear()
+
+    # Delete trains if 'crashed'.
+    for train in State.trains:
+        if train.crashed:
+            State.train_sprites.remove(train)
+            State.trains.remove(train)
 
     # Update trains.
     for train in State.trains:
@@ -205,7 +219,7 @@ def gameplay_phase() -> None:
         other_trains_pos = [x.pos for x in other_trains]
         other_trains_pos_dict = dict(zip(other_trains, other_trains_pos))
         if train_1.pos in other_trains_pos_dict.values():
-            train_2 = [key for key, val in other_trains_pos_dict.items() if val == train.pos][0]
+            train_2 = [key for key, val in other_trains_pos_dict.items() if val == train_1.pos][0]
             State.merge_trains(train_1, train_2)
 
     # Draw the train sprites.
@@ -216,7 +230,8 @@ def gameplay_phase() -> None:
     State.arrival_station_sprites.draw(State.screen_surface)
 
     # Draw the blob sprites.
-    State.departure_station.departure_sprites.draw(State.screen_surface)
+    for departure_station in State.departure_stations:
+        departure_station.departure_sprites.draw(State.screen_surface)
     State.arrival_station.arrival_sprites.draw(State.screen_surface)
 
     # Place track on the cell based on the mouse movements.
@@ -246,7 +261,8 @@ def gameplay_phase() -> None:
     pg.draw.line(State.screen_surface, WHITESMOKE, (State.screen_surface.get_width() / 2, 64), (State.screen_surface.get_width() / 2, 64 + 8 * 64))
 
     # Update the departure station.
-    State.departure_station.update()
+    for departure_station in State.departure_stations:
+        departure_station.update()
 
 
 # Exit phase.

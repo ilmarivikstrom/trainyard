@@ -6,7 +6,7 @@ from src.game_state import State
 from src.resources import Resources
 from src.utils import setup_logging
 
-logger = setup_logging(log_level="DEBUG")
+logger = setup_logging(log_level=Config.log_level)
 
 class Cell(pg.sprite.Sprite):
     def __init__(self, i: int, j: int, color: pg.Color):
@@ -36,7 +36,7 @@ class Cell(pg.sprite.Sprite):
     def check_mouse_collision(self):
         if self.rect.collidepoint(State.mouse_pos):
             if not self.mouse_on:
-                logger.debug(f"Mouse entered Cell at {(self.i, self.j)}")
+                #logger.debug(f"Mouse entered Cell at {(self.i, self.j)}")
                 handle_mouse_cell_enter(self)
             self.mouse_on = True
         else:

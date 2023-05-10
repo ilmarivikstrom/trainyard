@@ -47,6 +47,8 @@ class Train(pg.sprite.Sprite):
 
         self.original_pos = self.pos.copy()
 
+        self.crashed = False
+
 
     def reset(self):
         self.pos = self.original_pos.copy()
@@ -87,3 +89,8 @@ class Train(pg.sprite.Sprite):
             self.reset()
         else:
             self.move()
+
+    def crash(self):
+        self.on_track = False
+        self.selected_track = None
+        self.crashed = True

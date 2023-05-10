@@ -11,3 +11,5 @@ class Config:
     FPS_list = [5, 10, 20, 30, 60, 100, 200, 500, 1000]
 
     draw_arcs = False
+
+    log_level = "INFO"

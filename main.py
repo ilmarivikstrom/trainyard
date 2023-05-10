@@ -8,7 +8,7 @@ from src.phases import exit_phase, gameplay_phase, main_menu_phase
 from src.resources import Resources
 from src.utils import setup_logging
 
-logger = setup_logging(log_level="DEBUG")
+logger = setup_logging(log_level=Config.log_level)
 
 
 def main() -> None:
