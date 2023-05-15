@@ -9,6 +9,7 @@ from src.config import Config
 from src.controls import UserControl
 from src.field import Field, TrackType
 from src.game_state import State, Direction, Phase
+from src.sound import Sound
 from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
@@ -256,9 +257,7 @@ def gameplay_phase() -> None:
 
     if not State.level_passed:
         if State.arrival_station.number_of_trains_to_catch == 0 and State.trains_crashed == 0 and len(State.trains) == 0:
-            pg.mixer.music.load("res/achievement.wav")
-            pg.mixer.music.set_volume(0.5)
-            pg.mixer.music.play()
+            Sound.success.play()
             State.level_passed = True
 
     # Go back to main menu if requested by the user.

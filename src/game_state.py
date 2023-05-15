@@ -6,6 +6,7 @@ import pygame as pg
 from src.config import Config
 from src.controls import UserControl
 from src.direction import Direction
+from src.sound import Sound
 from src.train import Train
 from src.utils import setup_logging
 
@@ -109,7 +110,5 @@ class State:
         State.trains.remove(train_2)
         train_2.kill()
         logger.info(f"Removed a train! Trains remaining: {len(State.trains)} or {len(State.train_sprites)}")
-        pg.mixer.music.load("res/merge.wav")
-        pg.mixer.music.set_volume(0.2)
-        pg.mixer.music.play()
+        Sound.merge.play()
 

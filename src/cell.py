@@ -4,6 +4,7 @@ from src.config import Config
 from src.direction import Direction
 from src.game_state import State
 from src.resources import Resources
+from src.sound import Sound
 from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
@@ -21,15 +22,12 @@ class Cell(pg.sprite.Sprite):
         self.mouse_on = False
         self.tracks = []
 
-
     def flip_tracks(self):
         if len(self.tracks) > 1:
             for track in self.tracks:
                 track.toggle_bright()
             self.tracks.reverse()
-            pg.mixer.music.load("res/click.wav")
-            pg.mixer.music.set_volume(0.2)
-            pg.mixer.music.play()
+            Sound.track_flip.play()
 
 
     def check_mouse_collision(self):

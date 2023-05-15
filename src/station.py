@@ -3,6 +3,7 @@ from src.config import Config
 from src.direction import Direction
 from src.game_state import State
 from src.resources import Resources
+from src.sound import Sound
 from src.train import Train, TrainColor
 from src.utils import setup_logging
 
@@ -56,9 +57,7 @@ class DepartureStation(pg.sprite.Sprite):
                     self.departures.pop(-1)
                     logger.debug("Train released.")
                     self.last_release_tick = State.current_tick
-                    pg.mixer.music.load("res/pop.mp3")
-                    pg.mixer.music.set_volume(0.5)
-                    pg.mixer.music.play()
+                    Sound.pop.play()
 
 
     def reset(self):
@@ -104,9 +103,7 @@ class ArrivalStation(pg.sprite.Sprite):
             self.arrivals[-1].kill()
             self.arrivals.pop(-1)
             logger.debug(f"Caught a train! Number of trains still expecting: {self.number_of_trains_to_catch}")
-            pg.mixer.music.load("res/pop.mp3")
-            pg.mixer.music.set_volume(0.5)
-            pg.mixer.music.play()
+            Sound.pop.play()
         else:
             logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
             train.crash()
