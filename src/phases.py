@@ -70,6 +70,7 @@ def gameplay_phase() -> None:
                         if len(cell.tracks) == 0:
                             # Stop the train. Should mean 'crash'.
                             train.crash()
+                            State.trains_crashed += 1
                         else:
                             # If there are some tracks in this cell.
                             train.tracks_ahead = cell.tracks
@@ -251,6 +252,13 @@ def gameplay_phase() -> None:
                 Field.place_track_item(TrackType.TOP_RIGHT, State.prev_cell)
             elif (State.prev_movement == Direction.DOWN and State.curr_movement == Direction.LEFT) or (State.prev_movement == Direction.RIGHT and State.curr_movement == Direction.UP):
                 Field.place_track_item(TrackType.TOP_LEFT, State.prev_cell)
+
+    if not State.level_passed:
+        if State.arrival_station.number_of_trains_to_catch == 0 and State.trains_crashed == 0 and len(State.trains) == 0:
+            pg.mixer.music.load("res/achievement.wav")
+            pg.mixer.music.set_volume(0.5)
+            pg.mixer.music.play()
+            State.level_passed = True
 
     # Go back to main menu if requested by the user.
     if State.pressed_keys[UserControl.MAIN_MENU]:

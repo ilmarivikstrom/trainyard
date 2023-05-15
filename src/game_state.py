@@ -33,6 +33,7 @@ class State:
     prev_movement = Direction.NONE
 
     trains = []
+    trains_crashed = 0
     cell_sprites = pg.sprite.Group()
     train_sprites = pg.sprite.Group()
     #angular_vel = 0.03125 # With 50.265 ticks per 90 degrees.
@@ -49,6 +50,8 @@ class State:
     arrival_station_sprites = pg.sprite.Group()
 
     current_tick = 0
+
+    level_passed = False
 
     @staticmethod
     def update_gameplay_state() -> None:
@@ -96,6 +99,9 @@ class State:
             State.arrival_station.reset()
             State.trains.clear()
             State.train_sprites.empty()
+            State.trains_crashed = 0
+            State.trains_released = False
+            State.level_passed = False
 
 
     @staticmethod
@@ -103,3 +109,7 @@ class State:
         State.trains.remove(train_2)
         train_2.kill()
         logger.info(f"Removed a train! Trains remaining: {len(State.trains)} or {len(State.train_sprites)}")
+        pg.mixer.music.load("res/merge.wav")
+        pg.mixer.music.set_volume(0.2)
+        pg.mixer.music.play()
+

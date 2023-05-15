@@ -56,6 +56,9 @@ class DepartureStation(pg.sprite.Sprite):
                     self.departures.pop(-1)
                     logger.debug("Train released.")
                     self.last_release_tick = State.current_tick
+                    pg.mixer.music.load("res/pop.mp3")
+                    pg.mixer.music.set_volume(0.5)
+                    pg.mixer.music.play()
 
 
     def reset(self):
@@ -95,14 +98,19 @@ class ArrivalStation(pg.sprite.Sprite):
         self.is_reset = False
 
     def catch(self, train):
-        if train.color == self.train_color and len(self.arrivals) > 0:
+        if train.color == self.train_color and len(self.arrivals) > 0 and self.number_of_trains_to_catch > 0:
             self.is_reset = False
             self.number_of_trains_to_catch -= 1
             self.arrivals[-1].kill()
             self.arrivals.pop(-1)
             logger.debug(f"Caught a train! Number of trains still expecting: {self.number_of_trains_to_catch}")
+            pg.mixer.music.load("res/pop.mp3")
+            pg.mixer.music.set_volume(0.5)
+            pg.mixer.music.play()
         else:
             logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
+            train.crash()
+            State.trains_crashed += 1
         train.kill()
         State.trains.remove(train)
 

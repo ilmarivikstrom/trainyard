@@ -28,6 +28,8 @@ def main() -> None:
 
 
 def initial_setup():
+    pg.mixer.pre_init(44100, -16, 1, 512)
+    pg.mixer.init()
     pg.init()
     pg.display.set_caption("trainyard")
     width = Config.screen_width

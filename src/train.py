@@ -1,6 +1,5 @@
 from enum import Enum
 import math
-import typing
 import pygame as pg
 
 from src.config import Config
@@ -94,3 +93,6 @@ class Train(pg.sprite.Sprite):
         self.on_track = False
         self.selected_track = None
         self.crashed = True
+        pg.mixer.music.load("res/crash.wav")
+        pg.mixer.music.set_volume(0.5)
+        pg.mixer.music.play()

@@ -27,11 +27,9 @@ class Cell(pg.sprite.Sprite):
             for track in self.tracks:
                 track.toggle_bright()
             self.tracks.reverse()
-            pg.mixer.init()
             pg.mixer.music.load("res/click.wav")
-            pg.mixer.music.set_volume(1.0)
+            pg.mixer.music.set_volume(0.2)
             pg.mixer.music.play()
-            logger.info(f"Tick: {State.current_tick}")
 
 
     def check_mouse_collision(self):
