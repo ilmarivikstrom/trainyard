@@ -211,7 +211,8 @@ def gameplay_phase() -> None:
         other_trains_pos_dict = dict(zip(other_trains, other_trains_pos))
         if train_1.pos in other_trains_pos_dict.values():
             train_2 = [key for key, val in other_trains_pos_dict.items() if val == train_1.pos][0]
-            State.merge_trains(train_1, train_2)
+            if train_1.direction == train_2.direction:
+                State.merge_trains(train_1, train_2)
 
     # Update trains.
     for train in State.trains:
