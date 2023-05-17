@@ -4,11 +4,12 @@ import sys
 import pygame as pg
 from pygame.locals import QUIT
 
-from src.color_constants import DELETE_MODE_BG_COLOR, NORMAL_MODE_BG_COLOR, GRAY10, WHITESMOKE
+from src.color_constants import (DELETE_MODE_BG_COLOR, GRAY10,
+                                 NORMAL_MODE_BG_COLOR, WHITESMOKE)
 from src.config import Config
 from src.controls import UserControl
 from src.field import Field, TrackType
-from src.game_state import State, Direction, Phase
+from src.game_state import Direction, Phase, State
 from src.resources import Resources
 from src.sound import Sound
 from src.utils import setup_logging

@@ -1,5 +1,7 @@
 from typing import List
+
 import pygame as pg
+
 
 class Resources:
     img_surfaces = {}

@@ -1,4 +1,5 @@
 import pygame as pg
+
 from src.config import Config
 from src.direction import Direction
 from src.game_state import State
