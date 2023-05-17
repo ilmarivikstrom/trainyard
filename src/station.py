@@ -9,6 +9,7 @@ from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
 
+
 class DepartureSprite(pg.sprite.Sprite):
     def __init__(self, color: str, place: int, parent_rect: pg.Rect):
         super().__init__()
@@ -93,7 +94,7 @@ class ArrivalStation(pg.sprite.Sprite):
 
         self.is_reset = False
 
-    def catch_train(self, train):
+    def handle_train_arrival(self, train):
         if train.color == self.train_color and self.arrivals and self.number_of_trains_to_catch > 0:
             self.is_reset = False
             self.number_of_trains_to_catch -= 1
