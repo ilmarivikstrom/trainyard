@@ -54,6 +54,8 @@ class State:
 
     level_passed = False
 
+    gradient_dest = (0, 0)
+
     @staticmethod
     def update_gameplay_state() -> None:
         State.mouse_pos = pg.mouse.get_pos()
@@ -110,5 +112,4 @@ class State:
         State.trains.remove(train_2)
         train_2.kill()
         logger.info(f"Removed a train! Trains remaining: {len(State.trains)} or {len(State.train_sprites)}")
-        Sound.merge.play()
-
+        Sound.play_channel(Sound.merge, 0)

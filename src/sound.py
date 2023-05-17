@@ -19,3 +19,7 @@ class Sound:
 
     success = pg.mixer.Sound("res/achievement.wav")
     success.set_volume(0.5)
+
+    @staticmethod
+    def play_channel(sound, channel):
+        pg.mixer.Channel(channel).play(sound)

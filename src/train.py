@@ -94,4 +94,4 @@ class Train(pg.sprite.Sprite):
         self.on_track = False
         self.selected_track = None
         self.crashed = True
-        Sound.crash.play()
+        Sound.play_channel(Sound.crash, 3)

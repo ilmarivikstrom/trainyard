@@ -9,6 +9,7 @@ from src.config import Config
 from src.controls import UserControl
 from src.field import Field, TrackType
 from src.game_state import State, Direction, Phase
+from src.resources import Resources
 from src.sound import Sound
 from src.utils import setup_logging
 
@@ -36,6 +37,10 @@ def gameplay_phase() -> None:
         State.screen_surface.fill(DELETE_MODE_BG_COLOR)
     else:
         State.screen_surface.fill(NORMAL_MODE_BG_COLOR)
+
+    # Blit the color gradient on top of the base layer.
+    State.gradient_dest = (-640 + 640 * math.sin(State.current_tick * 0.005), -360 + 360 * math.cos(State.current_tick * 0.005))
+    State.screen_surface.blit(Resources.img_surfaces["gradient"], dest=State.gradient_dest)
 
     # 1. Draw cell sprites.
     State.cell_sprites.draw(State.screen_surface)

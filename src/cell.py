@@ -27,7 +27,7 @@ class Cell(pg.sprite.Sprite):
             for track in self.tracks:
                 track.toggle_bright()
             self.tracks.reverse()
-            Sound.track_flip.play()
+            Sound.play_channel(Sound.track_flip, 2)
 
 
     def check_mouse_collision(self):

@@ -57,7 +57,7 @@ class DepartureStation(pg.sprite.Sprite):
                     self.departures.pop(-1)
                     logger.debug("Train released.")
                     self.last_release_tick = State.current_tick
-                    Sound.pop.play()
+                    Sound.play_channel(Sound.pop, 1)
 
 
     def reset(self):
@@ -103,7 +103,7 @@ class ArrivalStation(pg.sprite.Sprite):
             self.arrivals[-1].kill()
             self.arrivals.pop(-1)
             logger.debug(f"Caught a train! Number of trains still expecting: {self.number_of_trains_to_catch}")
-            Sound.pop.play()
+            Sound.play_channel(Sound.pop, 1)
         else:
             logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
             train.crash()
