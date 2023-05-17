@@ -112,4 +112,4 @@ class State:
         State.trains.remove(train_2)
         train_2.kill()
         logger.info(f"Removed a train! Trains remaining: {len(State.trains)} or {len(State.train_sprites)}")
-        Sound.play_channel(Sound.merge, 0)
+        Sound.play_sound_on_channel(Sound.merge, 0)

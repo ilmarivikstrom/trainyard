@@ -6,7 +6,7 @@ class Sound:
     pg.init()
 
     crash = pg.mixer.Sound("res/crash.mp3")
-    crash.set_volume(1.0)
+    crash.set_volume(0.2)
 
     merge = pg.mixer.Sound("res/merge.wav")
     merge.set_volume(0.2)
@@ -21,5 +21,5 @@ class Sound:
     success.set_volume(0.5)
 
     @staticmethod
-    def play_channel(sound, channel):
+    def play_sound_on_channel(sound, channel):
         pg.mixer.Channel(channel).play(sound)

@@ -44,20 +44,17 @@ class DepartureStation(pg.sprite.Sprite):
 
 
     def update(self):
-        if State.trains_released:
-            if self.number_of_trains_to_release > 0:
-                self.is_reset = False
-                if self.last_release_tick is None or State.current_tick - self.last_release_tick == 32:
-                    train_to_release = Train(self.i, self.j, self.train_color, Direction.UP)
-                    State.trains.append(train_to_release)
-                    State.train_sprites.add(train_to_release)
-                    self.number_of_trains_to_release -= 1
-                    # Kill the departure sprite.
-                    self.departures[-1].kill()
-                    self.departures.pop(-1)
-                    logger.debug("Train released.")
-                    self.last_release_tick = State.current_tick
-                    Sound.play_channel(Sound.pop, 1)
+        if State.trains_released and self.number_of_trains_to_release > 0:
+            self.is_reset = False
+            if not self.last_release_tick or State.current_tick - self.last_release_tick == 32:
+                train_to_release = Train(self.i, self.j, self.train_color, Direction.UP)
+                State.trains.append(train_to_release)
+                State.train_sprites.add(train_to_release)
+                self.number_of_trains_to_release -= 1
+                self.departures.pop().kill() # Remove from list and kill the departure sprite.
+                logger.debug("Train released.")
+                self.last_release_tick = State.current_tick
+                Sound.play_sound_on_channel(Sound.pop, 1)
 
 
     def reset(self):
@@ -96,20 +93,20 @@ class ArrivalStation(pg.sprite.Sprite):
 
         self.is_reset = False
 
-    def catch(self, train):
-        if train.color == self.train_color and len(self.arrivals) > 0 and self.number_of_trains_to_catch > 0:
+    def catch_train(self, train):
+        if train.color == self.train_color and self.arrivals and self.number_of_trains_to_catch > 0:
             self.is_reset = False
             self.number_of_trains_to_catch -= 1
-            self.arrivals[-1].kill()
-            self.arrivals.pop(-1)
+            self.arrivals.pop().kill()
             logger.debug(f"Caught a train! Number of trains still expecting: {self.number_of_trains_to_catch}")
-            Sound.play_channel(Sound.pop, 1)
+            Sound.play_sound_on_channel(Sound.pop, 1)
         else:
             logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
             train.crash()
             State.trains_crashed += 1
         train.kill()
         State.trains.remove(train)
+
 
     def reset(self):
         if not self.is_reset:

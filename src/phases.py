@@ -228,7 +228,7 @@ def gameplay_phase() -> None:
     # Check if collided with arrival station.
     for train in State.trains:
         if train.rect.colliderect(State.arrival_station):
-            State.arrival_station.catch(train)
+            State.arrival_station.catch_train(train)
 
 
 
