@@ -203,13 +203,8 @@ def gameplay_phase(field: Field) -> None:
         if cell.mouse_on and State.mouse_pressed[0] and State.delete_mode and not State.trains_released:
             cell.tracks.clear()
 
-    # Delete trains if 'crashed'.
-    for train in State.trains:
-        if train.crashed:
-            State.train_sprites.remove(train)
-            State.trains.remove(train)
 
-    # TODO: Check the colors of the trains on merge.
+    # Check if trains should merge, or if they have crashed.
     for train_1 in State.trains:
         other_trains = State.trains.copy()
         other_trains.remove(train_1)
@@ -218,7 +213,20 @@ def gameplay_phase(field: Field) -> None:
         if train_1.pos in other_trains_pos_dict.values():
             train_2 = [key for key, val in other_trains_pos_dict.items() if val == train_1.pos][0]
             if train_1.direction == train_2.direction:
-                State.merge_trains(train_1, train_2)
+                if train_1.color == train_2.color:
+                    State.merge_trains(train_1, train_2)
+                else:
+                    train_1.crash()
+                    train_2.crash()
+
+
+    # Delete trains if 'crashed'.
+    for train in State.trains:
+        if train.crashed:
+            State.train_sprites.remove(train)
+            State.trains.remove(train)
+            logger.info(f"Train crashed. Trains left: {len(State.trains)}")
+
 
     # Update trains.
     for train in State.trains:
