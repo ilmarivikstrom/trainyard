@@ -236,9 +236,10 @@ def gameplay_phase(field: Field) -> None:
 
     # Check if collided with arrival station.
     for train in State.trains:
-        if train.rect.colliderect(State.arrival_station):
-            State.arrival_station.handle_train_arrival(train)
-            logger.info(f"Arrival station saveable attributes: {State.arrival_station.saveable_attributes.serialize()}")
+        for arrival_station in State.arrival_stations:
+            if train.rect.colliderect(arrival_station):
+                arrival_station.handle_train_arrival(train)
+                logger.info(f"Arrival station saveable attributes: {arrival_station.saveable_attributes.serialize()}")
 
 
     # Draw the train sprites.
@@ -251,7 +252,8 @@ def gameplay_phase(field: Field) -> None:
     # Draw the blob sprites.
     for departure_station in State.departure_stations:
         departure_station.goal_sprites.draw(State.screen_surface)
-    State.arrival_station.goal_sprites.draw(State.screen_surface)
+    for arrival_station in State.arrival_stations:
+        arrival_station.goal_sprites.draw(State.screen_surface)
 
     # Place track on the cell based on the mouse movements.
     if State.mouse_pressed[0] and not State.delete_mode and State.prev_cell_needs_checking and not State.trains_released:
@@ -270,7 +272,11 @@ def gameplay_phase(field: Field) -> None:
                 field.place_track_item(TrackType.TOP_LEFT, State.prev_cell)
 
     if not State.level_passed:
-        if State.arrival_station.number_of_trains_left == 0 and State.trains_crashed == 0 and len(State.trains) == 0:
+        arrival_stations_pending = False
+        for arrival_station in State.arrival_stations:
+            if arrival_station.number_of_trains_left > 0:
+                arrival_stations_pending = True
+        if not arrival_stations_pending and State.trains_crashed == 0 and len(State.trains) == 0:
             Sound.success.play()
             State.level_passed = True
 

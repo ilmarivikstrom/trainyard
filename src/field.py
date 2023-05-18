@@ -29,13 +29,18 @@ class Field:
                 # Add some stations. Manually, for now...
                 if (i,j) == (2,2):
                     State.departure_stations.append(DepartureStation(i=i, j=j, angle=Direction.UP.value, number_of_trains_left=4, train_color=TrainColor.YELLOW))
-                    State.departure_station_sprites.add(State.departure_stations)
+                elif (i,j) == (6,1):
+                    State.departure_stations.append(DepartureStation(i=i, j=j, angle=Direction.LEFT.value, number_of_trains_left=4, train_color=TrainColor.RED))
                 elif (i,j) == (3,2):
                     State.departure_stations.append(DepartureStation(i=i, j=j, angle=Direction.UP.value, number_of_trains_left=4, train_color=TrainColor.BLUE))
-                    State.departure_station_sprites.add(State.departure_stations)
                 elif (i,j) == (6,6):
-                    State.arrival_station = ArrivalStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=3, train_color=TrainColor.YELLOW)
-                    State.arrival_station_sprites.add(State.arrival_station)
+                    State.arrival_stations.append(ArrivalStation(i=i, j=j, angle=Direction.RIGHT.value, number_of_trains_left=4, train_color=TrainColor.YELLOW))
+                elif (i,j) == (1,1):
+                    State.arrival_stations.append(ArrivalStation(i=i, j=j, angle=Direction.UP.value, number_of_trains_left=4, train_color=TrainColor.RED))
+                elif (i,j) == (5,5):
+                    State.arrival_stations.append(ArrivalStation(i=i, j=j, angle=Direction.UP.value, number_of_trains_left=4, train_color=TrainColor.BLUE))
+        State.departure_station_sprites.add(State.departure_stations)
+        State.arrival_station_sprites.add(State.arrival_stations)
 
     def _get_cell_index(self, i: int = 0, j: int = 0) -> int:
         return int(j) * self.cells_y + int(i)

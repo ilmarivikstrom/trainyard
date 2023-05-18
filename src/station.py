@@ -14,7 +14,7 @@ logger = setup_logging(log_level=Config.log_level)
 class StationGoalSprite(pg.sprite.Sprite):
     def __init__(self, color: str, place: int, parent_rect: pg.Rect):
         super().__init__()
-        self.image = Resources.img_surfaces[f"{color}_train_{place}"]
+        self.image = Resources.img_surfaces[f"{color}_goal_{place}"]
         self.rect = parent_rect
 
 
@@ -33,7 +33,13 @@ class Station(Cell):
         self.create_goal_sprites()
 
     def create_goal_sprites(self):
-        self.goals = [StationGoalSprite("blue", i+1, self.rect) for i in range(self.number_of_trains_left)]
+        if self.train_color == TrainColor.BLUE:
+            goal_sprite_color = "blue"
+        elif self.train_color == TrainColor.RED:
+            goal_sprite_color = "red"
+        else:
+            goal_sprite_color = "yellow"
+        self.goals = [StationGoalSprite(goal_sprite_color, i+1, self.rect) for i in range(self.number_of_trains_left)]
         self.goal_sprites.add(self.goals)
 
     def reset(self):

@@ -45,7 +45,7 @@ class State:
     delete_mode = False
 
     departure_stations = []
-    arrival_station = None
+    arrival_stations = []
     departure_station_sprites = pg.sprite.Group()
     arrival_station_sprites = pg.sprite.Group()
 
@@ -98,7 +98,8 @@ class State:
         if not State.trains_released:
             for departure_station in State.departure_stations:
                 departure_station.reset()
-            State.arrival_station.reset()
+            for arrival_station in State.arrival_stations:
+                arrival_station.reset()
             State.trains.clear()
             State.train_sprites.empty()
             State.trains_crashed = 0
