@@ -55,6 +55,8 @@ class State:
 
     gradient_dest = (0, 0)
 
+    day_cycle_dest = [0, 0]
+
     @staticmethod
     def update_gameplay_state() -> None:
         State.mouse_pos = pg.mouse.get_pos()

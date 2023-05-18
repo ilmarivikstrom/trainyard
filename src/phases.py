@@ -40,8 +40,11 @@ def gameplay_phase(field: Field) -> None:
         State.screen_surface.fill(NORMAL_MODE_BG_COLOR)
 
     # Blit the color gradient on top of the base layer.
-    State.gradient_dest = (-640 + 640 * math.sin(State.current_tick * 0.005), -360 + 360 * math.cos(State.current_tick * 0.005))
-    State.screen_surface.blit(Resources.img_surfaces["gradient"], dest=State.gradient_dest)
+    #State.gradient_dest = (-640 + 640 * math.sin(State.current_tick * 0.005), -360 + 360 * math.cos(State.current_tick * 0.005))
+    #State.screen_surface.blit(Resources.img_surfaces["gradient"], dest=State.gradient_dest)
+
+    State.day_cycle_dest = [-State.current_tick * 5, 0]
+    State.screen_surface.blit(Resources.img_surfaces["day_cycle"], dest=State.day_cycle_dest)
 
     # 1. Draw cell sprites.
     State.cell_sprites.draw(State.screen_surface)

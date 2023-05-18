@@ -11,6 +11,7 @@ class Resources:
     @staticmethod
     def load_resources() -> List[pg.Surface]:
         Resources.img_surfaces = {
+            "day_cycle": pg.image.load("res/scrolling_day_cycle.png").convert_alpha(),
             "gradient": pg.image.load("res/gradient.png").convert_alpha(),
             "train_red": pg.image.load("res/train_red.png").convert_alpha(),
             "train_blue": pg.image.load("res/train_blue.png").convert_alpha(),
