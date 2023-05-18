@@ -18,15 +18,15 @@ class DepartureSprite(pg.sprite.Sprite):
 
 
 class DepartureStation(pg.sprite.Sprite):
-    def __init__(self, i: int, j: int, angle: float, number_of_trains_to_release: int, train_color: TrainColor):
+    def __init__(self, i: int, j: int, angle: float, number_of_trains: int, train_color: TrainColor):
         super().__init__()
         self.i = i
         self.j = j
         self.angle = angle
-        self.number_of_trains_to_release = number_of_trains_to_release
+        self.number_of_trains = number_of_trains
         self.train_color = train_color
 
-        self.original_number_of_trains_to_release = number_of_trains_to_release
+        self.original_number_of_trains_to_release = number_of_trains
 
         self.image = pg.transform.rotate(Resources.img_surfaces["departure"], self.angle)
 
@@ -43,45 +43,48 @@ class DepartureStation(pg.sprite.Sprite):
 
         self.last_release_tick = None
 
+        self.saveable_attributes = SaveableAttributes(self)
+
 
     def update(self):
-        if State.trains_released and self.number_of_trains_to_release > 0:
+        if State.trains_released and self.number_of_trains > 0:
             self.is_reset = False
             if not self.last_release_tick or State.current_tick - self.last_release_tick == 32:
                 train_to_release = Train(self.i, self.j, self.train_color, Direction.UP)
                 State.trains.append(train_to_release)
                 State.train_sprites.add(train_to_release)
-                self.number_of_trains_to_release -= 1
+                self.number_of_trains -= 1
                 self.departures.pop().kill() # Remove from list and kill the departure sprite.
                 logger.debug("Train released.")
                 self.last_release_tick = State.current_tick
                 Sound.play_sound_on_channel(Sound.pop, 1)
+                logger.info(f"Departure station saveable attributes: {self.saveable_attributes.serialize()}")
 
 
     def reset(self):
         if not self.is_reset:
-            self.number_of_trains_to_release = self.original_number_of_trains_to_release
+            self.number_of_trains = self.original_number_of_trains_to_release
             self.departure_sprites.empty()
             self.create_departure_sprites()
             self.is_reset = True
             self.last_release_tick = None
 
     def create_departure_sprites(self):
-        self.departures = [DepartureSprite("blue", i+1, self.rect) for i in range(self.number_of_trains_to_release)]
+        self.departures = [DepartureSprite("blue", i+1, self.rect) for i in range(self.number_of_trains)]
         self.departure_sprites.add(self.departures)
 
 
 
 class ArrivalStation(pg.sprite.Sprite):
-    def __init__(self, i: int, j: int, angle: int, number_of_trains_to_catch: int, train_color: TrainColor):
+    def __init__(self, i: int, j: int, angle: int, number_of_trains: int, train_color: TrainColor):
         super().__init__()
         self.i = i
         self.j = j
         self.angle = angle
-        self.number_of_trains_to_catch = number_of_trains_to_catch
+        self.number_of_trains = number_of_trains
         self.train_color = train_color
 
-        self.original_number_of_trains_to_catch = number_of_trains_to_catch
+        self.original_number_of_trains = number_of_trains
 
         self.image = pg.transform.rotate(Resources.img_surfaces["arrival"], self.angle)
 
@@ -94,12 +97,14 @@ class ArrivalStation(pg.sprite.Sprite):
 
         self.is_reset = False
 
+        self.saveable_attributes = SaveableAttributes(self)
+
     def handle_train_arrival(self, train):
-        if train.color == self.train_color and self.arrivals and self.number_of_trains_to_catch > 0:
+        if train.color == self.train_color and self.arrivals and self.number_of_trains > 0:
             self.is_reset = False
-            self.number_of_trains_to_catch -= 1
+            self.number_of_trains -= 1
             self.arrivals.pop().kill()
-            logger.debug(f"Caught a train! Number of trains still expecting: {self.number_of_trains_to_catch}")
+            logger.debug(f"Caught a train! Number of trains still expecting: {self.number_of_trains}")
             Sound.play_sound_on_channel(Sound.pop, 1)
         else:
             logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
@@ -111,12 +116,45 @@ class ArrivalStation(pg.sprite.Sprite):
 
     def reset(self):
         if not self.is_reset:
-            self.number_of_trains_to_catch = self.original_number_of_trains_to_catch
+            self.number_of_trains = self.original_number_of_trains
             self.arrival_sprites.empty()
             self.create_arrival_sprites()
             self.is_reset = True
 
 
     def create_arrival_sprites(self):
-        self.arrivals = [DepartureSprite("blue", i+1, self.rect) for i in range(self.number_of_trains_to_catch)]
+        self.arrivals = [DepartureSprite("blue", i+1, self.rect) for i in range(self.number_of_trains)]
         self.arrival_sprites.add(self.arrivals)
+
+
+
+
+class SaveableAttributes:
+    block_types = {
+        ArrivalStation: "A",
+        DepartureStation: "D",
+    }
+    block_colors = {
+        TrainColor.BLUE: "b",
+        TrainColor.RED: "r",
+        TrainColor.YELLOW: "y",
+        None: ""
+    }
+    # Example:
+    # TypeNumberColor:Orientation:PosI,PosJ
+    # D1y:90:3,4
+    # E:0:4,4
+    # R:0:6,7
+    # A4r:90:7,7
+    def __init__(self, block):
+        self.type = self.block_types[type(block)]
+        self.color = self.block_colors[None]
+        self.number = None
+        if isinstance(block, (ArrivalStation, DepartureStation)):
+            self.color = self.block_colors[block.train_color]
+            self.number = block.number_of_trains
+        self.orientation = block.angle
+        self.position = (block.i, block.j)
+
+    def serialize(self):
+        return f"{self.type}{self.number}{self.color}:{self.orientation}:{self.position[0]},{self.position[1]}"
