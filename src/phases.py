@@ -229,7 +229,7 @@ def gameplay_phase(field: Field) -> None:
     for train in State.trains:
         if train.rect.colliderect(State.arrival_station):
             State.arrival_station.handle_train_arrival(train)
-            print(f"Arrival station saveable attributes: {State.arrival_station.saveable_attributes.serialize()}")
+            logger.info(f"Arrival station saveable attributes: {State.arrival_station.saveable_attributes.serialize()}")
 
 
     # Draw the train sprites.
@@ -261,7 +261,7 @@ def gameplay_phase(field: Field) -> None:
                 field.place_track_item(TrackType.TOP_LEFT, State.prev_cell)
 
     if not State.level_passed:
-        if State.arrival_station.number_of_trains == 0 and State.trains_crashed == 0 and len(State.trains) == 0:
+        if State.arrival_station.number_of_trains_left == 0 and State.trains_crashed == 0 and len(State.trains) == 0:
             Sound.success.play()
             State.level_passed = True
 
