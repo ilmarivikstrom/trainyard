@@ -16,9 +16,9 @@ from src.utils import setup_logging
 logger = setup_logging(log_level=Config.log_level)
 
 
-def main_menu_phase() -> None:
+def main_menu_phase(field: Field) -> None:
     State.screen_surface.fill(GRAY10)
-    check_events()
+    check_events(field)
     pressed_keys = pg.key.get_pressed()
     if pressed_keys[UserControl.GAMEPLAY]:
         State.game_phase = Phase.GAMEPLAY
@@ -28,8 +28,8 @@ def main_menu_phase() -> None:
         logger.info(f"Moving to state {State.game_phase}")
 
 
-def gameplay_phase() -> None:
-    check_events()
+def gameplay_phase(field: Field) -> None:
+    check_events(field)
     State.update_gameplay_state()
 
     # Check if delete mode, change background color accordingly.
@@ -50,7 +50,7 @@ def gameplay_phase() -> None:
         train.at_endpoint = False
 
     # Iterate over all the cells on the map.
-    for (_, cell) in enumerate(Field.grid):
+    for (_, cell) in enumerate(field.grid):
 
         # 2. Draw track sprites on top of the cells.
         for (_, track) in enumerate(cell.tracks):
@@ -241,24 +241,24 @@ def gameplay_phase() -> None:
 
     # Draw the blob sprites.
     for departure_station in State.departure_stations:
-        departure_station.departure_sprites.draw(State.screen_surface)
-    State.arrival_station.arrival_sprites.draw(State.screen_surface)
+        departure_station.goal_sprites.draw(State.screen_surface)
+    State.arrival_station.goal_sprites.draw(State.screen_surface)
 
     # Place track on the cell based on the mouse movements.
     if State.mouse_pressed[0] and not State.delete_mode and State.prev_cell_needs_checking and not State.trains_released:
         if State.prev_cell is not None and State.curr_cell is not None:
             if (State.prev_movement == Direction.UP and State.curr_movement == Direction.UP) or (State.prev_movement == Direction.DOWN and State.curr_movement == Direction.DOWN):
-                Field.place_track_item(TrackType.VERT, State.prev_cell)
+                field.place_track_item(TrackType.VERT, State.prev_cell)
             elif (State.prev_movement == Direction.RIGHT and State.curr_movement == Direction.RIGHT) or (State.prev_movement == Direction.LEFT and State.curr_movement == Direction.LEFT):
-                Field.place_track_item(TrackType.HORI, State.prev_cell)
+                field.place_track_item(TrackType.HORI, State.prev_cell)
             elif (State.prev_movement == Direction.UP and State.curr_movement == Direction.LEFT) or (State.prev_movement == Direction.RIGHT and State.curr_movement == Direction.DOWN):
-                Field.place_track_item(TrackType.BOTTOM_LEFT, State.prev_cell)
+                field.place_track_item(TrackType.BOTTOM_LEFT, State.prev_cell)
             elif (State.prev_movement == Direction.UP and State.curr_movement == Direction.RIGHT) or (State.prev_movement == Direction.LEFT and State.curr_movement == Direction.DOWN):
-                Field.place_track_item(TrackType.BOTTOM_RIGHT, State.prev_cell)
+                field.place_track_item(TrackType.BOTTOM_RIGHT, State.prev_cell)
             elif (State.prev_movement == Direction.DOWN and State.curr_movement == Direction.RIGHT) or (State.prev_movement == Direction.LEFT and State.curr_movement == Direction.UP):
-                Field.place_track_item(TrackType.TOP_RIGHT, State.prev_cell)
+                field.place_track_item(TrackType.TOP_RIGHT, State.prev_cell)
             elif (State.prev_movement == Direction.DOWN and State.curr_movement == Direction.LEFT) or (State.prev_movement == Direction.RIGHT and State.curr_movement == Direction.UP):
-                Field.place_track_item(TrackType.TOP_LEFT, State.prev_cell)
+                field.place_track_item(TrackType.TOP_LEFT, State.prev_cell)
 
     if not State.level_passed:
         if State.arrival_station.number_of_trains == 0 and State.trains_crashed == 0 and len(State.trains) == 0:
@@ -288,13 +288,13 @@ def exit_phase():
 
 
 # Check basic events, like quit.
-def check_events() -> None:
+def check_events(field: Field) -> None:
     for event in pg.event.get():
         if event.type == QUIT:
             State.game_phase = Phase.GAME_END
             logger.info(f"Moving to state {State.game_phase}")
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 3:
-                for cell in Field.grid:
+                for cell in field.grid:
                     if cell.mouse_on:
                         cell.flip_tracks()

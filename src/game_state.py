@@ -37,7 +37,6 @@ class State:
     trains_crashed = 0
     cell_sprites = pg.sprite.Group()
     train_sprites = pg.sprite.Group()
-    #angular_vel = 0.03125 # With 50.265 ticks per 90 degrees.
     angular_vel = (math.pi / 2) / 48 # With 48 ticks per 90 degrees...
 
     spacebar_down = False

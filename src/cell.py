@@ -10,16 +10,29 @@ from src.utils import setup_logging
 logger = setup_logging(log_level=Config.log_level)
 
 class Cell(pg.sprite.Sprite):
-    def __init__(self, i: int, j: int, color: pg.Color):
+    def __init__(self, i: int, j: int, image: pg.Surface, angle: int):
         super().__init__()
         self.i = i
         self.j = j
-        self.image = Resources.img_surfaces["bg_tile"]
+        self.angle = angle
+        self.image = pg.transform.rotate(image, angle)
         self.rect = self.image.get_rect()
         self.rect.x = i * Config.cell_size + Config.padding_x
         self.rect.y = j * Config.cell_size + Config.padding_y
-
         self.mouse_on = False
+
+    def check_mouse_collision(self):
+        if self.rect.collidepoint(State.mouse_pos):
+            if not self.mouse_on:
+                handle_mouse_cell_enter(self)
+            self.mouse_on = True
+        else:
+            self.mouse_on = False
+
+
+class Empty(Cell):
+    def __init__(self, i: int, j: int):
+        super().__init__(i, j, Resources.img_surfaces["bg_tile"], 0)
         self.tracks = []
 
     def flip_tracks(self):
@@ -29,15 +42,6 @@ class Cell(pg.sprite.Sprite):
             self.tracks.reverse()
             Sound.play_sound_on_channel(Sound.track_flip, 2)
 
-
-    def check_mouse_collision(self):
-        if self.rect.collidepoint(State.mouse_pos):
-            if not self.mouse_on:
-                #logger.debug(f"Mouse entered Cell at {(self.i, self.j)}")
-                handle_mouse_cell_enter(self)
-            self.mouse_on = True
-        else:
-            self.mouse_on = False
 
 
 def handle_mouse_cell_enter(cell) -> None:

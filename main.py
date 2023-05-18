@@ -13,27 +13,31 @@ logger = setup_logging(log_level=Config.log_level)
 
 def main() -> None:
     initial_setup()
+    field = initialize_field()
     clock = pg.time.Clock()
 
     while True:
         State.current_tick += 1
         if State.game_phase == Phase.MAIN_MENU:
-            main_menu_phase()
+            main_menu_phase(field)
         elif State.game_phase == Phase.GAME_END:
             exit_phase()
         elif State.game_phase == Phase.GAMEPLAY:
-            gameplay_phase()
+            gameplay_phase(field)
         pg.display.update()
         clock.tick(Config.FPS)
 
 
 def initial_setup():
     pg.display.set_caption("trainyard")
-    width = Config.screen_width
-    height = Config.screen_height
-    State.screen_surface = pg.display.set_mode((width, height))
+    State.screen_surface = pg.display.set_mode((Config.screen_width, Config.screen_height))
     Resources.load_resources()
-    Field.initialize_grid()
+
+
+def initialize_field() -> Field:
+    field = Field()
+    field.initialize_grid()
+    return field
 
 
 if __name__ == "__main__":
