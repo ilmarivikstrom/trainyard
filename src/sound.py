@@ -1,5 +1,6 @@
 import pygame as pg
 
+
 class Sound:
     pg.mixer.pre_init(44100, -16, 1, 512)
     pg.mixer.init()

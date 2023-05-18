@@ -1,11 +1,13 @@
-from enum import Enum
 import math
+from enum import Enum
+
 import pygame as pg
 
 from src.config import Config
 from src.direction import Direction
 from src.resources import Resources
 from src.sound import Sound
+
 
 class TrainColor(Enum):
     RED = "train_red"
