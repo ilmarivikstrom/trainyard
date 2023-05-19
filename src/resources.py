@@ -1,8 +1,9 @@
+from typing import Dict
 import pygame as pg
 
 
 class Resources:
-    img_surfaces = {}
+    img_surfaces: Dict[str, pg.Surface] = {}
 
     @staticmethod
     def load_resources() -> None:

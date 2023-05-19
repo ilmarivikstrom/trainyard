@@ -22,5 +22,5 @@ class Sound:
     success.set_volume(0.5)
 
     @staticmethod
-    def play_sound_on_channel(sound, channel):
+    def play_sound_on_channel(sound: pg.mixer.Sound, channel: int) -> None:
         pg.mixer.Channel(channel).play(sound)

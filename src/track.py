@@ -1,12 +1,13 @@
 from enum import Enum
+from typing import Dict
 
 import pygame as pg
-import pygame.gfxdraw
+# import pygame.gfxdraw
 
-from src.color_constants import GRAY, RED1, WHITE
+# from src.color_constants import GRAY, RED1, WHITE
 from src.config import Config
 from src.direction import Direction
-from src.game_state import State
+#from src.game_state import State
 from src.resources import Resources
 
 
@@ -38,7 +39,7 @@ class Track(pg.sprite.Sprite):
         self.directions = tracktype_to_direction[track_type]
         self.bright = True
         self.endpoints = [pg.Vector2(0, 0), pg.Vector2(0,0)]
-        self.images = {}
+        self.images: Dict[str, pg.Surface] = {}
 
         if self.track_type == TrackType.VERT:
             self.endpoints = [pg.Vector2(self.cell_rect.midtop), pg.Vector2(self.cell_rect.midbottom)]
@@ -84,26 +85,26 @@ class Track(pg.sprite.Sprite):
         else:
             self.image = self.images["dark"]
 
-    def draw(self) -> None:
-        if self.bright == True:
-            color = WHITE
-        else:
-            color = GRAY
-        if self.image:
-            State.screen_surface.blit(self.image, dest=self.cell_rect)
-        if Config.draw_arcs:
-            if self.track_type == TrackType.VERT:
-                pg.draw.line(State.screen_surface, color, self.cell_rect.midtop, self.cell_rect.midbottom)
-            elif self.track_type == TrackType.HORI:
-                pg.draw.line(State.screen_surface, color, self.cell_rect.midleft, self.cell_rect.midright)
-            elif self.track_type == TrackType.TOP_RIGHT:
-                pygame.gfxdraw.arc(State.screen_surface, self.cell_rect.right, self.cell_rect.top, int(Config.cell_size / 2), 90, 180, color)
-            elif self.track_type == TrackType.TOP_LEFT:
-                pygame.gfxdraw.arc(State.screen_surface, self.cell_rect.left, self.cell_rect.top, int(Config.cell_size / 2), 0, 90, color)
-            elif self.track_type == TrackType.BOTTOM_LEFT:
-                pygame.gfxdraw.arc(State.screen_surface, self.cell_rect.left, self.cell_rect.bottom, int(Config.cell_size / 2), 270, 360, color)
-            elif self.track_type == TrackType.BOTTOM_RIGHT:
-                pygame.gfxdraw.arc(State.screen_surface, self.cell_rect.right, self.cell_rect.bottom, int(Config.cell_size / 2), 180, 270, color)
+    # def draw(self) -> None:
+    #     if self.bright == True:
+    #         color = WHITE
+    #     else:
+    #         color = GRAY
+    #     if self.image:
+    #         State.screen_surface.blit(self.image, dest=self.cell_rect)
+    #     if Config.draw_arcs:
+    #         if self.track_type == TrackType.VERT:
+    #             pg.draw.line(State.screen_surface, color, self.cell_rect.midtop, self.cell_rect.midbottom)
+    #         elif self.track_type == TrackType.HORI:
+    #             pg.draw.line(State.screen_surface, color, self.cell_rect.midleft, self.cell_rect.midright)
+    #         elif self.track_type == TrackType.TOP_RIGHT:
+    #             pygame.gfxdraw.arc(State.screen_surface, self.cell_rect.right, self.cell_rect.top, int(Config.cell_size / 2), 90, 180, color)
+    #         elif self.track_type == TrackType.TOP_LEFT:
+    #             pygame.gfxdraw.arc(State.screen_surface, self.cell_rect.left, self.cell_rect.top, int(Config.cell_size / 2), 0, 90, color)
+    #         elif self.track_type == TrackType.BOTTOM_LEFT:
+    #             pygame.gfxdraw.arc(State.screen_surface, self.cell_rect.left, self.cell_rect.bottom, int(Config.cell_size / 2), 270, 360, color)
+    #         elif self.track_type == TrackType.BOTTOM_RIGHT:
+    #             pygame.gfxdraw.arc(State.screen_surface, self.cell_rect.right, self.cell_rect.bottom, int(Config.cell_size / 2), 180, 270, color)
 
-            for endpoint in self.endpoints:
-                pygame.gfxdraw.pixel(State.screen_surface, int(endpoint.x), int(endpoint.y), RED1)
+    #         for endpoint in self.endpoints:
+    #             pygame.gfxdraw.pixel(State.screen_surface, int(endpoint.x), int(endpoint.y), RED1)

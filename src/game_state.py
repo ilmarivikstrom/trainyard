@@ -1,10 +1,12 @@
 from enum import Enum
+from typing import List, Any
 
 import pygame as pg
 
 from src.config import Config
 from src.controls import UserControl
 from src.sound import Sound
+from src.station import ArrivalStation, DepartureStation
 from src.train import Train, TrainColor
 from src.utils import setup_logging
 
@@ -19,13 +21,13 @@ class Phase(Enum):
 class State:
     game_phase = Phase.MAIN_MENU
     screen_surface = pg.display.set_mode((Config.screen_width, Config.screen_height))
-    trains = []
+    trains: List[Train] = []
     trains_crashed = 0
     cell_sprites = pg.sprite.Group()
     train_sprites = pg.sprite.Group()
     trains_released = False
-    departure_stations = []
-    arrival_stations = []
+    departure_stations: List[DepartureStation] = []
+    arrival_stations: List[ArrivalStation]= []
     departure_station_sprites = pg.sprite.Group()
     arrival_station_sprites = pg.sprite.Group()
     current_tick = 0

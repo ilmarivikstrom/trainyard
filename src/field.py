@@ -1,6 +1,8 @@
+from typing import List
+
 import pygame as pg
 
-from src.cell import Empty
+from src.cell import EmptyCell
 from src.config import Config
 from src.direction import Direction
 from src.game_state import State
@@ -18,12 +20,12 @@ class Field:
         self.cells_y = Config.cells_y
         self.width_px = self.cells_x * Config.cell_size
         self.height_px = self.cells_y * Config.cell_size
-        self.grid = []
+        self.grid: List[EmptyCell] = []
 
     def initialize_grid(self) -> None:
         for j in range(0, self.cells_y):
             for i in range(0, self.cells_x):
-                empty_cell = Empty(i, j)
+                empty_cell = EmptyCell(i, j)
                 self.grid.append(empty_cell)
                 State.cell_sprites.add(empty_cell)
                 # Add some stations. Manually, for now...
@@ -51,7 +53,7 @@ class Field:
     def _get_empty_cell_index(self, i: int = 0, j: int = 0) -> int:
         return int(j) * self.cells_y + int(i)
 
-    def get_empty_cell_at(self, i: int, j: int) -> Empty:
+    def get_empty_cell_at(self, i: int, j: int) -> EmptyCell:
         return self.grid[self._get_empty_cell_index(i, j)]
 
     def place_track_item(
@@ -60,16 +62,16 @@ class Field:
             pos: pg.Vector2
     ) -> None:
         logger.info("Called set_grid_track_item")
-        cell = self.get_empty_cell_at(round(pos.x), round(pos.y))
-        if cell.rect:
-            track_to_be_added = Track(round(pos.x), round(pos.y), cell.rect, requested_tracktype)
-            if requested_tracktype in [existing_track.track_type for existing_track in cell.tracks]:
-                cell.tracks.clear()
-                cell.tracks.append(track_to_be_added)
+        empty_cell = self.get_empty_cell_at(round(pos.x), round(pos.y))
+        if empty_cell.rect:
+            track_to_be_added = Track(round(pos.x), round(pos.y), empty_cell.rect, requested_tracktype)
+            if requested_tracktype in [existing_track.track_type for existing_track in empty_cell.tracks]:
+                empty_cell.tracks.clear()
+                empty_cell.tracks.append(track_to_be_added)
             else:
-                cell.tracks.append(track_to_be_added)
-                cell.tracks = cell.tracks[-2:]
-            if len(cell.tracks) > 1:
-                cell.tracks[0].bright = False
-                cell.tracks[0].image = cell.tracks[0].images["dark"]
+                empty_cell.tracks.append(track_to_be_added)
+                empty_cell.tracks = empty_cell.tracks[-2:]
+            if len(empty_cell.tracks) > 1:
+                empty_cell.tracks[0].bright = False
+                empty_cell.tracks[0].image = empty_cell.tracks[0].images["dark"]
             State.prev_cell_needs_checking = False
