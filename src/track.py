@@ -37,7 +37,7 @@ class Track(pg.sprite.Sprite):
         self.track_type = track_type
         self.directions = tracktype_to_direction[track_type]
         self.bright = True
-        self.endpoints = pg.Vector2(0, 0)
+        self.endpoints = [pg.Vector2(0, 0), pg.Vector2(0,0)]
         self.images = {}
 
         if self.track_type == TrackType.VERT:
@@ -70,24 +70,27 @@ class Track(pg.sprite.Sprite):
             self.images["bright"] = Resources.img_surfaces["track_c_bright"]
             self.images["dark"] = Resources.img_surfaces["track_c_dark"]
             self.image = self.images["bright"]
+        else:
+            raise ValueError("Track type not recognized.")
 
         self.rect = self.image.get_rect()
         self.rect.x = self.cell_rect.x
         self.rect.y = self.cell_rect.y
 
-    def toggle_bright(self):
+    def toggle_bright(self) -> None:
         self.bright = not self.bright
         if self.bright:
             self.image = self.images["bright"]
         else:
             self.image = self.images["dark"]
 
-    def draw(self):
+    def draw(self) -> None:
         if self.bright == True:
             color = WHITE
         else:
             color = GRAY
-        State.screen_surface.blit(self.image, dest=self.cell_rect)
+        if self.image:
+            State.screen_surface.blit(self.image, dest=self.cell_rect)
         if Config.draw_arcs:
             if self.track_type == TrackType.VERT:
                 pg.draw.line(State.screen_surface, color, self.cell_rect.midtop, self.cell_rect.midbottom)

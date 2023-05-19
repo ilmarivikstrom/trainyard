@@ -48,11 +48,11 @@ class Field:
         State.departure_station_sprites.add(State.departure_stations)
         State.arrival_station_sprites.add(State.arrival_stations)
 
-    def _get_cell_index(self, i: int = 0, j: int = 0) -> int:
+    def _get_empty_cell_index(self, i: int = 0, j: int = 0) -> int:
         return int(j) * self.cells_y + int(i)
 
-    def get_cell_at(self, i: int, j: int):
-        return self.grid[self._get_cell_index(i, j)]
+    def get_empty_cell_at(self, i: int, j: int) -> Empty:
+        return self.grid[self._get_empty_cell_index(i, j)]
 
     def place_track_item(
             self,
@@ -60,15 +60,16 @@ class Field:
             pos: pg.Vector2
     ) -> None:
         logger.info("Called set_grid_track_item")
-        cell = self.get_cell_at(pos.x, pos.y)
-        track_to_be_added = Track(pos.x, pos.y, cell.rect, requested_tracktype)
-        if requested_tracktype in [existing_track.track_type for existing_track in cell.tracks]:
-            cell.tracks.clear()
-            cell.tracks.append(track_to_be_added)
-        else:
-            cell.tracks.append(track_to_be_added)
-            cell.tracks = cell.tracks[-2:]
-        if len(cell.tracks) > 1:
-            cell.tracks[0].bright = False
-            cell.tracks[0].image = cell.tracks[0].images["dark"]
-        State.prev_cell_needs_checking = False
+        cell = self.get_empty_cell_at(round(pos.x), round(pos.y))
+        if cell.rect:
+            track_to_be_added = Track(round(pos.x), round(pos.y), cell.rect, requested_tracktype)
+            if requested_tracktype in [existing_track.track_type for existing_track in cell.tracks]:
+                cell.tracks.clear()
+                cell.tracks.append(track_to_be_added)
+            else:
+                cell.tracks.append(track_to_be_added)
+                cell.tracks = cell.tracks[-2:]
+            if len(cell.tracks) > 1:
+                cell.tracks[0].bright = False
+                cell.tracks[0].image = cell.tracks[0].images["dark"]
+            State.prev_cell_needs_checking = False

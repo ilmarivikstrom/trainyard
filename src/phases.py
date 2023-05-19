@@ -8,8 +8,9 @@ from src.color_constants import (DELETE_MODE_BG_COLOR, GRAY10,
                                  NORMAL_MODE_BG_COLOR, WHITESMOKE)
 from src.config import Config
 from src.controls import UserControl
+from src.direction import Direction
 from src.field import Field, TrackType
-from src.game_state import Direction, Phase, State
+from src.game_state import Phase, State
 from src.resources import Resources
 from src.sound import Sound
 from src.utils import setup_logging
@@ -40,9 +41,6 @@ def gameplay_phase(field: Field) -> None:
         State.screen_surface.fill(NORMAL_MODE_BG_COLOR)
 
     # Blit the color gradient on top of the base layer.
-    #State.gradient_dest = (-640 + 640 * math.sin(State.current_tick * 0.005), -360 + 360 * math.cos(State.current_tick * 0.005))
-    #State.screen_surface.blit(Resources.img_surfaces["gradient"], dest=State.gradient_dest)
-
     State.day_cycle_dest = [-State.current_tick * 0.1, 0]
     State.screen_surface.blit(Resources.img_surfaces["day_cycle"], dest=State.day_cycle_dest)
 
@@ -132,15 +130,15 @@ def gameplay_phase(field: Field) -> None:
                         # If the selected track is top-right.
                         elif train.selected_track.track_type == TrackType.TOP_RIGHT:
                             if train.direction == Direction.LEFT:
-                                train.angle -= State.angular_vel
-                                if train.angle <= math.radians(90) + 0.5 * State.angular_vel:
+                                train.angle -= Config.angular_vel
+                                if train.angle <= math.radians(90) + 0.5 * Config.angular_vel:
                                     train.direction = Direction.UP
                                     train.angle = math.radians(90)
                                     train.rect.center = pg.Vector2(cell.rect.midtop)
                                     train.pos = pg.Vector2(train.rect.topleft)
                             elif train.direction == Direction.DOWN:
-                                train.angle += State.angular_vel
-                                if train.angle >= math.radians(360) - 0.5 * State.angular_vel:
+                                train.angle += Config.angular_vel
+                                if train.angle >= math.radians(360) - 0.5 * Config.angular_vel:
                                     train.direction = Direction.RIGHT
                                     train.angle = math.radians(0)
                                     train.rect.center = pg.Vector2(cell.rect.midright)
@@ -148,15 +146,15 @@ def gameplay_phase(field: Field) -> None:
                         # If the selected track is top-left.
                         elif train.selected_track.track_type == TrackType.TOP_LEFT:
                             if train.direction == Direction.RIGHT:
-                                train.angle += State.angular_vel
-                                if train.angle >= math.radians(90) - 0.5 * State.angular_vel:
+                                train.angle += Config.angular_vel
+                                if train.angle >= math.radians(90) - 0.5 * Config.angular_vel:
                                     train.direction = Direction.UP
                                     train.angle = math.radians(90)
                                     train.rect.center = pg.Vector2(cell.rect.midtop)
                                     train.pos = pg.Vector2(train.rect.topleft)
                             elif train.direction == Direction.DOWN:
-                                train.angle -= State.angular_vel
-                                if train.angle <= math.radians(180) + 0.5 * State.angular_vel:
+                                train.angle -= Config.angular_vel
+                                if train.angle <= math.radians(180) + 0.5 * Config.angular_vel:
                                     train.direction = Direction.LEFT
                                     train.angle = math.radians(180)
                                     train.rect.center = pg.Vector2(cell.rect.midleft)
@@ -164,15 +162,15 @@ def gameplay_phase(field: Field) -> None:
                         # If the selected track is bottom-left.
                         elif train.selected_track.track_type == TrackType.BOTTOM_LEFT:
                             if train.direction == Direction.RIGHT:
-                                train.angle -= State.angular_vel
-                                if train.angle <= math.radians(-90) + 0.5 * State.angular_vel:
+                                train.angle -= Config.angular_vel
+                                if train.angle <= math.radians(-90) + 0.5 * Config.angular_vel:
                                     train.direction = Direction.DOWN
                                     train.angle = math.radians(270)
                                     train.rect.center = pg.Vector2(cell.rect.midbottom)
                                     train.pos = pg.Vector2(train.rect.topleft)
                             elif train.direction == Direction.UP:
-                                train.angle += State.angular_vel
-                                if train.angle >= math.radians(180) - 0.5 * State.angular_vel:
+                                train.angle += Config.angular_vel
+                                if train.angle >= math.radians(180) - 0.5 * Config.angular_vel:
                                     train.direction = Direction.LEFT
                                     train.angle = math.radians(180)
                                     train.rect.center = pg.Vector2(cell.rect.midleft)
@@ -180,15 +178,15 @@ def gameplay_phase(field: Field) -> None:
                         # If the selected track is bottom-right.
                         elif train.selected_track.track_type == TrackType.BOTTOM_RIGHT:
                             if train.direction == Direction.LEFT:
-                                train.angle += State.angular_vel
-                                if train.angle >= math.radians(270) - 0.5 * State.angular_vel:
+                                train.angle += Config.angular_vel
+                                if train.angle >= math.radians(270) - 0.5 * Config.angular_vel:
                                     train.direction = Direction.DOWN
                                     train.angle = math.radians(270)
                                     train.rect.center = pg.Vector2(cell.rect.midbottom)
                                     train.pos = pg.Vector2(train.rect.topleft)
                             elif train.direction == Direction.UP:
-                                train.angle -= State.angular_vel
-                                if train.angle <= math.radians(0) + 0.5 * State.angular_vel:
+                                train.angle -= Config.angular_vel
+                                if train.angle <= math.radians(0) + 0.5 * Config.angular_vel:
                                     train.direction = Direction.RIGHT
                                     train.angle = math.radians(0)
                                     train.rect.center = pg.Vector2(cell.rect.midright)

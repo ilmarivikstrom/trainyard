@@ -1,11 +1,9 @@
-import math
 from enum import Enum
 
 import pygame as pg
 
 from src.config import Config
 from src.controls import UserControl
-from src.direction import Direction
 from src.sound import Sound
 from src.train import Train, TrainColor
 from src.utils import setup_logging
@@ -20,34 +18,21 @@ class Phase(Enum):
 
 class State:
     game_phase = Phase.MAIN_MENU
-    screen_surface = None
-
-    curr_cell = pg.Vector2(-1, -1)
-    prev_cell = pg.Vector2(-1, -1)
-    prev_cell_needs_checking = False
-    curr_movement = Direction.NONE
-    prev_movement = Direction.NONE
-
+    screen_surface = pg.display.set_mode((Config.screen_width, Config.screen_height))
     trains = []
     trains_crashed = 0
     cell_sprites = pg.sprite.Group()
     train_sprites = pg.sprite.Group()
-    angular_vel = (math.pi / 2) / 48 # With 48 ticks per 90 degrees...
-
     trains_released = False
-
     departure_stations = []
     arrival_stations = []
     departure_station_sprites = pg.sprite.Group()
     arrival_station_sprites = pg.sprite.Group()
-
     current_tick = 0
-
     level_passed = False
-
     gradient_dest = (0, 0)
-
     day_cycle_dest = [0, 0]
+    prev_cell_needs_checking = False
 
     @staticmethod
     def update_gameplay_state() -> None:

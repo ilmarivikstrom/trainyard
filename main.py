@@ -29,7 +29,6 @@ def main() -> None:
 
 def initial_setup():
     pg.display.set_caption("trainyard")
-    State.screen_surface = pg.display.set_mode((Config.screen_width, Config.screen_height))
     Resources.load_resources()
 
 

@@ -30,10 +30,10 @@ class Train(pg.sprite.Sprite):
 
         self.original_direction = direction
 
-        self.image = Resources.img_surfaces[color.value]
-        self.original_image = self.image
-        self.rect = self.image.get_rect()
-        self.rect.x = i * Config.cell_size - 0.5 * Config.cell_size + Config.padding_x + 48
+        self.image: pg.Surface = Resources.img_surfaces[color.value]
+        self.original_image: pg.Surface = self.image
+        self.rect: pg.Rect = self.image.get_rect()
+        self.rect.x = int(i * Config.cell_size - 0.5 * Config.cell_size + Config.padding_x + 48)
         self.rect.y = j * Config.cell_size + Config.padding_y + 16
         self.pos = pg.Vector2(float(self.rect.x), float(self.rect.y))
 
@@ -53,8 +53,8 @@ class Train(pg.sprite.Sprite):
     def reset(self) -> None:
         self.pos = self.original_pos.copy()
         self.image = self.original_image
-        self.rect.x = self.pos.x
-        self.rect.y = self.pos.y
+        self.rect.x = round(self.pos.x)
+        self.rect.y = round(self.pos.y)
         self.angle = 0
         self.direction = self.original_direction
         self.last_collided_cells = []
@@ -82,12 +82,12 @@ class Train(pg.sprite.Sprite):
         self.image = self.rot_center(self.angle)
         self.pos.x = self.pos.x + self.base_speed * math.cos(self.angle)
         self.pos.y = self.pos.y - self.base_speed * math.sin(self.angle)
-        self.rect.x = self.pos.x
-        self.rect.y = self.pos.y
+        self.rect.x = round(self.pos.x)
+        self.rect.y = round(self.pos.y)
         self.is_reset = False
 
 
-    def update(self, train_go):
+    def update(self, train_go: bool) -> None:
         if not self.on_track:
             self.base_speed = 0
         else:
@@ -97,7 +97,7 @@ class Train(pg.sprite.Sprite):
         else:
             self.move()
 
-    def crash(self):
+    def crash(self) -> None:
         self.on_track = False
         self.selected_track = None
         self.crashed = True

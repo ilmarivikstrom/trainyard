@@ -23,12 +23,13 @@ class Cell(pg.sprite.Sprite):
         self.mouse_on = False
 
     def check_mouse_collision(self):
-        if self.rect.collidepoint(UserControl.mouse_pos):
-            if not self.mouse_on:
-                handle_mouse_cell_enter(self)
-            self.mouse_on = True
-        else:
-            self.mouse_on = False
+        if self.rect: # Rect is Optional by design.
+            if self.rect.collidepoint(UserControl.mouse_pos):
+                if not self.mouse_on:
+                    handle_mouse_cell_enter(self)
+                self.mouse_on = True
+            else:
+                self.mouse_on = False
 
 
 class Empty(Cell):
@@ -76,7 +77,7 @@ def handle_mouse_cell_enter(cell) -> None:
     ):
         UserControl.curr_movement = Direction.UP
     else:
-        UserControl.curr_movement = None
+        UserControl.curr_movement = Direction.NONE
         logger.info(
             f"Mouse warped. Prev: ({UserControl.prev_cell.x}, {UserControl.prev_cell.y}), current: ({UserControl.curr_cell.x}, {UserControl.curr_cell.y})"
         )
