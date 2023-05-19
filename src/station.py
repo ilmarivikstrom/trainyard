@@ -37,8 +37,16 @@ class Station(Cell):
             goal_sprite_color = "blue"
         elif self.train_color == TrainColor.RED:
             goal_sprite_color = "red"
-        else:
+        elif self.train_color == TrainColor.YELLOW:
             goal_sprite_color = "yellow"
+        elif self.train_color == TrainColor.ORANGE:
+            goal_sprite_color = "orange"
+        elif self.train_color == TrainColor.GREEN:
+            goal_sprite_color = "green"
+        elif self.train_color == TrainColor.PURPLE:
+            goal_sprite_color = "purple"
+        else:
+            raise ValueError(f"Missing goal sprite string for color {self.train_color}")
         self.goals = [StationGoalSprite(goal_sprite_color, i+1, self.rect) for i in range(self.number_of_trains_left)]
         self.goal_sprites.add(self.goals)
 

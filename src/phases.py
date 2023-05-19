@@ -43,7 +43,7 @@ def gameplay_phase(field: Field) -> None:
     #State.gradient_dest = (-640 + 640 * math.sin(State.current_tick * 0.005), -360 + 360 * math.cos(State.current_tick * 0.005))
     #State.screen_surface.blit(Resources.img_surfaces["gradient"], dest=State.gradient_dest)
 
-    State.day_cycle_dest = [-State.current_tick * 5, 0]
+    State.day_cycle_dest = [-State.current_tick * 0.1, 0]
     State.screen_surface.blit(Resources.img_surfaces["day_cycle"], dest=State.day_cycle_dest)
 
     # 1. Draw cell sprites.
@@ -204,7 +204,7 @@ def gameplay_phase(field: Field) -> None:
         # Update the cell according to mouse position.
         cell.check_mouse_collision()
         # If mouse is on the cell, the mouse is pressed, and the delete mode is on.
-        if cell.mouse_on and State.mouse_pressed[0] and State.delete_mode and not State.trains_released:
+        if cell.mouse_on and UserControl.mouse_pressed[0] and UserControl.delete_mode and not State.trains_released:
             cell.tracks.clear()
 
 
@@ -217,11 +217,7 @@ def gameplay_phase(field: Field) -> None:
         if train_1.pos in other_trains_pos_dict.values():
             train_2 = [key for key, val in other_trains_pos_dict.items() if val == train_1.pos][0]
             if train_1.direction == train_2.direction:
-                if train_1.color == train_2.color:
-                    State.merge_trains(train_1, train_2)
-                else:
-                    train_1.crash()
-                    train_2.crash()
+                State.merge_trains(train_1, train_2)
 
 
     # Delete trains if 'crashed'.
@@ -259,20 +255,20 @@ def gameplay_phase(field: Field) -> None:
         arrival_station.goal_sprites.draw(State.screen_surface)
 
     # Place track on the cell based on the mouse movements.
-    if State.mouse_pressed[0] and not State.delete_mode and State.prev_cell_needs_checking and not State.trains_released:
-        if State.prev_cell is not None and State.curr_cell is not None:
-            if (State.prev_movement == Direction.UP and State.curr_movement == Direction.UP) or (State.prev_movement == Direction.DOWN and State.curr_movement == Direction.DOWN):
-                field.place_track_item(TrackType.VERT, State.prev_cell)
-            elif (State.prev_movement == Direction.RIGHT and State.curr_movement == Direction.RIGHT) or (State.prev_movement == Direction.LEFT and State.curr_movement == Direction.LEFT):
-                field.place_track_item(TrackType.HORI, State.prev_cell)
-            elif (State.prev_movement == Direction.UP and State.curr_movement == Direction.LEFT) or (State.prev_movement == Direction.RIGHT and State.curr_movement == Direction.DOWN):
-                field.place_track_item(TrackType.BOTTOM_LEFT, State.prev_cell)
-            elif (State.prev_movement == Direction.UP and State.curr_movement == Direction.RIGHT) or (State.prev_movement == Direction.LEFT and State.curr_movement == Direction.DOWN):
-                field.place_track_item(TrackType.BOTTOM_RIGHT, State.prev_cell)
-            elif (State.prev_movement == Direction.DOWN and State.curr_movement == Direction.RIGHT) or (State.prev_movement == Direction.LEFT and State.curr_movement == Direction.UP):
-                field.place_track_item(TrackType.TOP_RIGHT, State.prev_cell)
-            elif (State.prev_movement == Direction.DOWN and State.curr_movement == Direction.LEFT) or (State.prev_movement == Direction.RIGHT and State.curr_movement == Direction.UP):
-                field.place_track_item(TrackType.TOP_LEFT, State.prev_cell)
+    if UserControl.mouse_pressed[0] and not UserControl.delete_mode and State.prev_cell_needs_checking and not State.trains_released:
+        if UserControl.prev_cell is not None and UserControl.curr_cell is not None:
+            if (UserControl.prev_movement == Direction.UP and UserControl.curr_movement == Direction.UP) or (UserControl.prev_movement == Direction.DOWN and UserControl.curr_movement == Direction.DOWN):
+                field.place_track_item(TrackType.VERT, UserControl.prev_cell)
+            elif (UserControl.prev_movement == Direction.RIGHT and UserControl.curr_movement == Direction.RIGHT) or (UserControl.prev_movement == Direction.LEFT and UserControl.curr_movement == Direction.LEFT):
+                field.place_track_item(TrackType.HORI, UserControl.prev_cell)
+            elif (UserControl.prev_movement == Direction.UP and UserControl.curr_movement == Direction.LEFT) or (UserControl.prev_movement == Direction.RIGHT and UserControl.curr_movement == Direction.DOWN):
+                field.place_track_item(TrackType.BOTTOM_LEFT, UserControl.prev_cell)
+            elif (UserControl.prev_movement == Direction.UP and UserControl.curr_movement == Direction.RIGHT) or (UserControl.prev_movement == Direction.LEFT and UserControl.curr_movement == Direction.DOWN):
+                field.place_track_item(TrackType.BOTTOM_RIGHT, UserControl.prev_cell)
+            elif (UserControl.prev_movement == Direction.DOWN and UserControl.curr_movement == Direction.RIGHT) or (UserControl.prev_movement == Direction.LEFT and UserControl.curr_movement == Direction.UP):
+                field.place_track_item(TrackType.TOP_RIGHT, UserControl.prev_cell)
+            elif (UserControl.prev_movement == Direction.DOWN and UserControl.curr_movement == Direction.LEFT) or (UserControl.prev_movement == Direction.RIGHT and UserControl.curr_movement == Direction.UP):
+                field.place_track_item(TrackType.TOP_LEFT, UserControl.prev_cell)
 
     if not State.level_passed:
         arrival_stations_pending = False
@@ -284,7 +280,7 @@ def gameplay_phase(field: Field) -> None:
             State.level_passed = True
 
     # Go back to main menu if requested by the user.
-    if State.pressed_keys[UserControl.MAIN_MENU]:
+    if UserControl.pressed_keys[UserControl.MAIN_MENU]:
         State.trains_released = False
         for train in State.trains:
             train.reset()

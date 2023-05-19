@@ -15,7 +15,7 @@ class TrainColor(Enum):
     YELLOW = "train_yellow"
 
     ORANGE = "train_orange"
-    VIOLET = "train_violet"
+    PURPLE = "train_purple"
     GREEN = "train_green"
 
 
@@ -46,13 +46,11 @@ class Train(pg.sprite.Sprite):
         self.track_ahead = []
         self.selected_track = None
         self.is_reset = True
-
         self.original_pos = self.pos.copy()
-
         self.crashed = False
 
 
-    def reset(self):
+    def reset(self) -> None:
         self.pos = self.original_pos.copy()
         self.image = self.original_image
         self.rect.x = self.pos.x
@@ -64,7 +62,14 @@ class Train(pg.sprite.Sprite):
         self.is_reset = True
 
 
-    def rot_center(self, angle):
+    def paint(self, train_color: TrainColor) -> None:
+        self.color = train_color
+        self.image = Resources.img_surfaces[self.color.value]
+        self.original_image = self.image
+
+
+
+    def rot_center(self, angle: float) -> pg.Surface:
         """rotate an image while keeping its center and size"""
         orig_rect = self.original_image.get_rect()
         rot_image = pg.transform.rotate(self.original_image, angle * 180 / math.pi)
@@ -73,7 +78,7 @@ class Train(pg.sprite.Sprite):
         rot_image = rot_image.subsurface(rot_rect).copy()
         return rot_image
 
-    def move(self):
+    def move(self) -> None:
         self.image = self.rot_center(self.angle)
         self.pos.x = self.pos.x + self.base_speed * math.cos(self.angle)
         self.pos.y = self.pos.y - self.base_speed * math.sin(self.angle)

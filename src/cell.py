@@ -1,6 +1,7 @@
 import pygame as pg
 
 from src.config import Config
+from src.controls import UserControl
 from src.direction import Direction
 from src.game_state import State
 from src.resources import Resources
@@ -22,7 +23,7 @@ class Cell(pg.sprite.Sprite):
         self.mouse_on = False
 
     def check_mouse_collision(self):
-        if self.rect.collidepoint(State.mouse_pos):
+        if self.rect.collidepoint(UserControl.mouse_pos):
             if not self.mouse_on:
                 handle_mouse_cell_enter(self)
             self.mouse_on = True
@@ -45,37 +46,37 @@ class Empty(Cell):
 
 
 def handle_mouse_cell_enter(cell) -> None:
-    previous_cell = State.curr_cell
+    previous_cell = UserControl.curr_cell
     State.prev_cell_needs_checking = True
-    State.prev_cell = previous_cell
-    State.curr_cell = pg.Vector2(cell.i, cell.j)
-    State.prev_movement = State.curr_movement
+    UserControl.prev_cell = previous_cell
+    UserControl.curr_cell = pg.Vector2(cell.i, cell.j)
+    UserControl.prev_movement = UserControl.curr_movement
 
     if (
-        State.prev_cell is None
-        or State.prev_cell.x is None
-        or State.prev_cell.y is None
+        UserControl.prev_cell is None
+        or UserControl.prev_cell.x is None
+        or UserControl.prev_cell.y is None
     ):
         logger.warning("Previous mouse cell was None. Returning from mouse handling.")
         return
-    if (State.curr_cell.x - State.prev_cell.x == 1) and (
-        State.curr_cell.y == State.prev_cell.y
+    if (UserControl.curr_cell.x - UserControl.prev_cell.x == 1) and (
+        UserControl.curr_cell.y == UserControl.prev_cell.y
     ):
-        State.curr_movement = Direction.RIGHT
+        UserControl.curr_movement = Direction.RIGHT
     elif (
-        State.curr_cell.x - State.prev_cell.x == -1
-    ) and (State.curr_cell.y == State.prev_cell.y):
-        State.curr_movement = Direction.LEFT
-    elif (State.curr_cell.x == State.prev_cell.x) and (
-        State.curr_cell.y - State.prev_cell.y == 1
+        UserControl.curr_cell.x - UserControl.prev_cell.x == -1
+    ) and (UserControl.curr_cell.y == UserControl.prev_cell.y):
+        UserControl.curr_movement = Direction.LEFT
+    elif (UserControl.curr_cell.x == UserControl.prev_cell.x) and (
+        UserControl.curr_cell.y - UserControl.prev_cell.y == 1
     ):
-        State.curr_movement = Direction.DOWN
-    elif (State.curr_cell.x == State.prev_cell.x) and (
-        State.curr_cell.y - State.prev_cell.y == -1
+        UserControl.curr_movement = Direction.DOWN
+    elif (UserControl.curr_cell.x == UserControl.prev_cell.x) and (
+        UserControl.curr_cell.y - UserControl.prev_cell.y == -1
     ):
-        State.curr_movement = Direction.UP
+        UserControl.curr_movement = Direction.UP
     else:
-        State.curr_movement = None
+        UserControl.curr_movement = None
         logger.info(
-            f"Mouse warped. Prev: ({State.prev_cell.x}, {State.prev_cell.y}), current: ({State.curr_cell.x}, {State.curr_cell.y})"
+            f"Mouse warped. Prev: ({UserControl.prev_cell.x}, {UserControl.prev_cell.y}), current: ({UserControl.curr_cell.x}, {UserControl.curr_cell.y})"
         )
