@@ -4,7 +4,6 @@ import pygame as pg
 from src.config import Config
 from src.controls import UserControl
 from src.direction import Direction
-#from src.game_state import State
 from src.resources import Resources
 from src.sound import Sound
 from src.track import Track

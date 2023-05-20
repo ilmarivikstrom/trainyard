@@ -1,8 +1,6 @@
 from collections import OrderedDict, namedtuple
 
 Color = namedtuple("RGB", "red, green, blue")
-colors = {}  # dict of colors
-
 
 class RGB(Color):
     def hex_format(self):
@@ -133,7 +131,6 @@ DEEPSKYBLUE1 = RGB(0, 191, 255)
 DEEPSKYBLUE2 = RGB(0, 178, 238)
 DEEPSKYBLUE3 = RGB(0, 154, 205)
 DEEPSKYBLUE4 = RGB(0, 104, 139)
-DIMGRAY = RGB(105, 105, 105)
 DIMGRAY = RGB(105, 105, 105)
 DODGERBLUE1 = RGB(30, 144, 255)
 DODGERBLUE2 = RGB(28, 134, 238)
@@ -273,7 +270,6 @@ HOTPINK1 = RGB(255, 110, 180)
 HOTPINK2 = RGB(238, 106, 167)
 HOTPINK3 = RGB(205, 96, 144)
 HOTPINK4 = RGB(139, 58, 98)
-INDIANRED = RGB(176, 23, 31)
 INDIANRED = RGB(205, 92, 92)
 INDIANRED1 = RGB(255, 106, 106)
 INDIANRED2 = RGB(238, 99, 99)
@@ -562,11 +558,12 @@ WHEAT3 = RGB(205, 186, 150)
 WHEAT4 = RGB(139, 126, 102)
 WHITE = RGB(255, 255, 255)
 WHITESMOKE = RGB(245, 245, 245)
-WHITESMOKE = RGB(245, 245, 245)
 YELLOW1 = RGB(255, 255, 0)
 YELLOW2 = RGB(238, 238, 0)
 YELLOW3 = RGB(205, 205, 0)
 YELLOW4 = RGB(139, 139, 0)
+
+colors = {}
 
 # Add colors to colors dictionary
 colors["aliceblue"] = ALICEBLUE
@@ -1123,4 +1120,5 @@ colors["yellow1"] = YELLOW1
 colors["yellow2"] = YELLOW2
 colors["yellow3"] = YELLOW3
 colors["yellow4"] = YELLOW4
+
 colors = OrderedDict(sorted(colors.items(), key=lambda t: t[0]))

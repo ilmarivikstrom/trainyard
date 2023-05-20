@@ -1,12 +1,15 @@
 import math
 from enum import Enum
+from typing import List, Optional
 
 import pygame as pg
 
+from src.field import EmptyCell
 from src.config import Config
 from src.direction import Direction
 from src.resources import Resources
 from src.sound import Sound
+from src.track import Track
 
 
 class TrainColor(Enum):
@@ -32,19 +35,19 @@ class Train(pg.sprite.Sprite):
 
         self.image: pg.Surface = Resources.img_surfaces[color.value]
         self.original_image: pg.Surface = self.image
-        self.rect: pg.Rect = self.image.get_rect()
+        self.rect: pg.Rect = self.image.get_rect() # type: ignore
         self.rect.x = int(i * Config.cell_size - 0.5 * Config.cell_size + Config.padding_x + 48)
         self.rect.y = j * Config.cell_size + Config.padding_y + 16
-        self.pos = pg.Vector2(float(self.rect.x), float(self.rect.y))
+        self.pos: pg.Vector2 = pg.Vector2(float(self.rect.x), float(self.rect.y))
 
         self.angle = 0 * math.pi / 2
         self.base_speed = 1
         self.on_track = False
         self.at_endpoint = False
-        self.last_collided_cells = []
-        self.last_flipped_cell = None
-        self.track_ahead = []
-        self.selected_track = None
+        self.last_collided_cells: List[EmptyCell] = []
+        self.last_flipped_cell: Optional[EmptyCell] = None
+        self.tracks_ahead: List[Track] = []
+        self.selected_track: Optional[Track] = None
         self.is_reset = True
         self.original_pos = self.pos.copy()
         self.crashed = False
@@ -79,7 +82,7 @@ class Train(pg.sprite.Sprite):
         return rot_image
 
     def move(self) -> None:
-        self.image = self.rot_center(self.angle)
+        self.image = self.rot_center(self.angle) # type: ignore
         self.pos.x = self.pos.x + self.base_speed * math.cos(self.angle)
         self.pos.y = self.pos.y - self.base_speed * math.sin(self.angle)
         self.rect.x = round(self.pos.x)
@@ -87,7 +90,7 @@ class Train(pg.sprite.Sprite):
         self.is_reset = False
 
 
-    def update(self, train_go: bool) -> None:
+    def tick(self, train_go: bool) -> None:
         if not self.on_track:
             self.base_speed = 0
         else:

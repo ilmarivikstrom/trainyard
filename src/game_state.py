@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Any
+from typing import List
 
 import pygame as pg
 
@@ -32,8 +32,8 @@ class State:
     arrival_station_sprites = pg.sprite.Group()
     current_tick = 0
     level_passed = False
-    gradient_dest = (0, 0)
-    day_cycle_dest = [0, 0]
+    gradient_dest: tuple[float, float] = (0.0, 0.0)
+    day_cycle_dest: tuple[float, float] = (0, 0)
     prev_cell_needs_checking = False
 
     @staticmethod

@@ -19,7 +19,7 @@ class UserControl:
     curr_cell = pg.Vector2(-1, -1)
     prev_cell = pg.Vector2(-1, -1)
 
-    pressed_keys = []
+    pressed_keys: pg.key.ScancodeWrapper = pg.key.ScancodeWrapper()
 
     spacebar_down = False
     wait_for_space_up = False

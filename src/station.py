@@ -1,11 +1,14 @@
+from typing import Optional
+
 import pygame as pg
 
 from src.cell import Cell
 from src.config import Config
 
 from src.resources import Resources
+from src.saveable import SaveableAttributes
 from src.train import TrainColor
-from src.utils import setup_logging, SaveableAttributes
+from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
 
@@ -26,7 +29,7 @@ class Station(Cell):
         self.is_reset = False
         self.goals = []
         self.goal_sprites = pg.sprite.Group(pg.sprite.Sprite())
-        self.last_release_tick = None
+        self.last_release_tick: Optional[int] = None
         self.saveable_attributes = SaveableAttributes(block_type=self.block_short_char, color=self.train_color, number=self.number_of_trains_left, orientation=self.angle, position=(self.i, self.j))
         self.create_goal_sprites()
 
@@ -68,4 +71,3 @@ class DepartureStation(Station):
 class ArrivalStation(Station):
     def __init__(self, i: int, j: int, angle: int, number_of_trains_left: int, train_color: TrainColor):
         super().__init__(i=i, j=j, image=Resources.img_surfaces["arrival"], angle=angle, number_of_trains_left=number_of_trains_left, train_color=train_color, block_short_char="A")
-
