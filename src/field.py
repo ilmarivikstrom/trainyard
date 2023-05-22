@@ -22,9 +22,9 @@ class Field:
         self.width_px = self.cells_x * Config.cell_size
         self.height_px = self.cells_y * Config.cell_size
         self.empties: List[EmptyCell] = []
-        self.empties_sprites = pg.sprite.Group()
+        self.empties_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.stations: List[Station] = []
-        self.stations_sprites = pg.sprite.Group()
+        self.stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
 
     def initialize_grid(self) -> None:

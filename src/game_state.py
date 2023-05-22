@@ -23,13 +23,8 @@ class State:
     screen_surface = pg.display.set_mode((Config.screen_width, Config.screen_height))
     trains: List[Train] = []
     trains_crashed = 0
-    cell_sprites = pg.sprite.Group() # type: ignore
-    train_sprites = pg.sprite.Group() # type: ignore
+    train_sprites = pg.sprite.Group()
     trains_released = False
-    departure_stations: List[DepartureStation] = []
-    arrival_stations: List[ArrivalStation]= []
-    departure_station_sprites = pg.sprite.Group() # type: ignore
-    arrival_station_sprites = pg.sprite.Group() # type: ignore
     current_tick = 0
     level_passed = False
     gradient_dest: tuple[float, float] = (0.0, 0.0)

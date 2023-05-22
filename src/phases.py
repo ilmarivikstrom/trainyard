@@ -331,9 +331,10 @@ def gameplay_phase(field: Field) -> None:
 
     if not State.level_passed:
         arrival_stations_pending = False
-        for arrival_station in State.arrival_stations:
-            if arrival_station.number_of_trains_left > 0:
-                arrival_stations_pending = True
+        for station in field.stations:
+            if isinstance(station, ArrivalStation):
+                if station.number_of_trains_left > 0:
+                    arrival_stations_pending = True
         if not arrival_stations_pending and State.trains_crashed == 0 and len(State.trains) == 0:
             Sound.success.play()
             State.level_passed = True
