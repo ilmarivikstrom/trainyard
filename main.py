@@ -12,7 +12,7 @@ logger = setup_logging(log_level=Config.log_level)
 
 def main() -> None:
     initial_setup()
-    field = initialize_field()
+    field = initialize_level()
     clock = pg.time.Clock()
 
     while True:
@@ -32,9 +32,11 @@ def initial_setup():
     Resources.load_resources()
 
 
-def initialize_field() -> Field:
+def initialize_level() -> Field:
     field = Field()
     field.initialize_grid()
+    # TODO: Instead of the following, load a level from somewhere and place the object accordingly.
+    field.add_level_objects()
     return field
 
 

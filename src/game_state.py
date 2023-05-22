@@ -23,42 +23,18 @@ class State:
     screen_surface = pg.display.set_mode((Config.screen_width, Config.screen_height))
     trains: List[Train] = []
     trains_crashed = 0
-    cell_sprites = pg.sprite.Group()
-    train_sprites = pg.sprite.Group()
+    cell_sprites = pg.sprite.Group() # type: ignore
+    train_sprites = pg.sprite.Group() # type: ignore
     trains_released = False
     departure_stations: List[DepartureStation] = []
     arrival_stations: List[ArrivalStation]= []
-    departure_station_sprites = pg.sprite.Group()
-    arrival_station_sprites = pg.sprite.Group()
+    departure_station_sprites = pg.sprite.Group() # type: ignore
+    arrival_station_sprites = pg.sprite.Group() # type: ignore
     current_tick = 0
     level_passed = False
     gradient_dest: tuple[float, float] = (0.0, 0.0)
-    day_cycle_dest: tuple[float, float] = (0, 0)
+    day_cycle_dest: tuple[float, float] = (0.0, 0.0)
     prev_cell_needs_checking = False
-
-    @staticmethod
-    def update_gameplay_state() -> None:
-        UserControl.update_user_controls()
-
-        if UserControl.pressed_keys[pg.K_SPACE] and not UserControl.wait_for_space_up:
-            State.trains_released = not State.trains_released
-            UserControl.wait_for_space_up = True
-            logger.debug("Space down.")
-        if UserControl.wait_for_space_up:
-            if not UserControl.pressed_keys[pg.K_SPACE]:
-                UserControl.wait_for_space_up = False
-                logger.debug("Space released.")
-        # TODO: Reset only once.
-        if not State.trains_released:
-            for departure_station in State.departure_stations:
-                departure_station.reset()
-            for arrival_station in State.arrival_stations:
-                arrival_station.reset()
-            State.trains.clear()
-            State.train_sprites.empty()
-            State.trains_crashed = 0
-            State.trains_released = False
-            State.level_passed = False
 
 
     @staticmethod
@@ -74,7 +50,7 @@ class State:
             elif TrainColor.YELLOW in colors and TrainColor.RED in colors:
                 upcoming_train_color = TrainColor.ORANGE
             else:
-                raise ValueError("Need brown color...")
+                raise ValueError(f"Trains with colors: {colors} crashed. Need brown color...")
         train_1.paint(upcoming_train_color)
         State.trains.remove(train_2)
         train_2.kill()

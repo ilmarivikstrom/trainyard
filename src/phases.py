@@ -16,11 +16,34 @@ from src.field import Field, TrackType
 from src.game_state import Phase, State
 from src.resources import Resources
 from src.sound import Sound
+from src.station import ArrivalStation, DepartureStation
 from src.track import Track
 from src.train import Train
 from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
+
+
+def update_gameplay_state(field: Field) -> None:
+    UserControl.update_user_controls()
+
+    if UserControl.pressed_keys[pg.K_SPACE] and not UserControl.wait_for_space_up:
+        State.trains_released = not State.trains_released
+        UserControl.wait_for_space_up = True
+        logger.debug("Space down.")
+    if UserControl.wait_for_space_up:
+        if not UserControl.pressed_keys[pg.K_SPACE]:
+            UserControl.wait_for_space_up = False
+            logger.debug("Space released.")
+    # TODO: Reset only once.
+    if not State.trains_released:
+        for station in field.stations:
+            station.reset()
+        State.trains.clear()
+        State.train_sprites.empty()
+        State.trains_crashed = 0
+        State.trains_released = False
+        State.level_passed = False
 
 
 def main_menu_phase(field: Field) -> None:
@@ -37,7 +60,7 @@ def main_menu_phase(field: Field) -> None:
 
 def gameplay_phase(field: Field) -> None:
     check_events(field)
-    State.update_gameplay_state()
+    update_gameplay_state(field)
 
     # Check if delete mode, change background color accordingly.
     if State.trains_released:
@@ -50,14 +73,14 @@ def gameplay_phase(field: Field) -> None:
     State.screen_surface.blit(Resources.img_surfaces["day_cycle"], dest=State.day_cycle_dest)
 
     # 1. Draw cell sprites.
-    State.cell_sprites.draw(State.screen_surface)
+    field.empties_sprites.draw(State.screen_surface)
 
     for train in State.trains:
         train.on_track = False
         train.at_endpoint = False
 
     # Iterate over all the cells on the map.
-    for (_, empty_cell) in enumerate(field.grid):
+    for (_, empty_cell) in enumerate(field.empties):
 
         # 2. Draw track sprites on top of the cells.
         for (_, track) in enumerate(empty_cell.tracks):
@@ -262,35 +285,33 @@ def gameplay_phase(field: Field) -> None:
 
     # Check if collided with arrival station.
     for train in State.trains:
-        for arrival_station in State.arrival_stations:
-            if train.rect.colliderect(arrival_station):
-                if train.color == arrival_station.train_color and arrival_station.goals and arrival_station.number_of_trains_left > 0:
-                    arrival_station.is_reset = False
-                    arrival_station.number_of_trains_left -= 1
-                    arrival_station.goals.pop().kill()
-                    logger.debug(f"Caught a train! Number of trains still expecting: {arrival_station.number_of_trains_left}")
-                    Sound.play_sound_on_channel(Sound.pop, 1)
-                else:
-                    logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
-                    train.crash()
-                    State.trains_crashed += 1
-                train.kill()
-                State.trains.remove(train)
-                logger.info(f"Arrival station saveable attributes: {arrival_station.saveable_attributes.serialize()}")
+        for station in field.stations:
+            if isinstance(station, ArrivalStation):
+                if train.rect.colliderect(station):
+                    if train.color == station.train_color and station.goals and station.number_of_trains_left > 0:
+                        station.is_reset = False
+                        station.number_of_trains_left -= 1
+                        station.goals.pop().kill()
+                        logger.debug(f"Caught a train! Number of trains still expecting: {station.number_of_trains_left}")
+                        Sound.play_sound_on_channel(Sound.pop, 1)
+                    else:
+                        logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
+                        train.crash()
+                        State.trains_crashed += 1
+                    train.kill()
+                    State.trains.remove(train)
+                    logger.info(f"Arrival station saveable attributes: {station.saveable_attributes.serialize()}")
 
 
     # Draw the train sprites.
     State.train_sprites.draw(State.screen_surface)
 
     # Draw the station sprites.
-    State.departure_station_sprites.draw(State.screen_surface)
-    State.arrival_station_sprites.draw(State.screen_surface)
+    field.stations_sprites.draw(State.screen_surface)
 
     # Draw the blob sprites.
-    for departure_station in State.departure_stations:
-        departure_station.goal_sprites.draw(State.screen_surface)
-    for arrival_station in State.arrival_stations:
-        arrival_station.goal_sprites.draw(State.screen_surface)
+    for station in field.stations:
+        station.goal_sprites.draw(State.screen_surface)
 
     # Place track on the cell based on the mouse movements.
     if UserControl.mouse_pressed[0] and not UserControl.delete_mode and State.prev_cell_needs_checking and not State.trains_released:
@@ -328,19 +349,20 @@ def gameplay_phase(field: Field) -> None:
     pg.draw.line(State.screen_surface, WHITESMOKE, (State.screen_surface.get_width() / 2, 64), (State.screen_surface.get_width() / 2, 64 + 8 * 64))
 
     # Update the departure station.
-    for departure_station in State.departure_stations:
-        if State.trains_released and departure_station.number_of_trains_left > 0:
-            departure_station.is_reset = False
-            if not departure_station.last_release_tick or State.current_tick - departure_station.last_release_tick == 32:
-                train_to_release = Train(departure_station.i, departure_station.j, departure_station.train_color, Direction(departure_station.angle))
-                State.trains.append(train_to_release)
-                State.train_sprites.add(train_to_release)
-                departure_station.number_of_trains_left -= 1
-                departure_station.goals.pop().kill()
-                logger.debug("Train released.")
-                departure_station.last_release_tick = State.current_tick
-                Sound.play_sound_on_channel(Sound.pop, 1)
-                logger.info(f"Departure station saveable attributes: {departure_station.saveable_attributes.serialize()}")
+    for station in field.stations:
+        if isinstance(station, DepartureStation):
+            if State.trains_released and station.number_of_trains_left > 0:
+                station.is_reset = False
+                if not station.last_release_tick or State.current_tick - station.last_release_tick == 32:
+                    train_to_release = Train(station.i, station.j, station.train_color, Direction(station.angle))
+                    State.trains.append(train_to_release)
+                    State.train_sprites.add(train_to_release)
+                    station.number_of_trains_left -= 1
+                    station.goals.pop().kill()
+                    logger.debug("Train released.")
+                    station.last_release_tick = State.current_tick
+                    Sound.play_sound_on_channel(Sound.pop, 1)
+                    logger.info(f"Departure station saveable attributes: {station.saveable_attributes.serialize()}")
 
 
 # Exit phase.
@@ -358,6 +380,6 @@ def check_events(field: Field) -> None:
             logger.info(f"Moving to state {State.game_phase}")
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 3:
-                for cell in field.grid:
+                for cell in field.empties:
                     if cell.mouse_on:
                         cell.flip_tracks()

@@ -28,7 +28,7 @@ class Station(Cell):
         self.original_number_of_trains = number_of_trains_left
         self.is_reset = False
         self.goals = []
-        self.goal_sprites = pg.sprite.Group(pg.sprite.Sprite())
+        self.goal_sprites = pg.sprite.Group()
         self.last_release_tick: Optional[int] = None
         self.saveable_attributes = SaveableAttributes(block_type=self.block_short_char, color=self.train_color, number=self.number_of_trains_left, orientation=self.angle, position=(self.i, self.j))
         self.create_goal_sprites()

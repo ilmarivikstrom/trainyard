@@ -4,9 +4,10 @@ import pygame as pg
 
 from src.cell import EmptyCell
 from src.config import Config
+from src.controls import UserControl
 from src.direction import Direction
 from src.game_state import State
-from src.station import ArrivalStation, DepartureStation
+from src.station import ArrivalStation, DepartureStation, Station
 from src.track import Track, TrackType
 from src.train import TrainColor
 from src.utils import setup_logging
@@ -20,41 +21,49 @@ class Field:
         self.cells_y = Config.cells_y
         self.width_px = self.cells_x * Config.cell_size
         self.height_px = self.cells_y * Config.cell_size
-        self.grid: List[EmptyCell] = []
+        self.empties: List[EmptyCell] = []
+        self.empties_sprites = pg.sprite.Group()
+        self.stations: List[Station] = []
+        self.stations_sprites = pg.sprite.Group()
+
 
     def initialize_grid(self) -> None:
         for j in range(0, self.cells_y):
             for i in range(0, self.cells_x):
                 empty_cell = EmptyCell(i, j)
-                self.grid.append(empty_cell)
-                State.cell_sprites.add(empty_cell)
+                self.empties.append(empty_cell)
+
+
+    def add_level_objects(self) -> None:
+        for j in range(0, self.cells_y):
+            for i in range(0, self.cells_x):
                 # Add some stations. Manually, for now...
                 if (i,j) == (1,1):
-                    State.departure_stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=4, train_color=TrainColor.YELLOW))
+                    self.stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=4, train_color=TrainColor.YELLOW))
                 elif (i,j) == (3,1):
-                    State.departure_stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=4, train_color=TrainColor.BLUE))
+                    self.stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=4, train_color=TrainColor.BLUE))
                 elif (i,j) == (4,1):
-                    State.departure_stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=4, train_color=TrainColor.BLUE))
+                    self.stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=4, train_color=TrainColor.BLUE))
                 elif (i,j) == (6,1):
-                    State.departure_stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=4, train_color=TrainColor.RED))
+                    self.stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=4, train_color=TrainColor.RED))
                 elif (i,j) == (3,6):
-                    State.departure_stations.append(DepartureStation(i=i, j=j, angle=Direction.UP.value, number_of_trains_left=3, train_color=TrainColor.YELLOW))
+                    self.stations.append(DepartureStation(i=i, j=j, angle=Direction.UP.value, number_of_trains_left=3, train_color=TrainColor.YELLOW))
                 elif (i,j) == (5,6):
-                    State.departure_stations.append(DepartureStation(i=i, j=j, angle=Direction.UP.value, number_of_trains_left=3, train_color=TrainColor.RED))
+                    self.stations.append(DepartureStation(i=i, j=j, angle=Direction.UP.value, number_of_trains_left=3, train_color=TrainColor.RED))
                 elif (i,j) == (0,4):
-                    State.arrival_stations.append(ArrivalStation(i=i, j=j, angle=Direction.RIGHT.value, number_of_trains_left=4, train_color=TrainColor.GREEN))
+                    self.stations.append(ArrivalStation(i=i, j=j, angle=Direction.RIGHT.value, number_of_trains_left=4, train_color=TrainColor.GREEN))
                 elif (i,j) == (7,4):
-                    State.arrival_stations.append(ArrivalStation(i=i, j=j, angle=Direction.LEFT.value, number_of_trains_left=4, train_color=TrainColor.PURPLE))
+                    self.stations.append(ArrivalStation(i=i, j=j, angle=Direction.LEFT.value, number_of_trains_left=4, train_color=TrainColor.PURPLE))
                 elif (i,j) == (4,7):
-                    State.arrival_stations.append(ArrivalStation(i=i, j=j, angle=Direction.UP.value, number_of_trains_left=3, train_color=TrainColor.ORANGE))
-        State.departure_station_sprites.add(State.departure_stations)
-        State.arrival_station_sprites.add(State.arrival_stations)
+                    self.stations.append(ArrivalStation(i=i, j=j, angle=Direction.UP.value, number_of_trains_left=3, train_color=TrainColor.ORANGE))
+        self.empties_sprites.add(self.empties)
+        self.stations_sprites.add(self.stations)
 
     def _get_empty_cell_index(self, i: int = 0, j: int = 0) -> int:
         return int(j) * self.cells_y + int(i)
 
     def get_empty_cell_at(self, i: int, j: int) -> EmptyCell:
-        return self.grid[self._get_empty_cell_index(i, j)]
+        return self.empties[self._get_empty_cell_index(i, j)]
 
     def place_track_item(
             self,
