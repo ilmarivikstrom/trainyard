@@ -83,7 +83,7 @@ def gameplay_phase(field: Field) -> None:
     for (_, empty_cell) in enumerate(field.empties):
 
         # 2. Draw track sprites on top of the cells.
-        for (_, track) in enumerate(empty_cell.tracks):
+        for track in empty_cell.tracks:
             for endpoint in track.endpoints:
                 for train in State.trains:
                     if pg.Vector2(train.rect.center) == endpoint:

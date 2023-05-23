@@ -4,7 +4,6 @@ import pygame as pg
 
 from src.cell import EmptyCell
 from src.config import Config
-from src.controls import UserControl
 from src.direction import Direction
 from src.game_state import State
 from src.station import ArrivalStation, DepartureStation, Station
@@ -19,8 +18,6 @@ class Field:
     def __init__(self):
         self.cells_x = Config.cells_x
         self.cells_y = Config.cells_y
-        self.width_px = self.cells_x * Config.cell_size
-        self.height_px = self.cells_y * Config.cell_size
         self.empties: List[EmptyCell] = []
         self.empties_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.stations: List[Station] = []
