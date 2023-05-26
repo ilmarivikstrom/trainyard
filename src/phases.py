@@ -25,17 +25,23 @@ from src.utils import setup_logging
 logger = setup_logging(log_level=Config.log_level)
 
 
-def update_gameplay_state(field: Field) -> None:
-    UserControl.update_user_controls()
-
+def check_space_down_event() -> None:
     if UserControl.pressed_keys[pg.K_SPACE] and not UserControl.wait_for_space_up:
         State.trains_released = not State.trains_released
         UserControl.wait_for_space_up = True
         logger.debug("Space down.")
-    if UserControl.wait_for_space_up:
-        if not UserControl.pressed_keys[pg.K_SPACE]:
-            UserControl.wait_for_space_up = False
-            logger.debug("Space released.")
+
+
+def check_space_released_event() -> None:
+    if UserControl.wait_for_space_up and not UserControl.pressed_keys[pg.K_SPACE]:
+        UserControl.wait_for_space_up = False
+        logger.debug("Space released.")
+
+
+def update_gameplay_state(field: Field) -> None:
+    UserControl.read_user_controls()
+    check_space_down_event()
+    check_space_released_event()
     # TODO: Reset only once.
     if not State.trains_released:
         for station in field.stations:
@@ -47,20 +53,28 @@ def update_gameplay_state(field: Field) -> None:
         State.level_passed = False
 
 
-def main_menu_phase(field: Field) -> None:
-    State.screen_surface.fill(GRAY10)
-    check_events(field)
-    pressed_keys = pg.key.get_pressed()
-    if pressed_keys[UserControl.GAMEPLAY]:
+def check_for_gameplay_command() -> None:
+    if UserControl.pressed_keys[UserControl.GAMEPLAY]:
         State.game_phase = Phase.GAMEPLAY
         logger.info(f"Moving to state {State.game_phase}")
-    elif pressed_keys[UserControl.EXIT]:
+
+
+def check_for_exit_command() -> None:
+    if UserControl.pressed_keys[UserControl.EXIT]:
         State.game_phase = Phase.GAME_END
         logger.info(f"Moving to state {State.game_phase}")
 
 
+def main_menu_phase(field: Field) -> None:
+    UserControl.read_user_controls()
+    State.screen_surface.fill(GRAY10)
+    check_events(field)
+    check_for_gameplay_command()
+    check_for_exit_command()
+
+
 def draw_arcs_and_endpoints(track: Track):
-    if track.bright == True:
+    if track.bright:
         color = WHITE
     else:
         color = GRAY
@@ -93,7 +107,7 @@ def draw_background_day_cycle() -> None:
     State.screen_surface.blit(Resources.img_surfaces["day_cycle"], dest=State.day_cycle_dest)
 
 
-def draw_cell_tracks(empty_cell: EmptyCell) -> None:
+def draw_empty_cell_tracks(empty_cell: EmptyCell) -> None:
     for track in empty_cell.tracks:
         if track.image:
             State.screen_surface.blit(track.image, dest=track.cell_rect)
@@ -125,22 +139,24 @@ def tick_trains() -> None:
 def check_trains_at_arrival_stations(field: Field) -> None:
     for train in State.trains:
         for station in field.stations:
+            if station.rect is None:
+                raise ValueError(f"The rect of {station} is None.")
             if isinstance(station, ArrivalStation):
-                if station.rect is not None:
-                    if train.rect.colliderect(station.rect):
-                        if train.color == station.train_color and station.goals and station.number_of_trains_left > 0:
-                            station.is_reset = False
-                            station.number_of_trains_left -= 1
-                            station.goals.pop().kill()
-                            logger.debug(f"Caught a train! Number of trains still expecting: {station.number_of_trains_left}")
-                            Sound.play_sound_on_channel(Sound.pop, 1)
-                        else:
-                            logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
-                            train.crash()
-                            State.trains_crashed += 1
-                        logger.info(f"Arrival station saveable attributes: {station.saveable_attributes.serialize()}")
-                else:
-                    raise ValueError(f"The rect of {station} is None.")
+                if train.rect.colliderect(station.rect):
+                    if train.color == station.train_color and station.goals and station.number_of_trains_left > 0:
+                        State.trains.remove(train)
+                        State.train_sprites.remove(train) # type: ignore
+                        station.is_reset = False
+                        station.number_of_trains_left -= 1
+                        station.goals.pop().kill()
+                        logger.debug(f"Caught a train! Number of trains still expecting: {station.number_of_trains_left}")
+                        Sound.play_sound_on_channel(Sound.pop, 1)
+                    else:
+                        logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
+                        train.crash()
+                        State.trains_crashed += 1
+                    logger.info(f"Arrival station saveable attributes: {station.saveable_attributes.serialize()}")
+
 
 
 def draw_stations_goal_sprites(field: Field) -> None:
@@ -152,44 +168,70 @@ def draw_separator_line() -> None:
     pg.draw.line(State.screen_surface, WHITESMOKE, (State.screen_surface.get_width() / 2, 64), (State.screen_surface.get_width() / 2, 64 + 8 * 64))
 
 
+def add_train_to_state(train: Train) -> None:
+    State.trains.append(train)
+    State.train_sprites.add(train) # type: ignore
+
+
 def tick_departure_stations(field: Field) -> None:
+    if not State.trains_released:
+        return
     for station in field.stations:
         if isinstance(station, DepartureStation):
-            if State.trains_released and station.number_of_trains_left > 0:
-                station.is_reset = False
-                if not station.last_release_tick or State.current_tick - station.last_release_tick == 32:
-                    train_to_release = Train(station.i, station.j, station.train_color, Direction(station.angle))
-                    State.trains.append(train_to_release)
-                    State.train_sprites.add(train_to_release) # type: ignore
-                    station.number_of_trains_left -= 1
-                    station.goals.pop().kill()
-                    logger.debug("Train released.")
-                    station.last_release_tick = State.current_tick
-                    Sound.play_sound_on_channel(Sound.pop, 1)
-                    logger.info(f"Departure station saveable attributes: {station.saveable_attributes.serialize()}")
+            res = station.tick(State.current_tick)
+            if isinstance(res, Train):
+                add_train_to_state(res)
+
+
+def check_for_main_menu_command() -> None:
+    if UserControl.pressed_keys[UserControl.MAIN_MENU]:
+        State.trains_released = False
+        for train in State.trains:
+            train.reset()
+        State.game_phase = Phase.MAIN_MENU
+        logger.info(f"Moving to state {State.game_phase}")
+
+
+def arrival_stations_pending(field: Field) -> bool:
+    for station in field.stations:
+        if isinstance(station, ArrivalStation):
+            if station.number_of_trains_left > 0:
+                return True
+    return False
+
+
+def check_for_level_completion(field: Field) -> None:
+    if not State.level_passed:
+        pending = arrival_stations_pending(field)
+        if not pending and State.trains_crashed == 0 and len(State.trains) == 0:
+            Sound.success.play()
+            State.level_passed = True
+
+
+def reset_train_statuses() -> None:
+    for train in State.trains:
+        train.on_track = False
+        train.at_endpoint = False
+
 
 
 
 def gameplay_phase(field: Field) -> None:
     check_events(field)
     update_gameplay_state(field)
-
     draw_background_basecolor()
-
     draw_background_day_cycle()
 
     field.empty_cells_sprites.draw(State.screen_surface)
 
-    for train in State.trains:
-        train.on_track = False
-        train.at_endpoint = False
+    reset_train_statuses()
 
     for empty_cell in field.empty_cells:
         if empty_cell.rect is None:
             raise ValueError("The cell's rect is None. Exiting.")
 
         check_if_trains_at_endpoint(empty_cell)
-        draw_cell_tracks(empty_cell)
+        draw_empty_cell_tracks(empty_cell)
 
         # If train 'release' command has been given.
         if State.trains_released:
@@ -356,10 +398,10 @@ def gameplay_phase(field: Field) -> None:
     field.stations_sprites.draw(State.screen_surface) # type: ignore
     draw_stations_goal_sprites(field)
 
-    clicked_in_draw_mode = (UserControl.mouse_pressed[0] and not UserControl.delete_mode and not State.trains_released)
+    left_mouse_down_in_draw_mode = (UserControl.mouse_pressed[0] and not UserControl.delete_mode and not State.trains_released)
     mouse_moved_over_cells = (UserControl.prev_cell and UserControl.curr_cell)
 
-    if clicked_in_draw_mode and State.prev_cell_needs_checking and mouse_moved_over_cells:
+    if left_mouse_down_in_draw_mode and mouse_moved_over_cells and State.prev_cell_needs_checking:
         mouse_moved_up =        (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.UP)
         mouse_moved_down =      (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.DOWN)
         mouse_moved_right =     (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.RIGHT)
@@ -384,36 +426,20 @@ def gameplay_phase(field: Field) -> None:
             field.place_track_item(TrackType.TOP_RIGHT, UserControl.prev_cell)
         elif mouse_moved_downleft or mouse_moved_rightup:
             field.place_track_item(TrackType.TOP_LEFT, UserControl.prev_cell)
+        State.prev_cell_needs_checking = False
 
-    if not State.level_passed:
-        arrival_stations_pending = False
-        for station in field.stations:
-            if isinstance(station, ArrivalStation):
-                if station.number_of_trains_left > 0:
-                    arrival_stations_pending = True
-        if not arrival_stations_pending and State.trains_crashed == 0 and len(State.trains) == 0:
-            Sound.success.play()
-            State.level_passed = True
-
-    # Go back to main menu if requested by the user.
-    if UserControl.pressed_keys[UserControl.MAIN_MENU]:
-        State.trains_released = False
-        for train in State.trains:
-            train.reset()
-        State.game_phase = Phase.MAIN_MENU
-        logger.info(f"Moving to state {State.game_phase}")
-
+    check_for_level_completion(field)
+    check_for_main_menu_command()
     draw_separator_line()
     tick_departure_stations(field)
 
-# Exit phase.
+
 def exit_phase():
     logger.info("Exiting...")
     pg.quit()
     sys.exit()
 
 
-# Check basic events, like quit.
 def check_events(field: Field) -> None:
     for event in pg.event.get():
         if event.type == QUIT:
@@ -422,5 +448,5 @@ def check_events(field: Field) -> None:
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 3:
                 for cell in field.empty_cells:
-                    if cell.mouse_on:
+                    if cell.mouse_on and not State.trains_released:
                         cell.flip_tracks()

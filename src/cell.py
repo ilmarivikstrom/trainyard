@@ -70,8 +70,9 @@ class EmptyCell(Cell):
         self.tracks: List[Track] = []
 
     def flip_tracks(self):
-        if len(self.tracks) > 1:
-            for track in self.tracks:
-                track.toggle_bright()
-            self.tracks.reverse()
-            Sound.play_sound_on_channel(Sound.track_flip, 2)
+        if len(self.tracks) < 1:
+            return
+        for track in self.tracks:
+            track.toggle_bright()
+        self.tracks.reverse()
+        Sound.play_sound_on_channel(Sound.track_flip, 2)

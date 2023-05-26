@@ -5,7 +5,6 @@ import pygame as pg
 from src.cell import EmptyCell
 from src.config import Config
 from src.direction import Direction
-from src.game_state import State
 from src.station import ArrivalStation, DepartureStation, Station
 from src.track import Track, TrackType
 from src.train import TrainColor
@@ -56,11 +55,11 @@ class Field:
         self.empty_cells_sprites.add(self.empty_cells)
         self.stations_sprites.add(self.stations)
 
-    def _get_empty_cell_index(self, i: int = 0, j: int = 0) -> int:
+    def get_empty_cell_index(self, i: int = 0, j: int = 0) -> int:
         return int(j) * self.cells_y + int(i)
 
     def get_empty_cell_at(self, i: int, j: int) -> EmptyCell:
-        return self.empty_cells[self._get_empty_cell_index(i, j)]
+        return self.empty_cells[self.get_empty_cell_index(i, j)]
 
     def place_track_item(
             self,
@@ -80,4 +79,3 @@ class Field:
             if len(empty_cell.tracks) > 1:
                 empty_cell.tracks[0].bright = False
                 empty_cell.tracks[0].image = empty_cell.tracks[0].images["dark"]
-            State.prev_cell_needs_checking = False
