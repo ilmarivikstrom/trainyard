@@ -28,7 +28,7 @@ class Station(Cell):
         self.original_number_of_trains = number_of_trains_left
         self.is_reset = False
         self.goals = []
-        self.goal_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        self.goal_sprites = pg.sprite.Group() # type: ignore
         self.last_release_tick: Optional[int] = None
         self.saveable_attributes = SaveableAttributes(block_type=self.block_short_char, color=self.train_color, number=self.number_of_trains_left, orientation=self.angle, position=(self.i, self.j))
         self.create_goal_sprites()
@@ -50,12 +50,12 @@ class Station(Cell):
             raise ValueError(f"Missing goal sprite string for color {self.train_color}")
         if self.rect: # Rect is Optional by design.
             self.goals = [StationGoalSprite(goal_sprite_color, i+1, self.rect) for i in range(self.number_of_trains_left)]
-            self.goal_sprites.add(self.goals)
+            self.goal_sprites.add(self.goals) # type: ignore
 
     def reset(self) -> None:
         if not self.is_reset:
             self.number_of_trains_left = self.original_number_of_trains
-            self.goal_sprites.empty()
+            self.goal_sprites.empty() # type: ignore
             self.create_goal_sprites()
             self.is_reset = True
             self.last_release_tick = None

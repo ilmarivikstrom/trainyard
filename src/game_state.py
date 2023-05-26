@@ -4,9 +4,7 @@ from typing import List
 import pygame as pg
 
 from src.config import Config
-from src.controls import UserControl
 from src.sound import Sound
-from src.station import ArrivalStation, DepartureStation
 from src.train import Train, TrainColor
 from src.utils import setup_logging
 
@@ -23,7 +21,7 @@ class State:
     screen_surface = pg.display.set_mode((Config.screen_width, Config.screen_height))
     trains: List[Train] = []
     trains_crashed = 0
-    train_sprites = pg.sprite.Group()
+    train_sprites = pg.sprite.Group() # type: ignore
     trains_released = False
     current_tick = 0
     level_passed = False
@@ -49,5 +47,5 @@ class State:
         train_1.paint(upcoming_train_color)
         State.trains.remove(train_2)
         train_2.kill()
-        logger.info(f"Removed a train! Trains remaining: {len(State.trains)} or {len(State.train_sprites)}")
+        logger.info(f"Removed a train! Trains remaining: {len(State.trains)} or {len(State.train_sprites)}") # type: ignore
         Sound.play_sound_on_channel(Sound.merge, 0)

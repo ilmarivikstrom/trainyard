@@ -6,6 +6,7 @@ import pygame as pg
 import pygame.gfxdraw
 from pygame.locals import QUIT
 
+from src.cell import EmptyCell
 from src.color_constants import (DELETE_MODE_BG_COLOR, GRAY10,
                                  NORMAL_MODE_BG_COLOR, WHITESMOKE)
 from src.color_constants import GRAY, RED1, WHITE
@@ -40,7 +41,7 @@ def update_gameplay_state(field: Field) -> None:
         for station in field.stations:
             station.reset()
         State.trains.clear()
-        State.train_sprites.empty()
+        State.train_sprites.empty() #type: ignore
         State.trains_crashed = 0
         State.trains_released = False
         State.level_passed = False
@@ -58,59 +59,137 @@ def main_menu_phase(field: Field) -> None:
         logger.info(f"Moving to state {State.game_phase}")
 
 
-def gameplay_phase(field: Field) -> None:
-    check_events(field)
-    update_gameplay_state(field)
+def draw_arcs_and_endpoints(track: Track):
+    if track.bright == True:
+        color = WHITE
+    else:
+        color = GRAY
+    if track.track_type == TrackType.VERT:
+        pg.draw.line(State.screen_surface, color, track.cell_rect.midtop, track.cell_rect.midbottom)
+    elif track.track_type == TrackType.HORI:
+        pg.draw.line(State.screen_surface, color, track.cell_rect.midleft, track.cell_rect.midright)
+    elif track.track_type == TrackType.TOP_RIGHT:
+        pygame.gfxdraw.arc(State.screen_surface, track.cell_rect.right, track.cell_rect.top, int(Config.cell_size / 2), 90, 180, color)
+    elif track.track_type == TrackType.TOP_LEFT:
+        pygame.gfxdraw.arc(State.screen_surface, track.cell_rect.left, track.cell_rect.top, int(Config.cell_size / 2), 0, 90, color)
+    elif track.track_type == TrackType.BOTTOM_LEFT:
+        pygame.gfxdraw.arc(State.screen_surface, track.cell_rect.left, track.cell_rect.bottom, int(Config.cell_size / 2), 270, 360, color)
+    elif track.track_type == TrackType.BOTTOM_RIGHT:
+        pygame.gfxdraw.arc(State.screen_surface, track.cell_rect.right, track.cell_rect.bottom, int(Config.cell_size / 2), 180, 270, color)
 
-    # Check if delete mode, change background color accordingly.
+    for endpoint in track.endpoints:
+        pygame.gfxdraw.pixel(State.screen_surface, int(endpoint.x), int(endpoint.y), RED1)
+
+
+def draw_background_basecolor() -> None:
     if State.trains_released:
         State.screen_surface.fill(DELETE_MODE_BG_COLOR)
     else:
         State.screen_surface.fill(NORMAL_MODE_BG_COLOR)
 
-    # Blit the color gradient on top of the base layer.
+
+def draw_background_day_cycle() -> None:
     State.day_cycle_dest = (-State.current_tick * 0.1, 0)
     State.screen_surface.blit(Resources.img_surfaces["day_cycle"], dest=State.day_cycle_dest)
 
-    # 1. Draw cell sprites.
-    field.empties_sprites.draw(State.screen_surface)
+
+def draw_cell_tracks(empty_cell: EmptyCell) -> None:
+    for track in empty_cell.tracks:
+        if track.image:
+            State.screen_surface.blit(track.image, dest=track.cell_rect)
+        if Config.draw_arcs:
+            draw_arcs_and_endpoints(track)
+
+
+def check_if_trains_at_endpoint(empty_cell: EmptyCell) -> None:
+    for train in State.trains:
+        for track in empty_cell.tracks:
+            for endpoint in track.endpoints:
+                if pg.Vector2(train.rect.center) == endpoint:
+                    train.at_endpoint = True
+
+
+def delete_crashed_trains() -> None:
+    for train in State.trains:
+        if train.crashed:
+            State.train_sprites.remove(train) # type: ignore
+            State.trains.remove(train)
+            logger.info(f"Train crashed. Trains left: {len(State.trains)}")
+
+
+def tick_trains() -> None:
+    for train in State.trains:
+        train.tick(State.trains_released)
+
+
+def check_trains_at_arrival_stations(field: Field) -> None:
+    for train in State.trains:
+        for station in field.stations:
+            if isinstance(station, ArrivalStation):
+                if station.rect is not None:
+                    if train.rect.colliderect(station.rect):
+                        if train.color == station.train_color and station.goals and station.number_of_trains_left > 0:
+                            station.is_reset = False
+                            station.number_of_trains_left -= 1
+                            station.goals.pop().kill()
+                            logger.debug(f"Caught a train! Number of trains still expecting: {station.number_of_trains_left}")
+                            Sound.play_sound_on_channel(Sound.pop, 1)
+                        else:
+                            logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
+                            train.crash()
+                            State.trains_crashed += 1
+                        logger.info(f"Arrival station saveable attributes: {station.saveable_attributes.serialize()}")
+                else:
+                    raise ValueError(f"The rect of {station} is None.")
+
+
+def draw_stations_goal_sprites(field: Field) -> None:
+    for station in field.stations:
+        station.goal_sprites.draw(State.screen_surface) # type: ignore
+
+
+def draw_separator_line() -> None:
+    pg.draw.line(State.screen_surface, WHITESMOKE, (State.screen_surface.get_width() / 2, 64), (State.screen_surface.get_width() / 2, 64 + 8 * 64))
+
+
+def tick_departure_stations(field: Field) -> None:
+    for station in field.stations:
+        if isinstance(station, DepartureStation):
+            if State.trains_released and station.number_of_trains_left > 0:
+                station.is_reset = False
+                if not station.last_release_tick or State.current_tick - station.last_release_tick == 32:
+                    train_to_release = Train(station.i, station.j, station.train_color, Direction(station.angle))
+                    State.trains.append(train_to_release)
+                    State.train_sprites.add(train_to_release) # type: ignore
+                    station.number_of_trains_left -= 1
+                    station.goals.pop().kill()
+                    logger.debug("Train released.")
+                    station.last_release_tick = State.current_tick
+                    Sound.play_sound_on_channel(Sound.pop, 1)
+                    logger.info(f"Departure station saveable attributes: {station.saveable_attributes.serialize()}")
+
+
+
+def gameplay_phase(field: Field) -> None:
+    check_events(field)
+    update_gameplay_state(field)
+
+    draw_background_basecolor()
+
+    draw_background_day_cycle()
+
+    field.empty_cells_sprites.draw(State.screen_surface)
 
     for train in State.trains:
         train.on_track = False
         train.at_endpoint = False
 
-    # Iterate over all the cells on the map.
-    for (_, empty_cell) in enumerate(field.empties):
+    for empty_cell in field.empty_cells:
+        if empty_cell.rect is None:
+            raise ValueError("The cell's rect is None. Exiting.")
 
-        # 2. Draw track sprites on top of the cells.
-        for track in empty_cell.tracks:
-            for endpoint in track.endpoints:
-                for train in State.trains:
-                    if pg.Vector2(train.rect.center) == endpoint:
-                        train.at_endpoint = True
-            if track.bright == True:
-                color = WHITE
-            else:
-                color = GRAY
-            if track.image:
-                State.screen_surface.blit(track.image, dest=track.cell_rect)
-            if Config.draw_arcs:
-                if track.track_type == TrackType.VERT:
-                    pg.draw.line(State.screen_surface, color, track.cell_rect.midtop, track.cell_rect.midbottom)
-                elif track.track_type == TrackType.HORI:
-                    pg.draw.line(State.screen_surface, color, track.cell_rect.midleft, track.cell_rect.midright)
-                elif track.track_type == TrackType.TOP_RIGHT:
-                    pygame.gfxdraw.arc(State.screen_surface, track.cell_rect.right, track.cell_rect.top, int(Config.cell_size / 2), 90, 180, color)
-                elif track.track_type == TrackType.TOP_LEFT:
-                    pygame.gfxdraw.arc(State.screen_surface, track.cell_rect.left, track.cell_rect.top, int(Config.cell_size / 2), 0, 90, color)
-                elif track.track_type == TrackType.BOTTOM_LEFT:
-                    pygame.gfxdraw.arc(State.screen_surface, track.cell_rect.left, track.cell_rect.bottom, int(Config.cell_size / 2), 270, 360, color)
-                elif track.track_type == TrackType.BOTTOM_RIGHT:
-                    pygame.gfxdraw.arc(State.screen_surface, track.cell_rect.right, track.cell_rect.bottom, int(Config.cell_size / 2), 180, 270, color)
-
-                for endpoint in track.endpoints:
-                    pygame.gfxdraw.pixel(State.screen_surface, int(endpoint.x), int(endpoint.y), RED1)
-
+        check_if_trains_at_endpoint(empty_cell)
+        draw_cell_tracks(empty_cell)
 
         # If train 'release' command has been given.
         if State.trains_released:
@@ -185,14 +264,14 @@ def gameplay_phase(field: Field) -> None:
                                 if train.angle <= math.radians(90) + 0.5 * Config.angular_vel:
                                     train.direction = Direction.UP
                                     train.angle = math.radians(90)
-                                    train.rect.center = pg.Vector2(empty_cell.rect.midtop)
+                                    train.rect.center = empty_cell.rect.midtop
                                     train.pos = pg.Vector2(train.rect.topleft)
                             elif train.direction == Direction.DOWN:
                                 train.angle += Config.angular_vel
                                 if train.angle >= math.radians(360) - 0.5 * Config.angular_vel:
                                     train.direction = Direction.RIGHT
                                     train.angle = math.radians(0)
-                                    train.rect.center = pg.Vector2(empty_cell.rect.midright)
+                                    train.rect.center = empty_cell.rect.midright
                                     train.pos = pg.Vector2(train.rect.topleft)
                         # If the selected track is top-left.
                         elif train.selected_track.track_type == TrackType.TOP_LEFT:
@@ -201,14 +280,14 @@ def gameplay_phase(field: Field) -> None:
                                 if train.angle >= math.radians(90) - 0.5 * Config.angular_vel:
                                     train.direction = Direction.UP
                                     train.angle = math.radians(90)
-                                    train.rect.center = pg.Vector2(empty_cell.rect.midtop)
+                                    train.rect.center = empty_cell.rect.midtop
                                     train.pos = pg.Vector2(train.rect.topleft)
                             elif train.direction == Direction.DOWN:
                                 train.angle -= Config.angular_vel
                                 if train.angle <= math.radians(180) + 0.5 * Config.angular_vel:
                                     train.direction = Direction.LEFT
                                     train.angle = math.radians(180)
-                                    train.rect.center = pg.Vector2(empty_cell.rect.midleft)
+                                    train.rect.center = empty_cell.rect.midleft
                                     train.pos = pg.Vector2(train.rect.topleft)
                         # If the selected track is bottom-left.
                         elif train.selected_track.track_type == TrackType.BOTTOM_LEFT:
@@ -217,14 +296,14 @@ def gameplay_phase(field: Field) -> None:
                                 if train.angle <= math.radians(-90) + 0.5 * Config.angular_vel:
                                     train.direction = Direction.DOWN
                                     train.angle = math.radians(270)
-                                    train.rect.center = pg.Vector2(empty_cell.rect.midbottom)
+                                    train.rect.center = empty_cell.rect.midbottom
                                     train.pos = pg.Vector2(train.rect.topleft)
                             elif train.direction == Direction.UP:
                                 train.angle += Config.angular_vel
                                 if train.angle >= math.radians(180) - 0.5 * Config.angular_vel:
                                     train.direction = Direction.LEFT
                                     train.angle = math.radians(180)
-                                    train.rect.center = pg.Vector2(empty_cell.rect.midleft)
+                                    train.rect.center = empty_cell.rect.midleft
                                     train.pos = pg.Vector2(train.rect.topleft)
                         # If the selected track is bottom-right.
                         elif train.selected_track.track_type == TrackType.BOTTOM_RIGHT:
@@ -233,19 +312,19 @@ def gameplay_phase(field: Field) -> None:
                                 if train.angle >= math.radians(270) - 0.5 * Config.angular_vel:
                                     train.direction = Direction.DOWN
                                     train.angle = math.radians(270)
-                                    train.rect.center = pg.Vector2(empty_cell.rect.midbottom)
+                                    train.rect.center = empty_cell.rect.midbottom
                                     train.pos = pg.Vector2(train.rect.topleft)
                             elif train.direction == Direction.UP:
                                 train.angle -= Config.angular_vel
                                 if train.angle <= math.radians(0) + 0.5 * Config.angular_vel:
                                     train.direction = Direction.RIGHT
                                     train.angle = math.radians(0)
-                                    train.rect.center = pg.Vector2(empty_cell.rect.midright)
+                                    train.rect.center = empty_cell.rect.midright
                                     train.pos = pg.Vector2(train.rect.topleft)
 
                     # If the cell wholly contains the train, and the last flipped cell was some other cell.
                     if empty_cell.rect and empty_cell.rect.contains(train.rect) and train.last_flipped_cell != empty_cell:
-                        # If there are 2 tracks, flip them now. TOOD: Should only flip if they intersect.
+                        # If there are 2 tracks, flip them now. TOOD: Should only flip if the tracks intersect.
                         if len(empty_cell.tracks) == 2:
                             empty_cell.flip_tracks()
                             train.last_flipped_cell = empty_cell
@@ -270,64 +349,41 @@ def gameplay_phase(field: Field) -> None:
                 State.merge_trains(train_1, train_2)
 
 
-    # Delete trains if 'crashed'.
-    for train in State.trains:
-        if train.crashed:
-            State.train_sprites.remove(train)
-            State.trains.remove(train)
-            logger.info(f"Train crashed. Trains left: {len(State.trains)}")
+    check_trains_at_arrival_stations(field)
+    delete_crashed_trains()
+    tick_trains()
+    State.train_sprites.draw(State.screen_surface) # type: ignore
+    field.stations_sprites.draw(State.screen_surface) # type: ignore
+    draw_stations_goal_sprites(field)
 
+    clicked_in_draw_mode = (UserControl.mouse_pressed[0] and not UserControl.delete_mode and not State.trains_released)
+    mouse_moved_over_cells = (UserControl.prev_cell and UserControl.curr_cell)
 
-    # Update trains.
-    for train in State.trains:
-        train.tick(State.trains_released)
-
-
-    # Check if collided with arrival station.
-    for train in State.trains:
-        for station in field.stations:
-            if isinstance(station, ArrivalStation):
-                if train.rect.colliderect(station):
-                    if train.color == station.train_color and station.goals and station.number_of_trains_left > 0:
-                        station.is_reset = False
-                        station.number_of_trains_left -= 1
-                        station.goals.pop().kill()
-                        logger.debug(f"Caught a train! Number of trains still expecting: {station.number_of_trains_left}")
-                        Sound.play_sound_on_channel(Sound.pop, 1)
-                    else:
-                        logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
-                        train.crash()
-                        State.trains_crashed += 1
-                    train.kill()
-                    State.trains.remove(train)
-                    logger.info(f"Arrival station saveable attributes: {station.saveable_attributes.serialize()}")
-
-
-    # Draw the train sprites.
-    State.train_sprites.draw(State.screen_surface)
-
-    # Draw the station sprites.
-    field.stations_sprites.draw(State.screen_surface)
-
-    # Draw the blob sprites.
-    for station in field.stations:
-        station.goal_sprites.draw(State.screen_surface)
-
-    # Place track on the cell based on the mouse movements.
-    if UserControl.mouse_pressed[0] and not UserControl.delete_mode and State.prev_cell_needs_checking and not State.trains_released:
-        if UserControl.prev_cell and UserControl.curr_cell:
-            if (UserControl.prev_movement == Direction.UP and UserControl.curr_movement == Direction.UP) or (UserControl.prev_movement == Direction.DOWN and UserControl.curr_movement == Direction.DOWN):
-                field.place_track_item(TrackType.VERT, UserControl.prev_cell)
-            elif (UserControl.prev_movement == Direction.RIGHT and UserControl.curr_movement == Direction.RIGHT) or (UserControl.prev_movement == Direction.LEFT and UserControl.curr_movement == Direction.LEFT):
-                field.place_track_item(TrackType.HORI, UserControl.prev_cell)
-            elif (UserControl.prev_movement == Direction.UP and UserControl.curr_movement == Direction.LEFT) or (UserControl.prev_movement == Direction.RIGHT and UserControl.curr_movement == Direction.DOWN):
-                field.place_track_item(TrackType.BOTTOM_LEFT, UserControl.prev_cell)
-            elif (UserControl.prev_movement == Direction.UP and UserControl.curr_movement == Direction.RIGHT) or (UserControl.prev_movement == Direction.LEFT and UserControl.curr_movement == Direction.DOWN):
-                field.place_track_item(TrackType.BOTTOM_RIGHT, UserControl.prev_cell)
-            elif (UserControl.prev_movement == Direction.DOWN and UserControl.curr_movement == Direction.RIGHT) or (UserControl.prev_movement == Direction.LEFT and UserControl.curr_movement == Direction.UP):
-                field.place_track_item(TrackType.TOP_RIGHT, UserControl.prev_cell)
-            elif (UserControl.prev_movement == Direction.DOWN and UserControl.curr_movement == Direction.LEFT) or (UserControl.prev_movement == Direction.RIGHT and UserControl.curr_movement == Direction.UP):
-                field.place_track_item(TrackType.TOP_LEFT, UserControl.prev_cell)
+    if clicked_in_draw_mode and State.prev_cell_needs_checking and mouse_moved_over_cells:
+        mouse_moved_up =        (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.UP)
+        mouse_moved_down =      (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.DOWN)
+        mouse_moved_right =     (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.RIGHT)
+        mouse_moved_left =      (UserControl.prev_movement == Direction.LEFT    and UserControl.curr_movement == Direction.LEFT)
+        moues_moved_upleft =    (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.LEFT)
+        mouse_moved_rightdown = (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.DOWN)
+        mouse_moved_upright =   (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.RIGHT)
+        mouse_moved_leftdown =  (UserControl.prev_movement == Direction.LEFT    and UserControl.curr_movement == Direction.DOWN)
+        mouse_moved_downright = (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.RIGHT)
+        mouse_moved_leftup =    (UserControl.prev_movement == Direction.LEFT    and UserControl.curr_movement == Direction.UP)
+        mouse_moved_downleft =  (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.LEFT)
+        mouse_moved_rightup =   (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.UP)
+        if mouse_moved_up or mouse_moved_down:
+            field.place_track_item(TrackType.VERT, UserControl.prev_cell)
+        elif mouse_moved_right or mouse_moved_left:
+            field.place_track_item(TrackType.HORI, UserControl.prev_cell)
+        elif moues_moved_upleft or mouse_moved_rightdown:
+            field.place_track_item(TrackType.BOTTOM_LEFT, UserControl.prev_cell)
+        elif mouse_moved_upright or mouse_moved_leftdown:
+            field.place_track_item(TrackType.BOTTOM_RIGHT, UserControl.prev_cell)
+        elif mouse_moved_downright or mouse_moved_leftup:
+            field.place_track_item(TrackType.TOP_RIGHT, UserControl.prev_cell)
+        elif mouse_moved_downleft or mouse_moved_rightup:
+            field.place_track_item(TrackType.TOP_LEFT, UserControl.prev_cell)
 
     if not State.level_passed:
         arrival_stations_pending = False
@@ -347,24 +403,8 @@ def gameplay_phase(field: Field) -> None:
         State.game_phase = Phase.MAIN_MENU
         logger.info(f"Moving to state {State.game_phase}")
 
-    pg.draw.line(State.screen_surface, WHITESMOKE, (State.screen_surface.get_width() / 2, 64), (State.screen_surface.get_width() / 2, 64 + 8 * 64))
-
-    # Update the departure station.
-    for station in field.stations:
-        if isinstance(station, DepartureStation):
-            if State.trains_released and station.number_of_trains_left > 0:
-                station.is_reset = False
-                if not station.last_release_tick or State.current_tick - station.last_release_tick == 32:
-                    train_to_release = Train(station.i, station.j, station.train_color, Direction(station.angle))
-                    State.trains.append(train_to_release)
-                    State.train_sprites.add(train_to_release)
-                    station.number_of_trains_left -= 1
-                    station.goals.pop().kill()
-                    logger.debug("Train released.")
-                    station.last_release_tick = State.current_tick
-                    Sound.play_sound_on_channel(Sound.pop, 1)
-                    logger.info(f"Departure station saveable attributes: {station.saveable_attributes.serialize()}")
-
+    draw_separator_line()
+    tick_departure_stations(field)
 
 # Exit phase.
 def exit_phase():
@@ -381,6 +421,6 @@ def check_events(field: Field) -> None:
             logger.info(f"Moving to state {State.game_phase}")
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 3:
-                for cell in field.empties:
+                for cell in field.empty_cells:
                     if cell.mouse_on:
                         cell.flip_tracks()

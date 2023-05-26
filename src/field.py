@@ -18,8 +18,8 @@ class Field:
     def __init__(self):
         self.cells_x = Config.cells_x
         self.cells_y = Config.cells_y
-        self.empties: List[EmptyCell] = []
-        self.empties_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        self.empty_cells: List[EmptyCell] = []
+        self.empty_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.stations: List[Station] = []
         self.stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
@@ -28,7 +28,7 @@ class Field:
         for j in range(0, self.cells_y):
             for i in range(0, self.cells_x):
                 empty_cell = EmptyCell(i, j)
-                self.empties.append(empty_cell)
+                self.empty_cells.append(empty_cell)
 
 
     def add_level_objects(self) -> None:
@@ -40,9 +40,9 @@ class Field:
                 elif (i,j) == (3,1):
                     self.stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=4, train_color=TrainColor.BLUE))
                 elif (i,j) == (4,1):
-                    self.stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=4, train_color=TrainColor.BLUE))
+                    self.stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=1, train_color=TrainColor.BLUE))
                 elif (i,j) == (6,1):
-                    self.stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=4, train_color=TrainColor.RED))
+                    self.stations.append(DepartureStation(i=i, j=j, angle=Direction.DOWN.value, number_of_trains_left=1, train_color=TrainColor.RED))
                 elif (i,j) == (3,6):
                     self.stations.append(DepartureStation(i=i, j=j, angle=Direction.UP.value, number_of_trains_left=3, train_color=TrainColor.YELLOW))
                 elif (i,j) == (5,6):
@@ -50,17 +50,17 @@ class Field:
                 elif (i,j) == (0,4):
                     self.stations.append(ArrivalStation(i=i, j=j, angle=Direction.RIGHT.value, number_of_trains_left=4, train_color=TrainColor.GREEN))
                 elif (i,j) == (7,4):
-                    self.stations.append(ArrivalStation(i=i, j=j, angle=Direction.LEFT.value, number_of_trains_left=4, train_color=TrainColor.PURPLE))
+                    self.stations.append(ArrivalStation(i=i, j=j, angle=Direction.LEFT.value, number_of_trains_left=1, train_color=TrainColor.PURPLE))
                 elif (i,j) == (4,7):
                     self.stations.append(ArrivalStation(i=i, j=j, angle=Direction.UP.value, number_of_trains_left=3, train_color=TrainColor.ORANGE))
-        self.empties_sprites.add(self.empties)
+        self.empty_cells_sprites.add(self.empty_cells)
         self.stations_sprites.add(self.stations)
 
     def _get_empty_cell_index(self, i: int = 0, j: int = 0) -> int:
         return int(j) * self.cells_y + int(i)
 
     def get_empty_cell_at(self, i: int, j: int) -> EmptyCell:
-        return self.empties[self._get_empty_cell_index(i, j)]
+        return self.empty_cells[self._get_empty_cell_index(i, j)]
 
     def place_track_item(
             self,
