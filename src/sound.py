@@ -6,20 +6,22 @@ class Sound:
     pg.mixer.init()
     pg.init()
 
+    master_volume = 1.0
+
     crash = pg.mixer.Sound("res/crash.mp3")
-    crash.set_volume(0.2)
+    crash.set_volume(0.4 * master_volume)
 
     merge = pg.mixer.Sound("res/merge.wav")
-    merge.set_volume(0.2)
+    merge.set_volume(0.4 * master_volume)
 
     pop = pg.mixer.Sound("res/pop.mp3")
-    pop.set_volume(0.2)
+    pop.set_volume(0.4 * master_volume)
 
     track_flip = pg.mixer.Sound("res/click.wav")
-    track_flip.set_volume(0.2)
+    track_flip.set_volume(0.4 * master_volume)
 
     success = pg.mixer.Sound("res/achievement.wav")
-    success.set_volume(0.5)
+    success.set_volume(1.0 * master_volume)
 
     @staticmethod
     def play_sound_on_channel(sound: pg.mixer.Sound, channel: int) -> None:

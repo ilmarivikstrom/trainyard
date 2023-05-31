@@ -29,9 +29,25 @@ class UserControl:
 
     delete_mode = False
 
+    @staticmethod
+    def check_space_down_event() -> bool:
+        if UserControl.pressed_keys[pg.K_SPACE] and not UserControl.wait_for_space_up:
+            UserControl.wait_for_space_up = True
+            logger.debug("Space down.")
+            return True
+        return False
 
     @staticmethod
-    def read_user_controls():
+    def check_space_released_event() -> bool:
+        if UserControl.wait_for_space_up and not UserControl.pressed_keys[pg.K_SPACE]:
+            UserControl.wait_for_space_up = False
+            logger.debug("Space released.")
+            return True
+        return False
+
+
+    @staticmethod
+    def update_user_control_state():
         UserControl.mouse_pos = pg.mouse.get_pos()
         UserControl.pressed_keys = pg.key.get_pressed()
         UserControl.mouse_pressed = pg.mouse.get_pressed()

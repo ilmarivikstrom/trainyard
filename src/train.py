@@ -43,7 +43,6 @@ class Train(pg.sprite.Sprite):
         self.angle = 0 * math.pi / 2
         self.base_speed = 1
         self.on_track = False
-        self.at_endpoint = False
         self.last_collided_cells: List[EmptyCell] = []
         self.last_flipped_cell: Optional[EmptyCell] = None
         self.tracks_ahead: List[Track] = []
@@ -100,8 +99,14 @@ class Train(pg.sprite.Sprite):
         else:
             self.move()
 
+
     def crash(self) -> None:
         self.on_track = False
         self.selected_track = None
         self.crashed = True
         Sound.play_sound_on_channel(Sound.crash, 3)
+
+
+    def add_last_collided_cell(self, empty_cell: EmptyCell):
+        self.last_collided_cells.append(empty_cell)
+        self.last_collided_cells = self.last_collided_cells[-2:]

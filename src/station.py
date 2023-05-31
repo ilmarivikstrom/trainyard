@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 import pygame as pg
 
@@ -21,6 +21,13 @@ class StationGoalSprite(pg.sprite.Sprite):
         self.rect = parent_rect
 
 
+class CheckmarkSprite(pg.sprite.Sprite):
+    def __init__(self, parent_rect: pg.Rect):
+        super().__init__()
+        self.image = Resources.img_surfaces["checkmark"]
+        self.rect = parent_rect
+
+
 class Station(Cell):
     def __init__(self, i: int, j: int, image: pg.Surface, angle: int, number_of_trains_left: int, train_color: TrainColor, block_short_char: str):
         super().__init__(i, j, image, angle)
@@ -29,8 +36,9 @@ class Station(Cell):
         self.block_short_char = block_short_char
         self.original_number_of_trains = number_of_trains_left
         self.is_reset = False
-        self.goals = []
+        self.goals: List[StationGoalSprite] = []
         self.goal_sprites = pg.sprite.Group() # type: ignore
+        self.checkmark: Optional[CheckmarkSprite] = None
         self.last_release_tick: Optional[int] = None
         self.saveable_attributes = SaveableAttributes(block_type=self.block_short_char, color=self.train_color, number=self.number_of_trains_left, orientation=self.angle, position=(self.i, self.j))
         self.create_goal_sprites()
@@ -50,7 +58,7 @@ class Station(Cell):
             goal_sprite_color = "purple"
         else:
             raise ValueError(f"Missing goal sprite string for color {self.train_color}")
-        if self.rect: # Rect is Optional by design.
+        if self.rect:
             self.goals = [StationGoalSprite(goal_sprite_color, i+1, self.rect) for i in range(self.number_of_trains_left)]
             self.goal_sprites.add(self.goals) # type: ignore
 

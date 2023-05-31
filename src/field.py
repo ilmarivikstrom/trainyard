@@ -61,7 +61,7 @@ class Field:
     def get_empty_cell_at(self, i: int, j: int) -> EmptyCell:
         return self.empty_cells[self.get_empty_cell_index(i, j)]
 
-    def place_track_item(
+    def insert_track_to_position(
             self,
             requested_tracktype: TrackType,
             pos: pg.Vector2
