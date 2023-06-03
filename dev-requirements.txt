@@ -1,0 +1,4 @@
+pygame-ce
+black
+invoke
+pyinstaller
