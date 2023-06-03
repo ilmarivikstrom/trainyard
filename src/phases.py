@@ -17,7 +17,7 @@ from src.field import Field, TrackType
 from src.game_state import Phase, State
 from src.resources import Graphics
 from src.sound import Sound
-from src.station import ArrivalStation, DepartureStation, CheckmarkSprite
+from src.station import ArrivalStation, DepartureStation, CheckmarkSprite, Station
 from src.track import Track
 from src.train import Train
 from src.utils import setup_logging
@@ -33,9 +33,10 @@ def update_gameplay_state(field: Field) -> None:
         State.trains_released = not State.trains_released
     _ = UserControl.check_space_released_event()
 
-    if not State.trains_released and not State.trains:
-        for station in field.stations:
-            station.reset()
+    if not State.trains_released:
+        for grid_item in field.grid:
+            if isinstance(grid_item, Station):
+                grid_item.reset()
         State.trains.clear()
         State.train_sprites.empty() #type: ignore
         State.trains_crashed = 0
@@ -127,37 +128,40 @@ def tick_trains() -> None:
 
 def check_train_arrivals(field: Field) -> None:
     for train in State.trains:
-        for station in field.stations:
-            if station.rect is None:
-                raise ValueError(f"The rect of {station} is None.")
-            if isinstance(station, ArrivalStation) and train.rect.colliderect(station.rect):
-                if train.color == station.train_color and station.goals and station.number_of_trains_left > 0:
+        for grid_item in field.grid:
+            if grid_item.rect is None:
+                raise ValueError(f"The rect of {grid_item} is None.")
+            if isinstance(grid_item, ArrivalStation) and train.rect.collidepoint(grid_item.rect.center):
+                if train.color == grid_item.train_color and grid_item.goals and grid_item.number_of_trains_left > 0:
                     State.trains.remove(train)
                     State.train_sprites.remove(train) # type: ignore
-                    station.is_reset = False
-                    station.number_of_trains_left -= 1
-                    station.goals.pop().kill()
-                    logger.debug(f"Caught a train! Number of trains still expecting: {station.number_of_trains_left}")
+                    grid_item.is_reset = False
+                    grid_item.number_of_trains_left -= 1
+                    grid_item.goals.pop().kill()
+                    logger.debug(f"Caught a train! Number of trains still expecting: {grid_item.number_of_trains_left}")
                     Sound.play_sound_on_channel(Sound.pop, 1)
                 else:
                     logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
                     train.crash()
                     State.trains_crashed += 1
-                logger.info(f"Arrival station saveable attributes: {station.saveable_attributes.serialize()}")
+                    grid_item.checkmark = None
+                logger.info(f"Arrival station saveable attributes: {grid_item.saveable_attributes.serialize()}")
 
 
 def determine_arrival_station_checkmarks(field: Field) -> None:
-    for station in field.stations:
-        if isinstance(station, ArrivalStation) and station.number_of_trains_left == 0 and station.rect is not None:
-            station.checkmark = CheckmarkSprite(station.rect)
+    for grid_item in field.grid:
+        if isinstance(grid_item, ArrivalStation) and grid_item.number_of_trains_left == 0 and grid_item.rect is not None:
+            grid_item.checkmark = CheckmarkSprite(grid_item.rect)
         else:
-            station.checkmark = None
+            if isinstance(grid_item, Station):
+                grid_item.checkmark = None
 
 
 
 def draw_station_goals(field: Field) -> None:
-    for station in field.stations:
-        station.goal_sprites.draw(State.screen_surface) # type: ignore
+    for grid_item in field.grid:
+        if isinstance(grid_item, Station):
+            grid_item.goal_sprites.draw(State.screen_surface) # type: ignore
 
 
 def draw_separator_line() -> None:
@@ -172,9 +176,9 @@ def add_new_train(train: Train) -> None:
 def tick_departures(field: Field) -> None:
     if not State.trains_released:
         return
-    for station in field.stations:
-        if isinstance(station, DepartureStation):
-            res = station.tick(State.current_tick)
+    for grid_item in field.grid:
+        if isinstance(grid_item, DepartureStation):
+            res = grid_item.tick(State.current_tick)
             if isinstance(res, Train):
                 add_new_train(res)
 
@@ -189,8 +193,8 @@ def check_for_main_menu_command() -> None:
 
 
 def arrivals_pending(field: Field) -> bool:
-    for station in field.stations:
-        if isinstance(station, ArrivalStation) and station.number_of_trains_left > 0:
+    for grid_item in field.grid:
+        if isinstance(grid_item, ArrivalStation) and grid_item.number_of_trains_left > 0:
             return True
     return False
 
@@ -316,6 +320,8 @@ def check_train_merges() -> None:
         train_2 = [key for key, val in other_trains_pos_dict.items() if val == train_1.pos][0]
         if train_1.direction == train_2.direction:
             State.merge_trains(train_1, train_2)
+        else:
+            State.paint_trains(train_1, train_2)
 
 
 def check_for_new_track_placement(field: Field) -> None:
@@ -351,10 +357,10 @@ def check_for_new_track_placement(field: Field) -> None:
 
 
 def display_checkmarks(field: Field) -> None:
-    for station in field.stations:
-        if not isinstance(station, ArrivalStation) or station.checkmark is None or station.checkmark.image is None or station.rect is None:
+    for grid_item in field.grid:
+        if not isinstance(grid_item, ArrivalStation) or grid_item.checkmark is None or grid_item.checkmark.image is None or grid_item.rect is None:
             continue
-        State.screen_surface.blit(source=station.checkmark.image, dest=station.rect.topleft)
+        State.screen_surface.blit(source=grid_item.checkmark.image, dest=grid_item.rect.topleft)
 
 
 def check_profiling_command() -> None:
@@ -375,45 +381,52 @@ def gameplay_phase(field: Field) -> None:
 
     reset_train_statuses()
 
-    for empty_cell in field.empty_cells:
+    for grid_item in field.grid:
+        if not isinstance(grid_item, EmptyCell):
+            continue
+
+        empty_cell = grid_item
+
         if empty_cell.rect is None:
             raise ValueError("The cell's rect is None. Exiting.")
 
         draw_empty_cell_tracks(empty_cell)
 
-        # Update the cell according to mouse position.
-        if empty_cell.check_mouse_collision():
-            State.prev_cell_needs_checking = True
         check_track_delete(empty_cell)
+
 
         if not State.trains_released or len(State.trains) == 0:
             continue
 
+    for grid_item in field.grid:
+        if grid_item.check_mouse_collision():
+            State.prev_cell_needs_checking = True
         for train in State.trains:
-            # Continue looping if the cell does not intersect with the train.
-            if not empty_cell.rect.colliderect(pg.Rect(train.rect.centerx - 1, train.rect.centery - 1, 1, 1)):
+            if grid_item.rect is None:
+                raise ValueError("Rect is None.")
+            if not grid_item.rect.colliderect(pg.Rect(train.rect.centerx - 1, train.rect.centery - 1, 1, 1)):
                 continue
 
-            entering_new_cell_and_track_not_selected = (empty_cell not in train.last_collided_cells or train.selected_track is None)
+            entering_new_cell_and_track_not_selected = (grid_item not in train.last_collided_cells or train.selected_track is None)
             if entering_new_cell_and_track_not_selected:
-                train.add_last_collided_cell(empty_cell)
+                train.add_last_collided_cell(grid_item)
                 # Reset the last flipped cell.
                 train.last_flipped_cell = None
                 # If there are no tracks in this cell.
-                if len(empty_cell.tracks) == 0:
+                if len(grid_item.tracks) == 0:
                     # Stop the train. Should mean 'crash'.
                     train.crash()
                     State.trains_crashed += 1
                 else:
                     # If there are some tracks in this cell.
-                    train.tracks_ahead = empty_cell.tracks
+                    train.tracks_ahead = grid_item.tracks
                     possible_tracks: List[Track] = []
                     # If the state has just been reset, select the only available track.
                     if train.is_reset:
-                        possible_tracks.append(empty_cell.tracks[0])
+                        possible_tracks.append(grid_item.tracks[0])
                     else:
                         # Let's find all tracks in this cell that have an endpoint where the train is.
-                        for track_ahead in empty_cell.tracks:
+                        for track_ahead in grid_item.tracks:
                             for endpoint in track_ahead.endpoints:
                                 if train.rect.collidepoint(endpoint):
                                     possible_tracks.append(track_ahead)
@@ -433,8 +446,8 @@ def gameplay_phase(field: Field) -> None:
                         train.crash()
                         logger.debug("No track to be selected. Train is not on track.")
 
-            move_train_along_selected_track(train, empty_cell)
-            flip_tracks_if_needed(train, empty_cell)
+            move_train_along_selected_track(train, grid_item)
+            flip_tracks_if_needed(train, grid_item)
 
 
     check_train_merges()
@@ -468,6 +481,9 @@ def check_events(field: Field) -> None:
             logger.info(f"Moving to state {State.game_phase}")
         elif event.type == MOUSEBUTTONDOWN:
             if event.button == 3:
-                for cell in field.empty_cells:
-                    if cell.mouse_on and not State.trains_released and len(cell.tracks) > 1:
-                        cell.flip_tracks()
+                for grid_item in field.grid:
+                    if not isinstance(grid_item, EmptyCell):
+                        return
+                    # TODO: Investigate why flipping does not work.
+                    if grid_item.mouse_on and not State.trains_released and len(grid_item.tracks) > 1:
+                        grid_item.flip_tracks()

@@ -23,25 +23,12 @@ tracktype_to_direction = {
     TrackType.BOTTOM_RIGHT: [Direction.RIGHT, Direction.DOWN]
 }
 
-class StationTrack:
-    def __init__(self, i: int, j: int, parent_rect: pg.Rect, direction: Direction):
-        self.i = i
-        self.j = j
-        self.parent_rect = parent_rect
-        self.direction = direction
-        self.endpoints = [pg.Vector2(parent_rect.center)]
-
-        if self.direction == Direction.RIGHT:
-            self.endpoints.append(pg.Vector2(self.parent_rect.midright))
-        elif self.direction == Direction.UP:
-            self.endpoints.append(pg.Vector2(self.parent_rect.midtop))
-        elif self.direction == Direction.LEFT:
-            self.endpoints.append(pg.Vector2(self.parent_rect.midleft))
-        elif self.direction == Direction.DOWN:
-            self.endpoints.append(pg.Vector2(self.parent_rect.midbottom))
-        else:
-            raise ValueError(f"StationTrack direction is wrong: {self.direction}. Expected: {Direction.RIGHT}, {Direction.UP}, {Direction.LEFT}, {Direction.DOWN}")
-
+angle_to_direction = {
+    0: [Direction.RIGHT, Direction.LEFT],
+    90: [Direction.UP, Direction.DOWN],
+    180: [Direction.RIGHT, Direction.LEFT],
+    270: [Direction.UP, Direction.DOWN]
+}
 
 class Track(pg.sprite.Sprite):
     def __init__(self, i: int, j: int, cell_rect: pg.Rect, track_type: TrackType):
@@ -98,3 +85,23 @@ class Track(pg.sprite.Sprite):
             self.image = self.images["bright"]
         else:
             self.image = self.images["dark"]
+
+
+
+class StationTrack(Track):
+    def __init__(self, i: int, j: int, parent_rect: pg.Rect, track_type: TrackType, angle: int):
+        super().__init__(i, j, parent_rect, track_type)
+        self.angle = angle
+        self.parent_rect = parent_rect
+        self.endpoints = [pg.Vector2(parent_rect.center)]
+
+        if self.angle == 0:
+            self.endpoints.append(pg.Vector2(self.parent_rect.midright))
+        elif self.angle == 90:
+            self.endpoints.append(pg.Vector2(self.parent_rect.midtop))
+        elif self.angle == 180:
+            self.endpoints.append(pg.Vector2(self.parent_rect.midleft))
+        elif self.angle == 270:
+            self.endpoints.append(pg.Vector2(self.parent_rect.midbottom))
+        else:
+            raise ValueError(f"StationTrack angle is wrong: {self.angle}. Expected from : [0, 90, 180, 270]")

@@ -39,8 +39,6 @@ def initial_setup():
 def initialize_level() -> Field:
     field = Field()
     field.initialize_grid()
-    # TODO: Instead of the following, load a level from somewhere and place the object accordingly.
-    field.add_level_objects()
     return field
 
 

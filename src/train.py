@@ -1,15 +1,16 @@
 import math
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import pygame as pg
 
+from src.cell import Cell
 from src.field import EmptyCell
 from src.config import Config
 from src.direction import Direction
 from src.resources import Graphics
 from src.sound import Sound
-from src.track import Track
+from src.track import Track, StationTrack
 
 
 class TrainColor(Enum):
@@ -43,9 +44,9 @@ class Train(pg.sprite.Sprite):
         self.angle = 0 * math.pi / 2
         self.base_speed = 1
         self.on_track = False
-        self.last_collided_cells: List[EmptyCell] = []
+        self.last_collided_cells: List[Cell] = []
         self.last_flipped_cell: Optional[EmptyCell] = None
-        self.tracks_ahead: List[Track] = []
+        self.tracks_ahead: List[Union[Track, StationTrack]] = []
         self.selected_track: Optional[Track] = None
         self.is_reset = True
         self.original_pos = self.pos.copy()
@@ -64,7 +65,7 @@ class Train(pg.sprite.Sprite):
         self.is_reset = True
 
 
-    def paint(self, train_color: TrainColor) -> None:
+    def repaint(self, train_color: TrainColor) -> None:
         self.color = train_color
         self.image = Graphics.img_surfaces[self.color.value]
         self.original_image = self.image
@@ -107,6 +108,6 @@ class Train(pg.sprite.Sprite):
         Sound.play_sound_on_channel(Sound.crash, 3)
 
 
-    def add_last_collided_cell(self, empty_cell: EmptyCell):
+    def add_last_collided_cell(self, empty_cell: Cell):
         self.last_collided_cells.append(empty_cell)
         self.last_collided_cells = self.last_collided_cells[-2:]

@@ -26,7 +26,6 @@ class State:
     trains_released = False
     current_tick = 0
     level_passed = False
-    gradient_dest: tuple[float, float] = (0.0, 0.0)
     day_cycle_dest: tuple[float, float] = (0.0, 0.0)
     prev_cell_needs_checking = False
     in_delete_mode = False
@@ -34,11 +33,11 @@ class State:
 
 
     @staticmethod
-    def merge_trains(train_1: Train, train_2: Train) -> None:
-        if train_1.color == train_2.color:
-            upcoming_train_color = train_1.color
+    def determine_upcoming_train_color(color_1: TrainColor, color_2: TrainColor) -> TrainColor:
+        if color_1 == color_2:
+            upcoming_train_color = color_1
         else:
-            colors = [train_1.color, train_2.color]
+            colors = [color_1, color_2]
             if TrainColor.BLUE in colors and TrainColor.RED in colors:
                 upcoming_train_color = TrainColor.PURPLE
             elif TrainColor.BLUE in colors and TrainColor.YELLOW in colors:
@@ -47,8 +46,22 @@ class State:
                 upcoming_train_color = TrainColor.ORANGE
             else:
                 raise ValueError(f"Trains with colors: {colors} crashed. Need brown color...")
-        train_1.paint(upcoming_train_color)
+        return upcoming_train_color
+
+
+    @staticmethod
+    def merge_trains(train_1: Train, train_2: Train) -> None:
+        upcoming_train_color = State.determine_upcoming_train_color(train_1.color, train_2.color)
+
+        train_1.repaint(upcoming_train_color)
         State.trains.remove(train_2)
         train_2.kill()
         logger.info(f"Removed a train! Trains remaining: {len(State.trains)} or {len(State.train_sprites)}") # type: ignore
+        Sound.play_sound_on_channel(Sound.merge, 0)
+
+    @staticmethod
+    def paint_trains(train_1: Train, train_2: Train) -> None:
+        upcoming_color = State.determine_upcoming_train_color(train_1.color, train_2.color)
+        train_1.repaint(upcoming_color)
+        train_2.repaint(upcoming_color)
         Sound.play_sound_on_channel(Sound.merge, 0)
