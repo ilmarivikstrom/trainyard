@@ -4,7 +4,7 @@ from src.config import Config
 from src.field import Field
 from src.game_state import Phase, State
 from src.phases import exit_phase, gameplay_phase, main_menu_phase
-from src.resources import Resources
+from src.resources import Graphics
 from src.sound import Sound
 from src.utils import setup_logging
 
@@ -16,7 +16,8 @@ def main() -> None:
     field = initialize_level()
     clock = pg.time.Clock()
 
-    Sound.start_music()
+    if Config.play_music:
+        Sound.play_music()
 
     while True:
         State.current_tick += 1
@@ -32,7 +33,7 @@ def main() -> None:
 
 def initial_setup():
     pg.display.set_caption("trainyard")
-    Resources.load_resources()
+    Graphics.load_resources()
 
 
 def initialize_level() -> Field:

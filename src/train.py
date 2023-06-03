@@ -7,7 +7,7 @@ import pygame as pg
 from src.field import EmptyCell
 from src.config import Config
 from src.direction import Direction
-from src.resources import Resources
+from src.resources import Graphics
 from src.sound import Sound
 from src.track import Track
 
@@ -33,7 +33,7 @@ class Train(pg.sprite.Sprite):
 
         self.original_direction = direction
 
-        self.image: pg.Surface = Resources.img_surfaces[color.value]
+        self.image: pg.Surface = Graphics.img_surfaces[color.value]
         self.original_image: pg.Surface = self.image
         self.rect: pg.Rect = self.image.get_rect() # type: ignore
         self.rect.x = int(i * Config.cell_size - 0.5 * Config.cell_size + Config.padding_x + 48)
@@ -66,7 +66,7 @@ class Train(pg.sprite.Sprite):
 
     def paint(self, train_color: TrainColor) -> None:
         self.color = train_color
-        self.image = Resources.img_surfaces[self.color.value]
+        self.image = Graphics.img_surfaces[self.color.value]
         self.original_image = self.image
 
 

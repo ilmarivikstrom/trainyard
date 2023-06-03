@@ -18,7 +18,7 @@ class Sound:
     pop.set_volume(0.4 * master_volume)
 
     track_flip = pg.mixer.Sound("assets/sounds/click.wav")
-    track_flip.set_volume(0.4 * master_volume)
+    track_flip.set_volume(0.1 * master_volume)
 
     success = pg.mixer.Sound("assets/sounds/achievement.wav")
     success.set_volume(1.0 * master_volume)
@@ -28,7 +28,11 @@ class Sound:
         pg.mixer.Channel(channel).play(sound)
 
     @staticmethod
-    def start_music() -> None:
+    def play_music() -> None:
         pg.mixer.music.load("assets/sounds/cyberpunk_synthwave2.mp3")
-        pg.mixer.music.set_volume(0.2)
+        pg.mixer.music.set_volume(0.03)
         pg.mixer.music.play(-1)
+
+    @staticmethod
+    def stop_music() -> None:
+        pg.mixer.music.stop()

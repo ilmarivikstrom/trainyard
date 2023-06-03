@@ -4,7 +4,7 @@ import pygame as pg
 from src.config import Config
 from src.controls import UserControl
 from src.direction import Direction
-from src.resources import Resources
+from src.resources import Graphics
 from src.sound import Sound
 from src.track import Track
 from src.utils import setup_logging
@@ -66,7 +66,7 @@ class Cell(pg.sprite.Sprite):
 
 class EmptyCell(Cell):
     def __init__(self, i: int, j: int):
-        super().__init__(i, j, Resources.img_surfaces["bg_tile"], 0)
+        super().__init__(i, j, Graphics.img_surfaces["bg_tile"], 0)
         self.tracks: List[Track] = []
 
     def flip_tracks(self):

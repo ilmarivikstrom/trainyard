@@ -3,5 +3,6 @@
     "search.exclude": {
         "**/.git": true,
         "**/.venv": true
-    }
+    },
+    "editor.rulers": [80]
 }

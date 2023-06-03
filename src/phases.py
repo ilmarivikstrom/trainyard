@@ -15,7 +15,7 @@ from src.controls import UserControl
 from src.direction import Direction
 from src.field import Field, TrackType
 from src.game_state import Phase, State
-from src.resources import Resources
+from src.resources import Graphics
 from src.sound import Sound
 from src.station import ArrivalStation, DepartureStation, CheckmarkSprite
 from src.track import Track
@@ -32,8 +32,8 @@ def update_gameplay_state(field: Field) -> None:
     if UserControl.check_space_down_event():
         State.trains_released = not State.trains_released
     _ = UserControl.check_space_released_event()
-    # TODO: Reset only once.
-    if not State.trains_released:
+
+    if not State.trains_released and not State.trains:
         for station in field.stations:
             station.reset()
         State.trains.clear()
@@ -101,7 +101,7 @@ def draw_background_basecolor() -> None:
 
 def draw_background_day_cycle() -> None:
     State.day_cycle_dest = (-State.current_tick * 0.1, 0)
-    State.screen_surface.blit(Resources.img_surfaces["day_cycle"], dest=State.day_cycle_dest)
+    State.screen_surface.blit(Graphics.img_surfaces["day_cycle"], dest=State.day_cycle_dest)
 
 
 def draw_empty_cell_tracks(empty_cell: EmptyCell) -> None:

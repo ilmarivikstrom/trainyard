@@ -2,12 +2,12 @@ from typing import Dict
 import pygame as pg
 
 
-class Resources:
+class Graphics:
     img_surfaces: Dict[str, pg.Surface] = {}
 
     @staticmethod
     def load_resources() -> None:
-        Resources.img_surfaces = {
+        Graphics.img_surfaces = {
             "day_cycle": pg.image.load("assets/sprites/scrolling_day_cycle.png").convert_alpha(),
             "gradient": pg.image.load("assets/sprites/gradient.png").convert_alpha(),
             "checkmark": pg.image.load("assets/sprites/checkmark.png").convert_alpha(),

@@ -63,19 +63,20 @@ class Field:
 
     def insert_track_to_position(
             self,
-            requested_tracktype: TrackType,
+            track_type: TrackType,
             pos: pg.Vector2
     ) -> None:
-        logger.info("Called set_grid_track_item")
+        logger.info(f"Called set_grid_track_item on pos {pos}")
         empty_cell = self.get_empty_cell_at(round(pos.x), round(pos.y))
-        if empty_cell.rect:
-            track_to_be_added = Track(round(pos.x), round(pos.y), empty_cell.rect, requested_tracktype)
-            if requested_tracktype in [existing_track.track_type for existing_track in empty_cell.tracks]:
-                empty_cell.tracks.clear()
-                empty_cell.tracks.append(track_to_be_added)
-            else:
-                empty_cell.tracks.append(track_to_be_added)
-                empty_cell.tracks = empty_cell.tracks[-2:]
-            if len(empty_cell.tracks) > 1:
-                empty_cell.tracks[0].bright = False
-                empty_cell.tracks[0].image = empty_cell.tracks[0].images["dark"]
+        if empty_cell.rect is None:
+            raise ValueError("Rect of empty_cell is None")
+        track_to_be_added = Track(round(pos.x), round(pos.y), empty_cell.rect, track_type)
+        if track_type in [existing_track.track_type for existing_track in empty_cell.tracks]:
+            empty_cell.tracks.clear()
+            empty_cell.tracks.append(track_to_be_added)
+        else:
+            empty_cell.tracks.append(track_to_be_added)
+            empty_cell.tracks = empty_cell.tracks[-2:]
+        if len(empty_cell.tracks) > 1:
+            empty_cell.tracks[0].bright = False
+            empty_cell.tracks[0].image = empty_cell.tracks[0].images["dark"]

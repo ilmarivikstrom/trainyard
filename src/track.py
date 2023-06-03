@@ -4,8 +4,7 @@ from typing import Dict
 import pygame as pg
 
 from src.direction import Direction
-from src.resources import Resources
-
+from src.resources import Graphics
 
 class TrackType(Enum):
     VERT = 0
@@ -24,6 +23,25 @@ tracktype_to_direction = {
     TrackType.BOTTOM_RIGHT: [Direction.RIGHT, Direction.DOWN]
 }
 
+class StationTrack:
+    def __init__(self, i: int, j: int, parent_rect: pg.Rect, direction: Direction):
+        self.i = i
+        self.j = j
+        self.parent_rect = parent_rect
+        self.direction = direction
+        self.endpoints = [pg.Vector2(parent_rect.center)]
+
+        if self.direction == Direction.RIGHT:
+            self.endpoints.append(pg.Vector2(self.parent_rect.midright))
+        elif self.direction == Direction.UP:
+            self.endpoints.append(pg.Vector2(self.parent_rect.midtop))
+        elif self.direction == Direction.LEFT:
+            self.endpoints.append(pg.Vector2(self.parent_rect.midleft))
+        elif self.direction == Direction.DOWN:
+            self.endpoints.append(pg.Vector2(self.parent_rect.midbottom))
+        else:
+            raise ValueError(f"StationTrack direction is wrong: {self.direction}. Expected: {Direction.RIGHT}, {Direction.UP}, {Direction.LEFT}, {Direction.DOWN}")
+
 
 class Track(pg.sprite.Sprite):
     def __init__(self, i: int, j: int, cell_rect: pg.Rect, track_type: TrackType):
@@ -34,38 +52,38 @@ class Track(pg.sprite.Sprite):
         self.track_type = track_type
         self.directions = tracktype_to_direction[track_type]
         self.bright = True
-        self.endpoints = [pg.Vector2(0, 0), pg.Vector2(0,0)]
+        self.endpoints = [pg.Vector2(0, 0), pg.Vector2(0, 0)]
         self.images: Dict[str, pg.Surface] = {}
 
         if self.track_type == TrackType.VERT:
             self.endpoints = [pg.Vector2(self.cell_rect.midtop), pg.Vector2(self.cell_rect.midbottom)]
-            self.images["bright"] = pg.transform.rotate(Resources.img_surfaces["track_s_bright"], Direction.UP.value)
-            self.images["dark"] = pg.transform.rotate(Resources.img_surfaces["track_s_dark"], Direction.UP.value)
+            self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_s_bright"], Direction.UP.value)
+            self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_s_dark"], Direction.UP.value)
             self.image = self.images["bright"]
         elif self.track_type == TrackType.HORI:
             self.endpoints = [pg.Vector2(self.cell_rect.midleft), pg.Vector2(self.cell_rect.midright)]
-            self.images["bright"] = pg.transform.rotate(Resources.img_surfaces["track_s_bright"], Direction.RIGHT.value)
-            self.images["dark"] = pg.transform.rotate(Resources.img_surfaces["track_s_dark"], Direction.RIGHT.value)
+            self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_s_bright"], Direction.RIGHT.value)
+            self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_s_dark"], Direction.RIGHT.value)
             self.image = self.images["bright"]
         elif self.track_type == TrackType.TOP_RIGHT:
             self.endpoints = [pg.Vector2(self.cell_rect.midtop), pg.Vector2(self.cell_rect.midright)]
-            self.images["bright"] = pg.transform.rotate(Resources.img_surfaces["track_c_bright"], 90)
-            self.images["dark"] = pg.transform.rotate(Resources.img_surfaces["track_c_dark"], 90)
+            self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_c_bright"], 90)
+            self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_c_dark"], 90)
             self.image = self.images["bright"]
         elif self.track_type == TrackType.TOP_LEFT:
             self.endpoints = [pg.Vector2(self.cell_rect.midtop), pg.Vector2(self.cell_rect.midleft)]
-            self.images["bright"] = pg.transform.rotate(Resources.img_surfaces["track_c_bright"], 180)
-            self.images["dark"] = pg.transform.rotate(Resources.img_surfaces["track_c_dark"], 180)
+            self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_c_bright"], 180)
+            self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_c_dark"], 180)
             self.image = self.images["bright"]
         elif self.track_type == TrackType.BOTTOM_LEFT:
             self.endpoints = [pg.Vector2(self.cell_rect.midleft), pg.Vector2(self.cell_rect.midbottom)]
-            self.images["bright"] = pg.transform.rotate(Resources.img_surfaces["track_c_bright"], 270)
-            self.images["dark"] = pg.transform.rotate(Resources.img_surfaces["track_c_dark"], 270)
+            self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_c_bright"], 270)
+            self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_c_dark"], 270)
             self.image = self.images["bright"]
         elif self.track_type == TrackType.BOTTOM_RIGHT:
             self.endpoints = [pg.Vector2(self.cell_rect.midbottom), pg.Vector2(self.cell_rect.midright)]
-            self.images["bright"] = Resources.img_surfaces["track_c_bright"]
-            self.images["dark"] = Resources.img_surfaces["track_c_dark"]
+            self.images["bright"] = Graphics.img_surfaces["track_c_bright"]
+            self.images["dark"] = Graphics.img_surfaces["track_c_dark"]
             self.image = self.images["bright"]
         else:
             raise ValueError("Track type not recognized.")
