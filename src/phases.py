@@ -4,7 +4,7 @@ from typing import List
 
 import pygame as pg
 import pygame.gfxdraw
-from pygame.locals import QUIT
+from pygame.locals import QUIT, MOUSEBUTTONDOWN
 
 from src.cell import EmptyCell
 from src.color_constants import (DELETE_MODE_BG_COLOR, GRAY10,
@@ -27,6 +27,8 @@ logger = setup_logging(log_level=Config.log_level)
 
 def update_gameplay_state(field: Field) -> None:
     UserControl.update_user_control_state()
+    check_delete_mode()
+
     if UserControl.check_space_down_event():
         State.trains_released = not State.trains_released
     _ = UserControl.check_space_released_event()
@@ -39,6 +41,13 @@ def update_gameplay_state(field: Field) -> None:
         State.trains_crashed = 0
         State.trains_released = False
         State.level_passed = False
+
+
+def check_delete_mode() -> None:
+    if UserControl.pressed_keys[UserControl.DELETE_MODE]:
+        State.in_delete_mode = True
+    else:
+        State.in_delete_mode = False
 
 
 def check_for_gameplay_command() -> None:
@@ -198,7 +207,7 @@ def reset_train_statuses() -> None:
 
 
 def check_track_delete(empty_cell: EmptyCell) -> None:
-    mouse_pressed_cell_while_in_delete_mode = (empty_cell.mouse_on and UserControl.mouse_pressed[0] and UserControl.delete_mode and not State.trains_released)
+    mouse_pressed_cell_while_in_delete_mode = (empty_cell.mouse_on and UserControl.mouse_pressed[0] and State.in_delete_mode and not State.trains_released)
     if mouse_pressed_cell_while_in_delete_mode:
         empty_cell.tracks.clear()
 
@@ -310,7 +319,7 @@ def check_train_merges() -> None:
 
 
 def check_for_new_track_placement(field: Field) -> None:
-    left_mouse_down_in_draw_mode = (UserControl.mouse_pressed[0] and not UserControl.delete_mode and not State.trains_released)
+    left_mouse_down_in_draw_mode = (UserControl.mouse_pressed[0] and not State.in_delete_mode and not State.trains_released)
     mouse_moved_over_cells = (UserControl.prev_cell and UserControl.curr_cell)
 
     if left_mouse_down_in_draw_mode and mouse_moved_over_cells and State.prev_cell_needs_checking:
@@ -348,8 +357,16 @@ def display_checkmarks(field: Field) -> None:
         State.screen_surface.blit(source=station.checkmark.image, dest=station.rect.topleft)
 
 
+def check_profiling_command() -> None:
+    if UserControl.pressed_keys[pg.K_F1]:
+        State.profiler.continue_profiling()
+    else:
+        State.profiler.discontinue_profiling()
+
+
 def gameplay_phase(field: Field) -> None:
     check_events(field)
+    check_profiling_command()
     update_gameplay_state(field)
     draw_background_basecolor()
     draw_background_day_cycle()
@@ -369,7 +386,7 @@ def gameplay_phase(field: Field) -> None:
             State.prev_cell_needs_checking = True
         check_track_delete(empty_cell)
 
-        if not State.trains_released:
+        if not State.trains_released or len(State.trains) == 0:
             continue
 
         for train in State.trains:
@@ -449,8 +466,8 @@ def check_events(field: Field) -> None:
         if event.type == QUIT:
             State.game_phase = Phase.GAME_END
             logger.info(f"Moving to state {State.game_phase}")
-        if event.type == pg.MOUSEBUTTONDOWN:
+        elif event.type == MOUSEBUTTONDOWN:
             if event.button == 3:
                 for cell in field.empty_cells:
-                    if cell.mouse_on and not State.trains_released:
+                    if cell.mouse_on and not State.trains_released and len(cell.tracks) > 1:
                         cell.flip_tracks()

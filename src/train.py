@@ -70,7 +70,6 @@ class Train(pg.sprite.Sprite):
         self.original_image = self.image
 
 
-
     def rot_center(self, angle: float) -> pg.Surface:
         """rotate an image while keeping its center and size"""
         orig_rect = self.original_image.get_rect()
@@ -79,6 +78,7 @@ class Train(pg.sprite.Sprite):
         rot_rect.center = rot_image.get_rect().center
         rot_image = rot_image.subsurface(rot_rect).copy()
         return rot_image
+
 
     def move(self) -> None:
         self.image = self.rot_center(self.angle) # type: ignore

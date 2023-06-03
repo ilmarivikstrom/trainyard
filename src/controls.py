@@ -27,7 +27,6 @@ class UserControl:
     curr_movement = Direction.NONE
     prev_movement = Direction.NONE
 
-    delete_mode = False
 
     @staticmethod
     def check_space_down_event() -> bool:
@@ -55,10 +54,6 @@ class UserControl:
             UserControl.curr_movement = None
             UserControl.prev_movement = None
             UserControl.prev_cell = None
-        if UserControl.pressed_keys[UserControl.DELETE_MODE]:
-            UserControl.delete_mode = True
-        else:
-            UserControl.delete_mode = False
         if UserControl.pressed_keys[pg.K_1]:
             Config.FPS = Config.FPS_list[0]
         elif UserControl.pressed_keys[pg.K_2]:

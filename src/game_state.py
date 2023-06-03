@@ -4,6 +4,7 @@ from typing import List
 import pygame as pg
 
 from src.config import Config
+from src.profiling import Profiler
 from src.sound import Sound
 from src.train import Train, TrainColor
 from src.utils import setup_logging
@@ -28,6 +29,8 @@ class State:
     gradient_dest: tuple[float, float] = (0.0, 0.0)
     day_cycle_dest: tuple[float, float] = (0.0, 0.0)
     prev_cell_needs_checking = False
+    in_delete_mode = False
+    profiler: Profiler = Profiler()
 
 
     @staticmethod
