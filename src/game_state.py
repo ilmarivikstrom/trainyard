@@ -6,7 +6,8 @@ import pygame as pg
 from src.config import Config
 from src.profiling import Profiler
 from src.sound import Sound
-from src.train import Train, TrainColor
+from src.train import Train
+from src.traincolor import blend_train_colors
 from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
@@ -33,25 +34,8 @@ class State:
 
 
     @staticmethod
-    def determine_upcoming_train_color(color_1: TrainColor, color_2: TrainColor) -> TrainColor:
-        if color_1 == color_2:
-            upcoming_train_color = color_1
-        else:
-            colors = [color_1, color_2]
-            if TrainColor.BLUE in colors and TrainColor.RED in colors:
-                upcoming_train_color = TrainColor.PURPLE
-            elif TrainColor.BLUE in colors and TrainColor.YELLOW in colors:
-                upcoming_train_color = TrainColor.GREEN
-            elif TrainColor.YELLOW in colors and TrainColor.RED in colors:
-                upcoming_train_color = TrainColor.ORANGE
-            else:
-                upcoming_train_color = TrainColor.BROWN
-        return upcoming_train_color
-
-
-    @staticmethod
     def merge_trains(train_1: Train, train_2: Train) -> None:
-        upcoming_train_color = State.determine_upcoming_train_color(train_1.color, train_2.color)
+        upcoming_train_color = blend_train_colors(train_1.color, train_2.color)
 
         train_1.repaint(upcoming_train_color)
         State.trains.remove(train_2)
@@ -62,7 +46,7 @@ class State:
 
     @staticmethod
     def paint_trains(train_1: Train, train_2: Train) -> None:
-        upcoming_color = State.determine_upcoming_train_color(train_1.color, train_2.color)
+        upcoming_color = blend_train_colors(train_1.color, train_2.color)
         train_1.repaint(upcoming_color)
         train_2.repaint(upcoming_color)
         Sound.play_sound_on_channel(Sound.merge, 0)
