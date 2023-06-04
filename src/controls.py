@@ -42,7 +42,7 @@ class UserControl:
             UserControl.wait_for_space_up = False
 
     @staticmethod
-    def update_user_control_state():
+    def update_user_controls():
         UserControl.mouse_pos = pg.mouse.get_pos()
         UserControl.pressed_keys = pg.key.get_pressed()
         UserControl.mouse_pressed = pg.mouse.get_pressed()

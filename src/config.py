@@ -15,4 +15,4 @@ class Config:
     log_level: str = "INFO"
     angular_vel: float = (math.pi / 2) / 48 # With 48 ticks per 90 degrees.
     play_music: bool = False
-    background_scroll_speed: float = 0.1
+    background_scroll_speed: int = 0.1

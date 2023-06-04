@@ -1,6 +1,5 @@
 import csv
 import math
-import sys
 from typing import List
 
 import pygame as pg
@@ -8,14 +7,14 @@ import pygame.gfxdraw
 from pygame.locals import QUIT, MOUSEBUTTONDOWN
 
 from src.cell import Cell, EmptyCell
-from src.color_constants import (DELETE_MODE_BG_COLOR, GRAY10,
+from src.color_constants import (DELETE_MODE_BG_COLOR,
                                  NORMAL_MODE_BG_COLOR, WHITESMOKE)
 from src.color_constants import GRAY, RED1, WHITE
 from src.config import Config
 from src.controls import UserControl
 from src.direction import Direction
 from src.field import Field, TrackType
-from src.game_state import Phase, State
+from src.state import Phase, State
 from src.graphics import Graphics
 from src.screen import Screen
 from src.sound import Sound
@@ -28,22 +27,9 @@ from src.utils import setup_logging
 logger = setup_logging(log_level=Config.log_level)
 
 
-def check_for_gameplay_command(state: State) -> None:
-    if UserControl.pressed_keys[UserControl.GAMEPLAY]:
-        state.game_phase = Phase.GAMEPLAY
-        logger.info(f"Moving to state {state.game_phase}")
-
-
-def check_for_main_menu_command(state: State) -> None:
+def check_for_mainmenu_command(state: State) -> None:
     if UserControl.pressed_keys[UserControl.MAIN_MENU]:
-        state.gameplay.reset()
         state.game_phase = Phase.MAIN_MENU
-        logger.info(f"Moving to state {state.game_phase}")
-
-
-def check_for_exit_command(state: State) -> None:
-    if UserControl.pressed_keys[UserControl.EXIT]:
-        state.game_phase = Phase.GAME_END
         logger.info(f"Moving to state {state.game_phase}")
 
 
@@ -109,8 +95,8 @@ def check_and_save_field(field: Field, file_name: str="level_tmp.csv") -> None:
         logger.info(f"Saved game to '{file_path}'")
 
 
-def update_gameplay_state(state: State, field: Field) -> None:
-    UserControl.update_user_control_state()
+def update_gameplay_state(state: State) -> None:
+    UserControl.update_user_controls()
 
     if UserControl.pressed_keys[UserControl.DELETE_MODE]:
         state.gameplay.delete_mode = True
@@ -119,15 +105,16 @@ def update_gameplay_state(state: State, field: Field) -> None:
 
     if UserControl.space_down_event():
         state.gameplay.trains_released = not state.gameplay.trains_released
+    if state.gameplay.trains_released:
+        state.gameplay.current_tick += 1
+    else:
+        state.gameplay.current_tick = 0
     UserControl.check_space_released_event()
-
-    if not state.gameplay.trains_released:
-        reset_to_beginning(state, field)
 
 
 def reset_to_beginning(state: State, field: Field) -> None:
     field.reset()
-    state.gameplay.reset()
+    state.reset_gameplay_status()
 
 
 def tick_trains(state: State, field: Field) -> None:
@@ -161,7 +148,7 @@ def tick_departures(state: State, field: Field) -> None:
     if not state.gameplay.trains_released:
         return
     for departure_station in field.departure_stations:
-        res = departure_station.tick(state.global_status.current_tick)
+        res = departure_station.tick(state.gameplay.current_tick)
         if res is not None:
             add_new_train(field, res)
 
@@ -203,10 +190,10 @@ def check_for_new_track_placement(state: State, field: Field) -> None:
         state.gameplay.prev_cell_needs_checking = False
 
 
-def check_for_pygame_events(state: State, field: Field) -> None:
+def check_for_pg_gameplay_events(state: State, field: Field) -> None:
     for event in pg.event.get():
         if event.type == QUIT:
-            state.game_phase = Phase.GAME_END
+            state.game_phase = Phase.EXIT
             logger.info(f"Moving to state {state.game_phase}")
         elif event.type == MOUSEBUTTONDOWN and event.button == 3:
             for empty_cell in field.empty_cells:
@@ -406,15 +393,8 @@ def draw_middle_line(screen: Screen) -> None:
 
 
 def draw_background_basecolor(screen: Screen, state: State) -> None:
-    if state.gameplay.trains_released:
-        screen.surface.fill(DELETE_MODE_BG_COLOR)
-    else:
-        screen.surface.fill(NORMAL_MODE_BG_COLOR)
-
-
-def draw_background_day_cycle(screen: Screen, state: State) -> None:
-    state.gameplay.background_location = (-state.global_status.current_tick * Config.background_scroll_speed, 0)
-    screen.surface.blit(Graphics.img_surfaces["day_cycle"], dest=state.gameplay.background_location)
+    tick_index = int((Config.background_scroll_speed * state.gameplay.current_tick) % len(screen.background_color_array))
+    screen.surface.fill(screen.background_color_array[tick_index])
 
 
 def draw_station_goals(screen: Screen, field: Field) -> None:
@@ -468,12 +448,16 @@ def draw_empty_cell_tracks(screen: Screen, empty_cell: EmptyCell) -> None:
             draw_arcs_and_endpoints(screen, track)
 
 
+def check_and_reset_gameplay(state: State, field: Field) -> None:
+    if not state.gameplay.trains_released:
+        reset_to_beginning(state, field)
 
 
-def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
+def execute_business_logic(state: State, field: Field) -> None:
     check_and_toggle_profiling(state)
-    check_for_pygame_events(state, field)
-    update_gameplay_state(state, field)
+    check_for_pg_gameplay_events(state, field)
+    update_gameplay_state(state)
+    check_and_reset_gameplay(state, field)
     check_and_save_field(field)
     reset_train_statuses(field)
     select_tracks_and_move_trains(state, field)
@@ -484,12 +468,14 @@ def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
     tick_trains(state, field)
     check_for_new_track_placement(state, field)
     check_for_level_completion(state, field)
-    check_for_main_menu_command(state)
+    check_for_mainmenu_command(state)
     tick_departures(state, field)
     determine_arrival_station_checkmarks(field)
 
+
+def draw_game_objects(state: State, field: Field, screen: Screen) -> None:
     draw_background_basecolor(screen, state)
-    draw_background_day_cycle(screen, state)
+    #draw_background_day_cycle(screen, state)
     field.empty_cells_sprites.draw(screen.surface)
     field.rock_cells_sprites.draw(screen.surface)
     draw_empty_cells_tracks(screen, field)
@@ -503,16 +489,6 @@ def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
 
 
 
-
-def main_menu_phase(state: State, screen: Screen, field: Field) -> None:
-    UserControl.update_user_control_state()
-    screen.surface.fill(GRAY10)
-    check_for_pygame_events(state, field)
-    check_for_gameplay_command(state)
-    check_for_exit_command(state)
-
-
-def exit_phase():
-    logger.info("Exiting...")
-    pg.quit()
-    sys.exit()
+def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
+    execute_business_logic(state, field)
+    draw_game_objects(state, field, screen)

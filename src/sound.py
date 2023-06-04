@@ -12,10 +12,10 @@ class Sound:
     crash.set_volume(0.4 * master_volume)
 
     merge = pg.mixer.Sound("assets/sounds/merge.wav")
-    merge.set_volume(0.4 * master_volume)
+    merge.set_volume(0.05 * master_volume)
 
     pop = pg.mixer.Sound("assets/sounds/pop.mp3")
-    pop.set_volume(0.4 * master_volume)
+    pop.set_volume(0.1 * master_volume)
 
     track_flip = pg.mixer.Sound("assets/sounds/click.wav")
     track_flip.set_volume(0.1 * master_volume)

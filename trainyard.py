@@ -2,8 +2,10 @@ import pygame as pg
 
 from src.config import Config
 from src.field import Field
-from src.game_state import Phase, State
-from src.phases import exit_phase, gameplay_phase, main_menu_phase
+from src.state import Phase, State
+from src.phase_exit import exit_phase
+from src.phase_gameplay import gameplay_phase
+from src.phase_mainmenu import mainmenu_phase
 from src.graphics import Graphics
 from src.screen import Screen
 from src.sound import Sound
@@ -26,8 +28,8 @@ def main() -> None:
     while True:
         state.global_status.current_tick += 1
         if state.game_phase == Phase.MAIN_MENU:
-            main_menu_phase(state, screen, field)
-        elif state.game_phase == Phase.GAME_END:
+            mainmenu_phase(state, screen)
+        elif state.game_phase == Phase.EXIT:
             exit_phase()
         elif state.game_phase == Phase.GAMEPLAY:
             gameplay_phase(state, screen, field)
