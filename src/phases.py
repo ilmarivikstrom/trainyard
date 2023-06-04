@@ -18,7 +18,7 @@ from src.field import Field, TrackType
 from src.game_state import Phase, State
 from src.graphics import Graphics
 from src.sound import Sound
-from src.station import ArrivalStation, DepartureStation, CheckmarkSprite, Station
+from src.station import CheckmarkSprite, Station
 from src.track import Track
 from src.train import Train
 from src.utils import setup_logging
@@ -35,9 +35,10 @@ def update_gameplay_state(field: Field) -> None:
     _ = UserControl.check_space_released_event()
 
     if not State.trains_released:
-        for grid_item in field.grid:
-            if isinstance(grid_item, Station):
-                grid_item.reset()
+        for departure_station in field.departure_stations:
+            departure_station.reset()
+        for arrival_station in field.arrival_stations:
+            arrival_station.reset()
         State.trains.clear()
         State.train_sprites.empty() #type: ignore
         State.trains_crashed = 0
@@ -129,40 +130,37 @@ def tick_trains() -> None:
 
 def check_train_arrivals(field: Field) -> None:
     for train in State.trains:
-        for grid_item in field.grid:
-            if grid_item.rect is None:
-                raise ValueError(f"The rect of {grid_item} is None.")
-            if isinstance(grid_item, ArrivalStation) and train.rect.collidepoint(grid_item.rect.center):
-                if train.color == grid_item.train_color and grid_item.goals and grid_item.number_of_trains_left > 0:
+        for arrival_station in field.arrival_stations:
+            if arrival_station.rect is None:
+                raise ValueError(f"The rect of {arrival_station} is None.")
+            if train.rect.collidepoint(arrival_station.rect.center):
+                if train.color == arrival_station.train_color and arrival_station.goals and arrival_station.number_of_trains_left > 0:
                     State.trains.remove(train)
                     State.train_sprites.remove(train) # type: ignore
-                    grid_item.is_reset = False
-                    grid_item.number_of_trains_left -= 1
-                    grid_item.goals.pop().kill()
-                    logger.debug(f"Caught a train! Number of trains still expecting: {grid_item.number_of_trains_left}")
+                    arrival_station.is_reset = False
+                    arrival_station.number_of_trains_left -= 1
+                    arrival_station.goals.pop().kill()
+                    logger.debug(f"Caught a train! Number of trains still expecting: {arrival_station.number_of_trains_left}")
                     Sound.play_sound_on_channel(Sound.pop, 1)
                 else:
                     logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
                     train.crash()
                     State.trains_crashed += 1
-                    grid_item.checkmark = None
-                logger.info(f"Arrival station saveable attributes: {grid_item.saveable_attributes.serialize()}")
+                    arrival_station.checkmark = None
+                logger.info(f"Arrival station saveable attributes: {arrival_station.saveable_attributes.serialize()}")
 
 
 def determine_arrival_station_checkmarks(field: Field) -> None:
-    for grid_item in field.grid:
-        if isinstance(grid_item, ArrivalStation) and grid_item.number_of_trains_left == 0 and grid_item.rect is not None:
-            grid_item.checkmark = CheckmarkSprite(grid_item.rect)
-        else:
-            if isinstance(grid_item, Station):
-                grid_item.checkmark = None
-
+    for arrival_station in field.arrival_stations:
+        if arrival_station.number_of_trains_left == 0 and arrival_station.rect is not None:
+            arrival_station.checkmark = CheckmarkSprite(arrival_station.rect)
 
 
 def draw_station_goals(field: Field) -> None:
-    for grid_item in field.grid:
-        if isinstance(grid_item, Station):
-            grid_item.goal_sprites.draw(State.screen_surface) # type: ignore
+    for arrival_station in field.arrival_stations:
+        arrival_station.goal_sprites.draw(State.screen_surface) # type: ignore
+    for departure_station in field.departure_stations:
+        departure_station.goal_sprites.draw(State.screen_surface) # type: ignore
 
 
 def draw_separator_line() -> None:
@@ -177,11 +175,10 @@ def add_new_train(train: Train) -> None:
 def tick_departures(field: Field) -> None:
     if not State.trains_released:
         return
-    for grid_item in field.grid:
-        if isinstance(grid_item, DepartureStation):
-            res = grid_item.tick(State.current_tick)
-            if isinstance(res, Train):
-                add_new_train(res)
+    for departure_station in field.departure_stations:
+        res = departure_station.tick(State.current_tick)
+        if res is not None:
+            add_new_train(res)
 
 
 def check_for_main_menu_command() -> None:
@@ -194,8 +191,8 @@ def check_for_main_menu_command() -> None:
 
 
 def arrivals_pending(field: Field) -> bool:
-    for grid_item in field.grid:
-        if isinstance(grid_item, ArrivalStation) and grid_item.number_of_trains_left > 0:
+    for arrival_station in field.arrival_stations:
+        if arrival_station.number_of_trains_left > 0:
             return True
     return False
 
@@ -360,10 +357,10 @@ def check_for_new_track_placement(field: Field) -> None:
 
 
 def display_checkmarks(field: Field) -> None:
-    for grid_item in field.grid:
-        if not isinstance(grid_item, ArrivalStation) or grid_item.checkmark is None or grid_item.checkmark.image is None or grid_item.rect is None:
+    for arrival_station in field.arrival_stations:
+        if arrival_station.checkmark is None or arrival_station.checkmark.image is None or arrival_station.rect is None:
             continue
-        State.screen_surface.blit(source=grid_item.checkmark.image, dest=grid_item.rect.topleft)
+        State.screen_surface.blit(source=arrival_station.checkmark.image, dest=arrival_station.rect.topleft)
 
 
 def check_profiling_command() -> None:
@@ -373,19 +370,17 @@ def check_profiling_command() -> None:
         State.profiler.discontinue_profiling()
 
 
-def check_if_should_save_field(field: Field, file_name: str="level_tmp.csv") -> None:
-    if UserControl.pressed_keys[UserControl.SAVE_GAME]:
-        file_path = f"levels/{file_name}"
-        with open(file_path, newline="", mode="w", encoding="utf-8") as level_file:
-            level_writer = csv.writer(level_file, delimiter="-")
-            row: List[str] = []
-            for i, cell in enumerate(field.grid):
-                if isinstance(cell, Union[EmptyCell, Station]):
-                    row.append(cell.saveable_attributes.serialize())
-                    if (i+1) % 8 == 0:
-                        level_writer.writerow(row)
-                        row.clear()
-        logger.info(f"Saved game to '{file_path}'")
+def save_field(field: Field, file_name: str="level_tmp.csv") -> None:
+    file_path = f"levels/{file_name}"
+    with open(file_path, newline="", mode="w", encoding="utf-8") as level_file:
+        level_writer = csv.writer(level_file, delimiter="-")
+        row: List[str] = []
+        for i, cell in enumerate(field.full_grid):
+            row.append(cell.saveable_attributes.serialize())
+            if (i+1) % 8 == 0:
+                level_writer.writerow(row)
+                row.clear()
+    logger.info(f"Saved game to '{file_path}'")
 
 
 
@@ -400,18 +395,14 @@ def gameplay_phase(field: Field) -> None:
 
     reset_train_statuses()
 
-    for cell in field.grid:
-        if not isinstance(cell, EmptyCell):
-            continue
-
-        if cell.rect is None:
+    for empty_cell in field.empty_cells:
+        if empty_cell.rect is None:
             raise ValueError("The cell's rect is None. Exiting.")
+        draw_empty_cell_tracks(empty_cell)
+        check_track_delete(empty_cell)
 
-        draw_empty_cell_tracks(cell)
-        check_track_delete(cell)
 
-
-    for cell in field.grid:
+    for cell in field.full_grid:
         if cell.check_mouse_collision():
             State.prev_cell_needs_checking = True
         for train in State.trains:
@@ -480,7 +471,8 @@ def gameplay_phase(field: Field) -> None:
     determine_arrival_station_checkmarks(field)
     display_checkmarks(field)
 
-    check_if_should_save_field(field)
+    if UserControl.pressed_keys[UserControl.SAVE_GAME]:
+        save_field(field)
 
 
 def exit_phase():
@@ -496,8 +488,6 @@ def check_events(field: Field) -> None:
             logger.info(f"Moving to state {State.game_phase}")
         elif event.type == MOUSEBUTTONDOWN:
             if event.button == 3:
-                for grid_item in field.grid:
-                    if not isinstance(grid_item, EmptyCell):
-                        continue
-                    if grid_item.mouse_on and not State.trains_released and len(grid_item.tracks) > 1:
-                        grid_item.flip_tracks()
+                for empty_cell in field.empty_cells:
+                    if empty_cell.mouse_on and not State.trains_released and len(empty_cell.tracks) > 1:
+                        empty_cell.flip_tracks()

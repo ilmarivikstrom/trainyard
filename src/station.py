@@ -11,7 +11,7 @@ from src.saveable import SaveableAttributes
 from src.sound import Sound
 from src.train import Train
 from src.traincolor import TrainColor
-from src.track import StationTrack, TrackType
+from src.track import StationTrack, Track, TrackType
 from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
@@ -48,9 +48,9 @@ class Station(Cell):
             raise ValueError("Rect is None.")
 
         if self.angle in [0, 180]:
-            self.tracks: List[StationTrack] = [StationTrack(i, j, self.rect, TrackType.HORI, self.angle)]
+            self.tracks: List[Track] = [StationTrack(i, j, self.rect, TrackType.HORI, self.angle)]
         elif self.angle in [90, 270]:
-            self.tracks: List[StationTrack] = [StationTrack(i, j, self.rect, TrackType.VERT, self.angle)]
+            self.tracks: List[Track] = [StationTrack(i, j, self.rect, TrackType.VERT, self.angle)]
         self.create_goal_sprites()
 
     def create_goal_sprites(self) -> None:

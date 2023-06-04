@@ -1,3 +1,4 @@
+from typing import Tuple
 import pygame as pg
 
 from src.config import Config
@@ -16,7 +17,7 @@ class UserControl:
     SAVE_GAME = pg.K_s
 
     mouse_pos = pg.Vector2(-1, -1)
-    mouse_pressed = (False, False, False)
+    mouse_pressed: Tuple[bool, bool, bool] = (False, False, False)
     curr_cell = pg.Vector2(-1, -1)
     prev_cell = pg.Vector2(-1, -1)
 
