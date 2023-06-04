@@ -62,6 +62,15 @@ class Field:
         self.arrival_stations = [cell for cell in self.full_grid if isinstance(cell, ArrivalStation)]
 
 
+    def reset(self) -> None:
+        for departure_station in self.departure_stations:
+            departure_station.reset()
+        for arrival_station in self.arrival_stations:
+            arrival_station.reset()
+        self.trains.clear()
+        self.train_sprites.empty()
+
+
     def get_grid_cell_list_index(self, i: int = 0, j: int = 0) -> int:
         return int(j) * self.cells_y + int(i)
 

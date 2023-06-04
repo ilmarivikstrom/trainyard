@@ -31,20 +31,16 @@ class UserControl:
 
 
     @staticmethod
-    def check_space_down_event() -> bool:
+    def space_down_event() -> bool:
         if UserControl.pressed_keys[pg.K_SPACE] and not UserControl.wait_for_space_up:
             UserControl.wait_for_space_up = True
-            logger.debug("Space down.")
             return True
         return False
 
     @staticmethod
-    def check_space_released_event() -> bool:
+    def check_space_released_event() -> None:
         if UserControl.wait_for_space_up and not UserControl.pressed_keys[pg.K_SPACE]:
             UserControl.wait_for_space_up = False
-            logger.debug("Space released.")
-            return True
-        return False
 
 
     @staticmethod
