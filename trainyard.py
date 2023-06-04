@@ -20,7 +20,7 @@ def main() -> None:
         Sound.play_music()
 
     while True:
-        State.current_tick += 1
+        State.global_status.current_tick += 1
         if State.game_phase == Phase.MAIN_MENU:
             main_menu_phase(field)
         elif State.game_phase == Phase.GAME_END:
