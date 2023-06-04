@@ -3,7 +3,7 @@ from typing import List, Union
 
 import pygame as pg
 
-from src.cell import EmptyCell
+from src.cell import Cell, EmptyCell
 from src.config import Config
 from src.saveable import Saveable
 from src.station import ArrivalStation, DepartureStation, Station
@@ -17,7 +17,7 @@ class Field:
     def __init__(self):
         self.cells_x = Config.cells_x
         self.cells_y = Config.cells_y
-        self.grid: List[Union[Station, EmptyCell]] = []
+        self.grid: List[Cell] = []
         self.empty_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()

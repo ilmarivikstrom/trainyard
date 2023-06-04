@@ -1,27 +1,15 @@
 import math
-from enum import Enum
 from typing import List, Optional, Union
 
 import pygame as pg
 
-from src.cell import Cell
-from src.field import EmptyCell
+from src.cell import Cell, EmptyCell
 from src.config import Config
 from src.direction import Direction
-from src.resources import Graphics
+from src.graphics import Graphics
 from src.sound import Sound
 from src.track import Track, StationTrack
-
-
-class TrainColor(Enum):
-    RED = "train_red"
-    BLUE = "train_blue"
-    YELLOW = "train_yellow"
-
-    ORANGE = "train_orange"
-    PURPLE = "train_purple"
-    GREEN = "train_green"
-
+from src.traincolor import TrainColor
 
 
 class Train(pg.sprite.Sprite):

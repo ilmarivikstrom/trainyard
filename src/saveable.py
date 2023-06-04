@@ -1,24 +1,22 @@
-from typing import Optional, Tuple
-from src.train import TrainColor
+from typing import Union
+from src.traincolor import TrainColor, color_as_short_string
+
 
 class SaveableAttributes:
-    # TypeNumberColor:Orientation:PosI,PosJ
-    # Example:
-    #  - D1y:90:3,4
-    #  - E:0:4,4
-    #  - R:0:6,7
-    #  - A4r:90:7,7
-    def __init__(self, block_type: str="", color: Optional[TrainColor]=None, number: Optional[int]=None, orientation: int=0, position: Optional[Tuple[int, int]]=None):
+    # TypeNumberColorOrientation
+    # Examples:
+    #  - D1y90
+    #  - E
+    #  - R
+    #  - A4r90
+    def __init__(self, block_type: str="", color: Union[TrainColor, str]="", number: Union[int, str]="", angle: Union[int, str]=""):
         self.block_type = block_type
-        self.color = str(color).rsplit(".", maxsplit=1)[-1][0].lower() # TrainColor.YELLOW --> 'y'
+        self.color = color_as_short_string(color)
         self.number = number
-        self.orientation = orientation
-        self.position = position
+        self.angle = angle
 
     def serialize(self) -> str:
-        if self.position:
-            return f"{self.block_type}{self.number}{self.color}:{self.orientation}:{self.position[0]},{self.position[1]}"
-        raise ValueError("Position must be initialized to some actual value.")
+        return f"{self.block_type}{self.number}{self.color}{self.angle}"
 
 
 class Saveable:

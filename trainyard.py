@@ -4,7 +4,7 @@ from src.config import Config
 from src.field import Field
 from src.game_state import Phase, State
 from src.phases import exit_phase, gameplay_phase, main_menu_phase
-from src.resources import Graphics
+from src.graphics import Graphics
 from src.sound import Sound
 from src.utils import setup_logging
 

@@ -13,6 +13,7 @@ class UserControl:
     GAMEPLAY = pg.K_RETURN
     MOUSE_DOWN = pg.MOUSEBUTTONDOWN
     DELETE_MODE = pg.K_LSHIFT
+    SAVE_GAME = pg.K_s
 
     mouse_pos = pg.Vector2(-1, -1)
     mouse_pressed = (False, False, False)

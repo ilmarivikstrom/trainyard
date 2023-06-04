@@ -1,12 +1,13 @@
+import csv
 import math
 import sys
-from typing import List
+from typing import List, Union
 
 import pygame as pg
 import pygame.gfxdraw
 from pygame.locals import QUIT, MOUSEBUTTONDOWN
 
-from src.cell import EmptyCell
+from src.cell import Cell, EmptyCell
 from src.color_constants import (DELETE_MODE_BG_COLOR, GRAY10,
                                  NORMAL_MODE_BG_COLOR, WHITESMOKE)
 from src.color_constants import GRAY, RED1, WHITE
@@ -15,7 +16,7 @@ from src.controls import UserControl
 from src.direction import Direction
 from src.field import Field, TrackType
 from src.game_state import Phase, State
-from src.resources import Graphics
+from src.graphics import Graphics
 from src.sound import Sound
 from src.station import ArrivalStation, DepartureStation, CheckmarkSprite, Station
 from src.track import Track
@@ -216,97 +217,99 @@ def check_track_delete(empty_cell: EmptyCell) -> None:
         empty_cell.tracks.clear()
 
 
-def move_train_along_selected_track(train: Train, empty_cell: EmptyCell) -> None:
-    # If the train has selected a track.
-    if train.selected_track is not None and empty_cell.rect is not None:
-        train.on_track = True
-        # If the selected track is vertical.
-        if train.selected_track.track_type == TrackType.VERT:
-            if train.direction == Direction.UP:
+def move_train_along_cell(train: Train, cell: Cell) -> None:
+    if train.selected_track is None or cell.rect is None:
+        return
+    train.on_track = True
+    # If the selected track is vertical.
+    if train.selected_track.track_type == TrackType.VERT:
+        if train.direction == Direction.UP:
+            train.angle = math.radians(90)
+            train.pos = pg.Vector2(round(train.pos.x), round(train.pos.y))
+        elif train.direction == Direction.DOWN:
+            train.angle = math.radians(270)
+            train.pos = pg.Vector2(round(train.pos.x), round(train.pos.y))
+    # If the selected track is horizontal.
+    elif train.selected_track.track_type == TrackType.HORI:
+        if train.direction == Direction.RIGHT:
+            train.angle = math.radians(0)
+            train.pos = pg.Vector2(round(train.pos.x), round(train.pos.y))
+        elif train.direction == Direction.LEFT:
+            train.angle = math.radians(180)
+            train.pos = pg.Vector2(round(train.pos.x), round(train.pos.y))
+    # If the selected track is top-right.
+    elif train.selected_track.track_type == TrackType.TOP_RIGHT:
+        if train.direction == Direction.LEFT:
+            train.angle -= Config.angular_vel
+            if train.angle <= math.radians(90) + 0.5 * Config.angular_vel:
+                train.direction = Direction.UP
                 train.angle = math.radians(90)
-                train.pos = pg.Vector2(round(train.pos.x), round(train.pos.y))
-            elif train.direction == Direction.DOWN:
-                train.angle = math.radians(270)
-                train.pos = pg.Vector2(round(train.pos.x), round(train.pos.y))
-        # If the selected track is horizontal.
-        elif train.selected_track.track_type == TrackType.HORI:
-            if train.direction == Direction.RIGHT:
+                train.rect.center = cell.rect.midtop
+                train.pos = pg.Vector2(train.rect.topleft)
+        elif train.direction == Direction.DOWN:
+            train.angle += Config.angular_vel
+            if train.angle >= math.radians(360) - 0.5 * Config.angular_vel:
+                train.direction = Direction.RIGHT
                 train.angle = math.radians(0)
-                train.pos = pg.Vector2(round(train.pos.x), round(train.pos.y))
-            elif train.direction == Direction.LEFT:
+                train.rect.center = cell.rect.midright
+                train.pos = pg.Vector2(train.rect.topleft)
+    # If the selected track is top-left.
+    elif train.selected_track.track_type == TrackType.TOP_LEFT:
+        if train.direction == Direction.RIGHT:
+            train.angle += Config.angular_vel
+            if train.angle >= math.radians(90) - 0.5 * Config.angular_vel:
+                train.direction = Direction.UP
+                train.angle = math.radians(90)
+                train.rect.center = cell.rect.midtop
+                train.pos = pg.Vector2(train.rect.topleft)
+        elif train.direction == Direction.DOWN:
+            train.angle -= Config.angular_vel
+            if train.angle <= math.radians(180) + 0.5 * Config.angular_vel:
+                train.direction = Direction.LEFT
                 train.angle = math.radians(180)
-                train.pos = pg.Vector2(round(train.pos.x), round(train.pos.y))
-        # If the selected track is top-right.
-        elif train.selected_track.track_type == TrackType.TOP_RIGHT:
-            if train.direction == Direction.LEFT:
-                train.angle -= Config.angular_vel
-                if train.angle <= math.radians(90) + 0.5 * Config.angular_vel:
-                    train.direction = Direction.UP
-                    train.angle = math.radians(90)
-                    train.rect.center = empty_cell.rect.midtop
-                    train.pos = pg.Vector2(train.rect.topleft)
-            elif train.direction == Direction.DOWN:
-                train.angle += Config.angular_vel
-                if train.angle >= math.radians(360) - 0.5 * Config.angular_vel:
-                    train.direction = Direction.RIGHT
-                    train.angle = math.radians(0)
-                    train.rect.center = empty_cell.rect.midright
-                    train.pos = pg.Vector2(train.rect.topleft)
-        # If the selected track is top-left.
-        elif train.selected_track.track_type == TrackType.TOP_LEFT:
-            if train.direction == Direction.RIGHT:
-                train.angle += Config.angular_vel
-                if train.angle >= math.radians(90) - 0.5 * Config.angular_vel:
-                    train.direction = Direction.UP
-                    train.angle = math.radians(90)
-                    train.rect.center = empty_cell.rect.midtop
-                    train.pos = pg.Vector2(train.rect.topleft)
-            elif train.direction == Direction.DOWN:
-                train.angle -= Config.angular_vel
-                if train.angle <= math.radians(180) + 0.5 * Config.angular_vel:
-                    train.direction = Direction.LEFT
-                    train.angle = math.radians(180)
-                    train.rect.center = empty_cell.rect.midleft
-                    train.pos = pg.Vector2(train.rect.topleft)
-        # If the selected track is bottom-left.
-        elif train.selected_track.track_type == TrackType.BOTTOM_LEFT:
-            if train.direction == Direction.RIGHT:
-                train.angle -= Config.angular_vel
-                if train.angle <= math.radians(-90) + 0.5 * Config.angular_vel:
-                    train.direction = Direction.DOWN
-                    train.angle = math.radians(270)
-                    train.rect.center = empty_cell.rect.midbottom
-                    train.pos = pg.Vector2(train.rect.topleft)
-            elif train.direction == Direction.UP:
-                train.angle += Config.angular_vel
-                if train.angle >= math.radians(180) - 0.5 * Config.angular_vel:
-                    train.direction = Direction.LEFT
-                    train.angle = math.radians(180)
-                    train.rect.center = empty_cell.rect.midleft
-                    train.pos = pg.Vector2(train.rect.topleft)
-        # If the selected track is bottom-right.
-        elif train.selected_track.track_type == TrackType.BOTTOM_RIGHT:
-            if train.direction == Direction.LEFT:
-                train.angle += Config.angular_vel
-                if train.angle >= math.radians(270) - 0.5 * Config.angular_vel:
-                    train.direction = Direction.DOWN
-                    train.angle = math.radians(270)
-                    train.rect.center = empty_cell.rect.midbottom
-                    train.pos = pg.Vector2(train.rect.topleft)
-            elif train.direction == Direction.UP:
-                train.angle -= Config.angular_vel
-                if train.angle <= math.radians(0) + 0.5 * Config.angular_vel:
-                    train.direction = Direction.RIGHT
-                    train.angle = math.radians(0)
-                    train.rect.center = empty_cell.rect.midright
-                    train.pos = pg.Vector2(train.rect.topleft)
+                train.rect.center = cell.rect.midleft
+                train.pos = pg.Vector2(train.rect.topleft)
+    # If the selected track is bottom-left.
+    elif train.selected_track.track_type == TrackType.BOTTOM_LEFT:
+        if train.direction == Direction.RIGHT:
+            train.angle -= Config.angular_vel
+            if train.angle <= math.radians(-90) + 0.5 * Config.angular_vel:
+                train.direction = Direction.DOWN
+                train.angle = math.radians(270)
+                train.rect.center = cell.rect.midbottom
+                train.pos = pg.Vector2(train.rect.topleft)
+        elif train.direction == Direction.UP:
+            train.angle += Config.angular_vel
+            if train.angle >= math.radians(180) - 0.5 * Config.angular_vel:
+                train.direction = Direction.LEFT
+                train.angle = math.radians(180)
+                train.rect.center = cell.rect.midleft
+                train.pos = pg.Vector2(train.rect.topleft)
+    # If the selected track is bottom-right.
+    elif train.selected_track.track_type == TrackType.BOTTOM_RIGHT:
+        if train.direction == Direction.LEFT:
+            train.angle += Config.angular_vel
+            if train.angle >= math.radians(270) - 0.5 * Config.angular_vel:
+                train.direction = Direction.DOWN
+                train.angle = math.radians(270)
+                train.rect.center = cell.rect.midbottom
+                train.pos = pg.Vector2(train.rect.topleft)
+        elif train.direction == Direction.UP:
+            train.angle -= Config.angular_vel
+            if train.angle <= math.radians(0) + 0.5 * Config.angular_vel:
+                train.direction = Direction.RIGHT
+                train.angle = math.radians(0)
+                train.rect.center = cell.rect.midright
+                train.pos = pg.Vector2(train.rect.topleft)
+    else:
+        raise ValueError(f"Error: train.selected_track.track_type == {train.selected_track.track_type}")
 
 
-def flip_tracks_if_needed(train: Train, empty_cell: EmptyCell) -> None:
-    empty_cell_contains_train_and_has_multiple_tracks = (empty_cell.rect and empty_cell.rect.contains(train.rect) and train.last_flipped_cell != empty_cell and len(empty_cell.tracks) == 2)
+def flip_tracks_if_needed(train: Train, cell: Cell) -> None:
+    empty_cell_contains_train_and_has_multiple_tracks = (isinstance(cell, EmptyCell) and cell.rect and cell.rect.contains(train.rect) and train.last_flipped_cell != cell and len(cell.tracks) == 2)
     if empty_cell_contains_train_and_has_multiple_tracks:
-        empty_cell.flip_tracks()
-        train.last_flipped_cell = empty_cell
+        cell.flip_tracks()
+        train.last_flipped_cell = cell
 
 
 def check_train_merges() -> None:
@@ -370,6 +373,22 @@ def check_profiling_command() -> None:
         State.profiler.discontinue_profiling()
 
 
+def check_if_should_save_field(field: Field, file_name: str="level_tmp.csv") -> None:
+    if UserControl.pressed_keys[UserControl.SAVE_GAME]:
+        file_path = f"levels/{file_name}"
+        with open(file_path, newline="", mode="w", encoding="utf-8") as level_file:
+            level_writer = csv.writer(level_file, delimiter="-")
+            row: List[str] = []
+            for i, cell in enumerate(field.grid):
+                if isinstance(cell, Union[EmptyCell, Station]):
+                    row.append(cell.saveable_attributes.serialize())
+                    if (i+1) % 8 == 0:
+                        level_writer.writerow(row)
+                        row.clear()
+        logger.info(f"Saved game to '{file_path}'")
+
+
+
 def gameplay_phase(field: Field) -> None:
     check_events(field)
     check_profiling_command()
@@ -381,52 +400,46 @@ def gameplay_phase(field: Field) -> None:
 
     reset_train_statuses()
 
-    for grid_item in field.grid:
-        if not isinstance(grid_item, EmptyCell):
+    for cell in field.grid:
+        if not isinstance(cell, EmptyCell):
             continue
 
-        empty_cell = grid_item
-
-        if empty_cell.rect is None:
+        if cell.rect is None:
             raise ValueError("The cell's rect is None. Exiting.")
 
-        draw_empty_cell_tracks(empty_cell)
+        draw_empty_cell_tracks(cell)
+        check_track_delete(cell)
 
-        check_track_delete(empty_cell)
 
-
-        if not State.trains_released or len(State.trains) == 0:
-            continue
-
-    for grid_item in field.grid:
-        if grid_item.check_mouse_collision():
+    for cell in field.grid:
+        if cell.check_mouse_collision():
             State.prev_cell_needs_checking = True
         for train in State.trains:
-            if grid_item.rect is None:
+            if cell.rect is None:
                 raise ValueError("Rect is None.")
-            if not grid_item.rect.colliderect(pg.Rect(train.rect.centerx - 1, train.rect.centery - 1, 1, 1)):
+            if not cell.rect.colliderect(pg.Rect(train.rect.centerx - 1, train.rect.centery - 1, 1, 1)):
                 continue
 
-            entering_new_cell_and_track_not_selected = (grid_item not in train.last_collided_cells or train.selected_track is None)
+            entering_new_cell_and_track_not_selected = (cell not in train.last_collided_cells or train.selected_track is None)
             if entering_new_cell_and_track_not_selected:
-                train.add_last_collided_cell(grid_item)
+                train.add_last_collided_cell(cell)
                 # Reset the last flipped cell.
                 train.last_flipped_cell = None
                 # If there are no tracks in this cell.
-                if len(grid_item.tracks) == 0:
+                if len(cell.tracks) == 0:
                     # Stop the train. Should mean 'crash'.
                     train.crash()
                     State.trains_crashed += 1
                 else:
                     # If there are some tracks in this cell.
-                    train.tracks_ahead = grid_item.tracks
+                    train.tracks_ahead = cell.tracks
                     possible_tracks: List[Track] = []
                     # If the state has just been reset, select the only available track.
                     if train.is_reset:
-                        possible_tracks.append(grid_item.tracks[0])
+                        possible_tracks.append(cell.tracks[0])
                     else:
                         # Let's find all tracks in this cell that have an endpoint where the train is.
-                        for track_ahead in grid_item.tracks:
+                        for track_ahead in cell.tracks:
                             for endpoint in track_ahead.endpoints:
                                 if train.rect.collidepoint(endpoint):
                                     possible_tracks.append(track_ahead)
@@ -446,8 +459,8 @@ def gameplay_phase(field: Field) -> None:
                         train.crash()
                         logger.debug("No track to be selected. Train is not on track.")
 
-            move_train_along_selected_track(train, grid_item)
-            flip_tracks_if_needed(train, grid_item)
+            move_train_along_cell(train, cell)
+            flip_tracks_if_needed(train, cell)
 
 
     check_train_merges()
@@ -467,6 +480,8 @@ def gameplay_phase(field: Field) -> None:
     determine_arrival_station_checkmarks(field)
     display_checkmarks(field)
 
+    check_if_should_save_field(field)
+
 
 def exit_phase():
     logger.info("Exiting...")
@@ -483,7 +498,6 @@ def check_events(field: Field) -> None:
             if event.button == 3:
                 for grid_item in field.grid:
                     if not isinstance(grid_item, EmptyCell):
-                        return
-                    # TODO: Investigate why flipping does not work.
+                        continue
                     if grid_item.mouse_on and not State.trains_released and len(grid_item.tracks) > 1:
                         grid_item.flip_tracks()

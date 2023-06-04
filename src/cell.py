@@ -4,7 +4,8 @@ import pygame as pg
 from src.config import Config
 from src.controls import UserControl
 from src.direction import Direction
-from src.resources import Graphics
+from src.graphics import Graphics
+from src.saveable import SaveableAttributes
 from src.sound import Sound
 from src.track import Track
 from src.utils import setup_logging
@@ -22,6 +23,7 @@ class Cell(pg.sprite.Sprite):
         self.rect.x = i * Config.cell_size + Config.padding_x
         self.rect.y = j * Config.cell_size + Config.padding_y
         self.mouse_on = False
+        self.tracks: List[Track] = []
 
     def check_mouse_collision(self) -> bool:
         prev_cell_needs_checking = False
@@ -37,6 +39,7 @@ class Cell(pg.sprite.Sprite):
         return prev_cell_needs_checking
 
     def handle_mouse_cell_enter(self) -> None:
+        logger.info(f"Mouse entered cell: {self.i, self.j}")
         previous_cell = UserControl.curr_cell
         UserControl.prev_cell = previous_cell
         UserControl.curr_cell = pg.Vector2(self.i, self.j)
@@ -68,7 +71,7 @@ class Cell(pg.sprite.Sprite):
 class EmptyCell(Cell):
     def __init__(self, i: int, j: int):
         super().__init__(i, j, Graphics.img_surfaces["bg_tile"], 0)
-        self.tracks: List[Track] = []
+        self.saveable_attributes = SaveableAttributes(block_type="E")
 
     def flip_tracks(self):
         if len(self.tracks) < 1:

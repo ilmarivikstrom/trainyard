@@ -4,7 +4,7 @@ from typing import Dict
 import pygame as pg
 
 from src.direction import Direction
-from src.resources import Graphics
+from src.graphics import Graphics
 
 class TrackType(Enum):
     VERT = 0

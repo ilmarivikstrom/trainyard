@@ -45,7 +45,7 @@ class State:
             elif TrainColor.YELLOW in colors and TrainColor.RED in colors:
                 upcoming_train_color = TrainColor.ORANGE
             else:
-                raise ValueError(f"Trains with colors: {colors} crashed. Need brown color...")
+                upcoming_train_color = TrainColor.BROWN
         return upcoming_train_color
 
 
@@ -58,6 +58,7 @@ class State:
         train_2.kill()
         logger.info(f"Removed a train! Trains remaining: {len(State.trains)} or {len(State.train_sprites)}") # type: ignore
         Sound.play_sound_on_channel(Sound.merge, 0)
+
 
     @staticmethod
     def paint_trains(train_1: Train, train_2: Train) -> None:

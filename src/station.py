@@ -6,10 +6,11 @@ from src.cell import Cell
 from src.config import Config
 from src.direction import Direction
 
-from src.resources import Graphics
+from src.graphics import Graphics
 from src.saveable import SaveableAttributes
 from src.sound import Sound
-from src.train import Train, TrainColor
+from src.train import Train
+from src.traincolor import TrainColor
 from src.track import StationTrack, TrackType
 from src.utils import setup_logging
 
@@ -41,7 +42,7 @@ class Station(Cell):
         self.goal_sprites = pg.sprite.Group() # type: ignore
         self.checkmark: Optional[CheckmarkSprite] = None
         self.last_release_tick: Optional[int] = None
-        self.saveable_attributes = SaveableAttributes(block_type=self.block_short_char, color=self.train_color, number=self.number_of_trains_left, orientation=self.angle, position=(self.i, self.j))
+        self.saveable_attributes = SaveableAttributes(block_type=self.block_short_char, color=self.train_color, number=self.number_of_trains_left, angle=self.angle)
 
         if self.rect is None:
             raise ValueError("Rect is None.")
@@ -95,7 +96,6 @@ class DepartureStation(Station):
                 logger.debug("Train released.")
                 self.last_release_tick = current_tick
                 Sound.play_sound_on_channel(Sound.pop, 1)
-                logger.info(f"Departure station saveable attributes: {self.saveable_attributes.serialize()}")
                 return Train(self.i, self.j, self.train_color, Direction(self.angle))
         return None
 
