@@ -33,22 +33,25 @@ def check_for_gameplay_command(state: State) -> None:
         state.game_phase = Phase.GAMEPLAY
         logger.info(f"Moving to state {state.game_phase}")
 
+
+def check_for_main_menu_command(state: State) -> None:
+    if UserControl.pressed_keys[UserControl.MAIN_MENU]:
+        state.gameplay.reset()
+        state.game_phase = Phase.MAIN_MENU
+        logger.info(f"Moving to state {state.game_phase}")
+
+
 def check_for_exit_command(state: State) -> None:
     if UserControl.pressed_keys[UserControl.EXIT]:
         state.game_phase = Phase.GAME_END
         logger.info(f"Moving to state {state.game_phase}")
 
-def check_profiling_command(state: State) -> None:
+
+def check_and_toggle_profiling(state: State) -> None:
     if UserControl.pressed_keys[pg.K_F1]:
         state.profiler.continue_profiling()
     else:
         state.profiler.discontinue_profiling()
-
-
-
-
-
-
 
 
 def determine_arrival_station_checkmarks(field: Field) -> None:
@@ -104,12 +107,6 @@ def check_and_save_field(field: Field, file_name: str="level_tmp.csv") -> None:
                     level_writer.writerow(row)
                     row.clear()
         logger.info(f"Saved game to '{file_path}'")
-
-
-
-
-
-
 
 
 def update_gameplay_state(state: State, field: Field) -> None:
@@ -169,15 +166,6 @@ def tick_departures(state: State, field: Field) -> None:
             add_new_train(field, res)
 
 
-def check_for_main_menu_command(state: State, field: Field) -> None:
-    if UserControl.pressed_keys[UserControl.MAIN_MENU]:
-        state.gameplay.trains_released = False
-        for train in field.trains:
-            train.reset()
-        state.game_phase = Phase.MAIN_MENU
-        logger.info(f"Moving to state {state.game_phase}")
-
-
 def check_for_level_completion(state: State, field: Field) -> None:
     if not state.gameplay.current_level_passed and not arrivals_pending(field) and state.gameplay.trains_crashed == 0 and len(field.trains) == 0:
         Sound.success.play()
@@ -216,7 +204,7 @@ def check_for_new_track_placement(state: State, field: Field) -> None:
         state.gameplay.prev_cell_needs_checking = False
 
 
-def check_events(state: State, field: Field) -> None:
+def check_pygame_events(state: State, field: Field) -> None:
     for event in pg.event.get():
         if event.type == QUIT:
             state.game_phase = Phase.GAME_END
@@ -277,7 +265,7 @@ def select_tracks_and_move_trains(state: State, field: Field) -> None:
                         logger.debug("No track to be selected. Train is not on track.")
 
             move_train_along_cell(train, cell)
-            flip_cell_tracks_if_needed(train, cell)
+            check_and_flip_cell_tracks(train, cell)
 
 
 def check_and_delete_field_tracks(state: State, field: Field) -> None:
@@ -285,110 +273,6 @@ def check_and_delete_field_tracks(state: State, field: Field) -> None:
         if empty_cell.rect is None:
             raise ValueError("The cell's rect is None. Exiting.")
         check_and_delete_empty_cell_tracks(state, empty_cell)
-
-
-
-
-
-
-
-def draw_separator_line(screen: Screen) -> None:
-    pg.draw.line(screen.surface, WHITESMOKE, (screen.width / 2, 64), (screen.width / 2, 64 + 8 * 64))
-
-
-
-
-
-
-
-
-def draw_background_basecolor(screen: Screen, state: State) -> None:
-    if state.gameplay.trains_released:
-        screen.surface.fill(DELETE_MODE_BG_COLOR)
-    else:
-        screen.surface.fill(NORMAL_MODE_BG_COLOR)
-
-
-def draw_background_day_cycle(screen: Screen, state: State) -> None:
-    state.gameplay.background_location = (-state.global_status.current_tick * Config.background_scroll_speed, 0)
-    screen.surface.blit(Graphics.img_surfaces["day_cycle"], dest=state.gameplay.background_location)
-
-
-
-
-
-
-
-
-
-
-def draw_station_goals(screen: Screen, field: Field) -> None:
-    for arrival_station in field.arrival_stations:
-        arrival_station.goal_sprites.draw(screen.surface) # type: ignore
-    for departure_station in field.departure_stations:
-        departure_station.goal_sprites.draw(screen.surface) # type: ignore
-
-
-def display_checkmarks(screen: Screen, field: Field) -> None:
-    for arrival_station in field.arrival_stations:
-        if arrival_station.checkmark is None or arrival_station.checkmark.image is None or arrival_station.rect is None:
-            continue
-        screen.surface.blit(source=arrival_station.checkmark.image, dest=arrival_station.rect.topleft)
-
-
-def draw_empty_cells_tracks(screen: Screen, field: Field) -> None:
-    for empty_cell in field.empty_cells:
-        if empty_cell.rect is None:
-            raise ValueError("The cell's rect is None. Exiting.")
-        draw_empty_cell_tracks(screen, empty_cell)
-
-
-def main_menu_phase(state: State, screen: Screen, field: Field) -> None:
-    UserControl.update_user_control_state()
-    screen.surface.fill(GRAY10)
-    check_events(state, field)
-    check_for_gameplay_command(state)
-    check_for_exit_command(state)
-
-
-
-
-
-
-
-def draw_arcs_and_endpoints(screen: Screen, track: Track):
-    if track.bright:
-        color = WHITE
-    else:
-        color = GRAY
-    if track.track_type == TrackType.VERT:
-        pg.draw.line(screen.surface, color, track.cell_rect.midtop, track.cell_rect.midbottom)
-    elif track.track_type == TrackType.HORI:
-        pg.draw.line(screen.surface, color, track.cell_rect.midleft, track.cell_rect.midright)
-    elif track.track_type == TrackType.TOP_RIGHT:
-        pygame.gfxdraw.arc(screen.surface, track.cell_rect.right, track.cell_rect.top, int(Config.cell_size / 2), 90, 180, color)
-    elif track.track_type == TrackType.TOP_LEFT:
-        pygame.gfxdraw.arc(screen.surface, track.cell_rect.left, track.cell_rect.top, int(Config.cell_size / 2), 0, 90, color)
-    elif track.track_type == TrackType.BOTTOM_LEFT:
-        pygame.gfxdraw.arc(screen.surface, track.cell_rect.left, track.cell_rect.bottom, int(Config.cell_size / 2), 270, 360, color)
-    elif track.track_type == TrackType.BOTTOM_RIGHT:
-        pygame.gfxdraw.arc(screen.surface, track.cell_rect.right, track.cell_rect.bottom, int(Config.cell_size / 2), 180, 270, color)
-
-    for endpoint in track.endpoints:
-        pygame.gfxdraw.pixel(screen.surface, int(endpoint.x), int(endpoint.y), RED1)
-
-
-
-
-
-
-
-def draw_empty_cell_tracks(screen: Screen, empty_cell: EmptyCell) -> None:
-    for track in empty_cell.tracks:
-        if track.image:
-            screen.surface.blit(track.image, dest=track.cell_rect)
-        if Config.draw_arcs:
-            draw_arcs_and_endpoints(screen, track)
 
 
 def add_new_train(field: Field, train: Train) -> None:
@@ -402,12 +286,7 @@ def check_and_delete_empty_cell_tracks(state: State, empty_cell: EmptyCell) -> N
         empty_cell.tracks.clear()
 
 
-
-
-
-
-
-def flip_cell_tracks_if_needed(train: Train, cell: Cell) -> None:
+def check_and_flip_cell_tracks(train: Train, cell: Cell) -> None:
     cell_contains_train_and_has_multiple_tracks = (cell.rect and cell.rect.contains(train.rect) and train.last_flipped_cell != cell and len(cell.tracks) == 2)
     if cell_contains_train_and_has_multiple_tracks and isinstance(cell, EmptyCell):
         cell.flip_tracks()
@@ -499,12 +378,7 @@ def move_train_along_cell(train: Train, cell: Cell) -> None:
                 train.rect.center = cell.rect.midright
                 train.pos = pg.Vector2(train.rect.topleft)
     else:
-        raise ValueError(f"Error: train.selected_track.track_type == {train.selected_track.track_type}")
-
-
-
-
-
+        raise ValueError(f"Selected track type is {train.selected_track.track_type}")
 
 
 def paint_trains(train_1: Train, train_2: Train) -> None:
@@ -526,9 +400,85 @@ def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
 
 
 
+
+
+
+
+def draw_middle_line(screen: Screen) -> None:
+    pg.draw.line(screen.surface, WHITESMOKE, (screen.width / 2, 64), (screen.width / 2, 64 + 8 * 64))
+
+
+
+def draw_background_basecolor(screen: Screen, state: State) -> None:
+    if state.gameplay.trains_released:
+        screen.surface.fill(DELETE_MODE_BG_COLOR)
+    else:
+        screen.surface.fill(NORMAL_MODE_BG_COLOR)
+
+
+def draw_background_day_cycle(screen: Screen, state: State) -> None:
+    state.gameplay.background_location = (-state.global_status.current_tick * Config.background_scroll_speed, 0)
+    screen.surface.blit(Graphics.img_surfaces["day_cycle"], dest=state.gameplay.background_location)
+
+
+def draw_station_goals(screen: Screen, field: Field) -> None:
+    for arrival_station in field.arrival_stations:
+        arrival_station.goal_sprites.draw(screen.surface) # type: ignore
+    for departure_station in field.departure_stations:
+        departure_station.goal_sprites.draw(screen.surface) # type: ignore
+
+
+def draw_checkmarks(screen: Screen, field: Field) -> None:
+    for arrival_station in field.arrival_stations:
+        if arrival_station.checkmark is None or arrival_station.checkmark.image is None or arrival_station.rect is None:
+            continue
+        screen.surface.blit(source=arrival_station.checkmark.image, dest=arrival_station.rect.topleft)
+
+
+def draw_empty_cells_tracks(screen: Screen, field: Field) -> None:
+    for empty_cell in field.empty_cells:
+        if empty_cell.rect is None:
+            raise ValueError("The cell's rect is None. Exiting.")
+        draw_empty_cell_tracks(screen, empty_cell)
+
+
+def draw_arcs_and_endpoints(screen: Screen, track: Track):
+    if track.bright:
+        color = WHITE
+    else:
+        color = GRAY
+    if track.track_type == TrackType.VERT:
+        pg.draw.line(screen.surface, color, track.cell_rect.midtop, track.cell_rect.midbottom)
+    elif track.track_type == TrackType.HORI:
+        pg.draw.line(screen.surface, color, track.cell_rect.midleft, track.cell_rect.midright)
+    elif track.track_type == TrackType.TOP_RIGHT:
+        pygame.gfxdraw.arc(screen.surface, track.cell_rect.right, track.cell_rect.top, int(Config.cell_size / 2), 90, 180, color)
+    elif track.track_type == TrackType.TOP_LEFT:
+        pygame.gfxdraw.arc(screen.surface, track.cell_rect.left, track.cell_rect.top, int(Config.cell_size / 2), 0, 90, color)
+    elif track.track_type == TrackType.BOTTOM_LEFT:
+        pygame.gfxdraw.arc(screen.surface, track.cell_rect.left, track.cell_rect.bottom, int(Config.cell_size / 2), 270, 360, color)
+    elif track.track_type == TrackType.BOTTOM_RIGHT:
+        pygame.gfxdraw.arc(screen.surface, track.cell_rect.right, track.cell_rect.bottom, int(Config.cell_size / 2), 180, 270, color)
+
+    for endpoint in track.endpoints:
+        pygame.gfxdraw.pixel(screen.surface, int(endpoint.x), int(endpoint.y), RED1)
+
+
+def draw_empty_cell_tracks(screen: Screen, empty_cell: EmptyCell) -> None:
+    for track in empty_cell.tracks:
+        if track.image:
+            screen.surface.blit(track.image, dest=track.cell_rect)
+        if Config.draw_arcs:
+            draw_arcs_and_endpoints(screen, track)
+
+
+
+
+
+
 def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
-    check_events(state, field)
-    check_profiling_command(state)
+    check_pygame_events(state, field)
+    check_and_toggle_profiling(state)
     update_gameplay_state(state, field)
 
     draw_background_basecolor(screen, state)
@@ -554,19 +504,28 @@ def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
 
     check_for_new_track_placement(state, field)
     check_for_level_completion(state, field)
-    check_for_main_menu_command(state, field)
+    check_for_main_menu_command(state)
 
-    draw_separator_line(screen)
+    draw_middle_line(screen)
     
     tick_departures(state, field)
 
     determine_arrival_station_checkmarks(field)
 
-    display_checkmarks(screen, field)
+    draw_checkmarks(screen, field)
 
     check_and_save_field(field)
 
 
+
+
+
+def main_menu_phase(state: State, screen: Screen, field: Field) -> None:
+    UserControl.update_user_control_state()
+    screen.surface.fill(GRAY10)
+    check_pygame_events(state, field)
+    check_for_gameplay_command(state)
+    check_for_exit_command(state)
 
 
 def exit_phase():
