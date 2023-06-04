@@ -32,7 +32,7 @@ class CheckmarkSprite(pg.sprite.Sprite):
 
 class Station(Cell):
     def __init__(self, i: int, j: int, image: pg.Surface, angle: int, number_of_trains_left: int, train_color: TrainColor, block_short_char: str):
-        super().__init__(i, j, image, angle)
+        super().__init__(i, j, image, angle, True)
         self.number_of_trains_left = number_of_trains_left
         self.train_color = train_color
         self.block_short_char = block_short_char

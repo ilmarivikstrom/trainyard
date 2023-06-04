@@ -13,7 +13,7 @@ from src.utils import setup_logging
 logger = setup_logging(log_level=Config.log_level)
 
 class Cell(pg.sprite.Sprite):
-    def __init__(self, i: int, j: int, image: pg.Surface, angle: int):
+    def __init__(self, i: int, j: int, image: pg.Surface, angle: int, blocks_placement: bool):
         super().__init__()
         self.i = i
         self.j = j
@@ -24,6 +24,7 @@ class Cell(pg.sprite.Sprite):
         self.rect.y = j * Config.cell_size + Config.padding_y
         self.mouse_on = False
         self.tracks: List[Track] = []
+        self.blocks_placement = blocks_placement
 
     def check_mouse_collision(self) -> bool:
         prev_cell_needs_checking = False
@@ -70,7 +71,7 @@ class Cell(pg.sprite.Sprite):
 
 class EmptyCell(Cell):
     def __init__(self, i: int, j: int):
-        super().__init__(i, j, Graphics.img_surfaces["bg_tile"], 0)
+        super().__init__(i, j, Graphics.img_surfaces["bg_tile"], 0, False)
         self.saveable_attributes = SaveableAttributes(block_type="E")
 
     def flip_tracks(self):
@@ -80,3 +81,9 @@ class EmptyCell(Cell):
             track.toggle_bright()
         self.tracks.reverse()
         Sound.play_sound_on_channel(Sound.track_flip, 2)
+
+
+class RockCell(Cell):
+    def __init__(self, i: int, j: int):
+        super().__init__(i, j, Graphics.img_surfaces["rock"], 0, True)
+        self.saveable_attributes = SaveableAttributes(block_type="R")

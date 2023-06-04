@@ -392,6 +392,7 @@ def gameplay_phase(field: Field) -> None:
     draw_background_day_cycle()
 
     field.empty_cells_sprites.draw(State.screen_surface)
+    field.rock_cells_sprites.draw(State.screen_surface)
 
     reset_train_statuses()
 

@@ -3,7 +3,7 @@ from typing import List, Union
 
 import pygame as pg
 
-from src.cell import EmptyCell
+from src.cell import EmptyCell, RockCell
 from src.config import Config
 from src.saveable import Saveable
 from src.station import ArrivalStation, DepartureStation, Station
@@ -17,11 +17,13 @@ class Field:
     def __init__(self):
         self.cells_x = Config.cells_x
         self.cells_y = Config.cells_y
-        self.full_grid: List[Union[EmptyCell, Station]] = []
+        self.full_grid: List[Union[EmptyCell, RockCell, Station]] = []
         self.empty_cells: List[EmptyCell] = []
+        self.rock_cells: List[RockCell] = []
         self.departure_stations: List[DepartureStation] = []
         self.arrival_stations: List[ArrivalStation] = []
         self.empty_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        self.rock_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.departure_stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.arrival_stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
@@ -44,9 +46,14 @@ class Field:
                         empty_cell = EmptyCell(i, j)
                         self.full_grid.append(empty_cell)
                         self.empty_cells_sprites.add(empty_cell)
+                    elif saveable.type == "R":
+                        rock_cell = RockCell(i, j)
+                        self.full_grid.append(rock_cell)
+                        self.rock_cells_sprites.add(rock_cell)
                     else:
                         raise ValueError(f"Saveable type was unexpected: '{saveable.type}")
         self.empty_cells = [cell for cell in self.full_grid if isinstance(cell, EmptyCell)]
+        self.rock_cells = [cell for cell in self.full_grid if isinstance(cell, RockCell)]
         self.departure_stations = [cell for cell in self.full_grid if isinstance(cell, DepartureStation)]
         self.arrival_stations = [cell for cell in self.full_grid if isinstance(cell, ArrivalStation)]
 
@@ -63,7 +70,7 @@ class Field:
             pos: pg.Vector2
     ) -> None:
         grid_cell = self.get_grid_cell_at(round(pos.x), round(pos.y))
-        if isinstance(grid_cell, Station):
+        if grid_cell.blocks_placement:
             return
         if grid_cell.rect is None:
             raise ValueError("Rect of empty_cell is None")
