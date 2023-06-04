@@ -92,17 +92,18 @@ def delete_crashed_trains(field: Field) -> None:
             logger.info(f"Train crashed. Trains left: {len(field.trains)}")
 
 
-def save_field(field: Field, file_name: str="level_tmp.csv") -> None:
-    file_path = f"levels/{file_name}"
-    with open(file_path, newline="", mode="w", encoding="utf-8") as level_file:
-        level_writer = csv.writer(level_file, delimiter="-")
-        row: List[str] = []
-        for i, cell in enumerate(field.full_grid):
-            row.append(cell.saveable_attributes.serialize())
-            if (i+1) % 8 == 0:
-                level_writer.writerow(row)
-                row.clear()
-    logger.info(f"Saved game to '{file_path}'")
+def check_and_save_field(field: Field, file_name: str="level_tmp.csv") -> None:
+    if UserControl.pressed_keys[UserControl.SAVE_GAME]:
+        file_path = f"levels/{file_name}"
+        with open(file_path, newline="", mode="w", encoding="utf-8") as level_file:
+            level_writer = csv.writer(level_file, delimiter="-")
+            row: List[str] = []
+            for i, cell in enumerate(field.full_grid):
+                row.append(cell.saveable_attributes.serialize())
+                if (i+1) % 8 == 0:
+                    level_writer.writerow(row)
+                    row.clear()
+        logger.info(f"Saved game to '{file_path}'")
 
 
 
@@ -165,7 +166,7 @@ def tick_departures(state: State, field: Field) -> None:
     for departure_station in field.departure_stations:
         res = departure_station.tick(state.global_status.current_tick)
         if res is not None:
-            add_new_train(res, field)
+            add_new_train(field, res)
 
 
 def check_for_main_menu_command(state: State, field: Field) -> None:
@@ -226,10 +227,120 @@ def check_events(state: State, field: Field) -> None:
                     empty_cell.flip_tracks()
 
 
+def select_tracks_and_move_trains(state: State, field: Field) -> None:
+    for cell in field.full_grid:
+        if cell.check_mouse_collision():
+            state.gameplay.prev_cell_needs_checking = True
+        for train in field.trains:
+            if cell.rect is None:
+                raise ValueError("Rect is None.")
+            if not cell.rect.colliderect(pg.Rect(train.rect.centerx - 1, train.rect.centery - 1, 1, 1)):
+                continue
+
+            entering_new_cell_and_track_not_selected = (cell not in train.last_collided_cells or train.selected_track is None)
+            if entering_new_cell_and_track_not_selected:
+                train.add_last_collided_cell(cell)
+                # Reset the last flipped cell.
+                train.last_flipped_cell = None
+                # If there are no tracks in this cell.
+                if len(cell.tracks) == 0:
+                    # Stop the train. Should mean 'crash'.
+                    train.crash()
+                    state.gameplay.trains_crashed += 1
+                else:
+                    # If there are some tracks in this cell.
+                    train.tracks_ahead = cell.tracks
+                    possible_tracks: List[Track] = []
+                    # If the state has just been reset, select the only available track.
+                    if train.is_reset:
+                        possible_tracks.append(cell.tracks[0])
+                    else:
+                        # Let's find all tracks in this cell that have an endpoint where the train is.
+                        for track_ahead in cell.tracks:
+                            for endpoint in track_ahead.endpoints:
+                                if train.rect.collidepoint(endpoint):
+                                    possible_tracks.append(track_ahead)
+                    if len(possible_tracks) > 0:
+                        # If there is only 1 possible track, select that.
+                        if len(possible_tracks) == 1:
+                            train.selected_track = possible_tracks[0]
+                        elif len(possible_tracks) == 2:
+                            # If there are more possible tracks, select the one that is 'bright'.
+                            for possible_track in possible_tracks:
+                                if possible_track.bright:
+                                    train.selected_track = possible_track
+                        if train.selected_track:
+                            logger.debug(f"Selected track: {train.selected_track.directions}")
+                    else:
+                        # If there are no possible tracks available. Should 'crash'.
+                        train.crash()
+                        logger.debug("No track to be selected. Train is not on track.")
+
+            move_train_along_cell(train, cell)
+            flip_cell_tracks_if_needed(train, cell)
+
+
+def check_and_delete_field_tracks(state: State, field: Field) -> None:
+    for empty_cell in field.empty_cells:
+        if empty_cell.rect is None:
+            raise ValueError("The cell's rect is None. Exiting.")
+        check_and_delete_empty_cell_tracks(state, empty_cell)
 
 
 
 
+
+
+
+def draw_separator_line(screen: Screen) -> None:
+    pg.draw.line(screen.surface, WHITESMOKE, (screen.width / 2, 64), (screen.width / 2, 64 + 8 * 64))
+
+
+
+
+
+
+
+
+def draw_background_basecolor(screen: Screen, state: State) -> None:
+    if state.gameplay.trains_released:
+        screen.surface.fill(DELETE_MODE_BG_COLOR)
+    else:
+        screen.surface.fill(NORMAL_MODE_BG_COLOR)
+
+
+def draw_background_day_cycle(screen: Screen, state: State) -> None:
+    state.gameplay.background_location = (-state.global_status.current_tick * Config.background_scroll_speed, 0)
+    screen.surface.blit(Graphics.img_surfaces["day_cycle"], dest=state.gameplay.background_location)
+
+
+
+
+
+
+
+
+
+
+def draw_station_goals(screen: Screen, field: Field) -> None:
+    for arrival_station in field.arrival_stations:
+        arrival_station.goal_sprites.draw(screen.surface) # type: ignore
+    for departure_station in field.departure_stations:
+        departure_station.goal_sprites.draw(screen.surface) # type: ignore
+
+
+def display_checkmarks(screen: Screen, field: Field) -> None:
+    for arrival_station in field.arrival_stations:
+        if arrival_station.checkmark is None or arrival_station.checkmark.image is None or arrival_station.rect is None:
+            continue
+        screen.surface.blit(source=arrival_station.checkmark.image, dest=arrival_station.rect.topleft)
+
+
+def draw_empty_cells_tracks(screen: Screen, field: Field) -> None:
+    for empty_cell in field.empty_cells:
+        if empty_cell.rect is None:
+            raise ValueError("The cell's rect is None. Exiting.")
+        draw_empty_cell_tracks(screen, empty_cell)
 
 
 def main_menu_phase(state: State, screen: Screen, field: Field) -> None:
@@ -238,6 +349,11 @@ def main_menu_phase(state: State, screen: Screen, field: Field) -> None:
     check_events(state, field)
     check_for_gameplay_command(state)
     check_for_exit_command(state)
+
+
+
+
+
 
 
 def draw_arcs_and_endpoints(screen: Screen, track: Track):
@@ -262,16 +378,9 @@ def draw_arcs_and_endpoints(screen: Screen, track: Track):
         pygame.gfxdraw.pixel(screen.surface, int(endpoint.x), int(endpoint.y), RED1)
 
 
-def draw_background_basecolor(state: State, screen: Screen) -> None:
-    if state.gameplay.trains_released:
-        screen.surface.fill(DELETE_MODE_BG_COLOR)
-    else:
-        screen.surface.fill(NORMAL_MODE_BG_COLOR)
 
 
-def draw_background_day_cycle(state: State, screen: Screen) -> None:
-    state.gameplay.background_location = (-state.global_status.current_tick * Config.background_scroll_speed, 0)
-    screen.surface.blit(Graphics.img_surfaces["day_cycle"], dest=state.gameplay.background_location)
+
 
 
 def draw_empty_cell_tracks(screen: Screen, empty_cell: EmptyCell) -> None:
@@ -282,26 +391,27 @@ def draw_empty_cell_tracks(screen: Screen, empty_cell: EmptyCell) -> None:
             draw_arcs_and_endpoints(screen, track)
 
 
-def draw_station_goals(screen: Screen, field: Field) -> None:
-    for arrival_station in field.arrival_stations:
-        arrival_station.goal_sprites.draw(screen.surface) # type: ignore
-    for departure_station in field.departure_stations:
-        departure_station.goal_sprites.draw(screen.surface) # type: ignore
-
-
-def draw_separator_line(screen: Screen) -> None:
-    pg.draw.line(screen.surface, WHITESMOKE, (screen.width / 2, 64), (screen.width / 2, 64 + 8 * 64))
-
-
-def add_new_train(train: Train, field: Field) -> None:
+def add_new_train(field: Field, train: Train) -> None:
     field.trains.append(train)
     field.train_sprites.add(train) # type: ignore
 
 
-def check_track_delete(state: State, empty_cell: EmptyCell) -> None:
+def check_and_delete_empty_cell_tracks(state: State, empty_cell: EmptyCell) -> None:
     mouse_pressed_cell_while_in_delete_mode = (empty_cell.mouse_on and UserControl.mouse_pressed[0] and state.gameplay.delete_mode and not state.gameplay.trains_released)
     if mouse_pressed_cell_while_in_delete_mode:
         empty_cell.tracks.clear()
+
+
+
+
+
+
+
+def flip_cell_tracks_if_needed(train: Train, cell: Cell) -> None:
+    cell_contains_train_and_has_multiple_tracks = (cell.rect and cell.rect.contains(train.rect) and train.last_flipped_cell != cell and len(cell.tracks) == 2)
+    if cell_contains_train_and_has_multiple_tracks and isinstance(cell, EmptyCell):
+        cell.flip_tracks()
+        train.last_flipped_cell = cell
 
 
 def move_train_along_cell(train: Train, cell: Cell) -> None:
@@ -392,11 +502,16 @@ def move_train_along_cell(train: Train, cell: Cell) -> None:
         raise ValueError(f"Error: train.selected_track.track_type == {train.selected_track.track_type}")
 
 
-def flip_tracks_if_needed(train: Train, cell: Cell) -> None:
-    empty_cell_contains_train_and_has_multiple_tracks = (isinstance(cell, EmptyCell) and cell.rect and cell.rect.contains(train.rect) and train.last_flipped_cell != cell and len(cell.tracks) == 2)
-    if empty_cell_contains_train_and_has_multiple_tracks:
-        cell.flip_tracks()
-        train.last_flipped_cell = cell
+
+
+
+
+
+def paint_trains(train_1: Train, train_2: Train) -> None:
+    upcoming_color = blend_train_colors(train_1.color, train_2.color)
+    train_1.repaint(upcoming_color)
+    train_2.repaint(upcoming_color)
+    Sound.play_sound_on_channel(Sound.merge, 0)
 
 
 def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
@@ -408,95 +523,30 @@ def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
     Sound.play_sound_on_channel(Sound.merge, 0)
 
 
-def paint_trains(train_1: Train, train_2: Train) -> None:
-    upcoming_color = blend_train_colors(train_1.color, train_2.color)
-    train_1.repaint(upcoming_color)
-    train_2.repaint(upcoming_color)
-    Sound.play_sound_on_channel(Sound.merge, 0)
 
-
-def display_checkmarks(screen: Screen, field: Field) -> None:
-    for arrival_station in field.arrival_stations:
-        if arrival_station.checkmark is None or arrival_station.checkmark.image is None or arrival_station.rect is None:
-            continue
-        screen.surface.blit(source=arrival_station.checkmark.image, dest=arrival_station.rect.topleft)
 
 
 def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
     check_events(state, field)
     check_profiling_command(state)
     update_gameplay_state(state, field)
-    draw_background_basecolor(state, screen)
-    draw_background_day_cycle(state, screen)
 
+    draw_background_basecolor(screen, state)
+    draw_background_day_cycle(screen, state)
     field.empty_cells_sprites.draw(screen.surface)
     field.rock_cells_sprites.draw(screen.surface)
 
     reset_train_statuses(field)
+    select_tracks_and_move_trains(state, field)
+    check_and_delete_field_tracks(state, field)
 
-    for cell in field.full_grid:
-        if cell.check_mouse_collision():
-            state.gameplay.prev_cell_needs_checking = True
-        for train in field.trains:
-            if cell.rect is None:
-                raise ValueError("Rect is None.")
-            if not cell.rect.colliderect(pg.Rect(train.rect.centerx - 1, train.rect.centery - 1, 1, 1)):
-                continue
-
-            entering_new_cell_and_track_not_selected = (cell not in train.last_collided_cells or train.selected_track is None)
-            if entering_new_cell_and_track_not_selected:
-                train.add_last_collided_cell(cell)
-                # Reset the last flipped cell.
-                train.last_flipped_cell = None
-                # If there are no tracks in this cell.
-                if len(cell.tracks) == 0:
-                    # Stop the train. Should mean 'crash'.
-                    train.crash()
-                    state.gameplay.trains_crashed += 1
-                else:
-                    # If there are some tracks in this cell.
-                    train.tracks_ahead = cell.tracks
-                    possible_tracks: List[Track] = []
-                    # If the state has just been reset, select the only available track.
-                    if train.is_reset:
-                        possible_tracks.append(cell.tracks[0])
-                    else:
-                        # Let's find all tracks in this cell that have an endpoint where the train is.
-                        for track_ahead in cell.tracks:
-                            for endpoint in track_ahead.endpoints:
-                                if train.rect.collidepoint(endpoint):
-                                    possible_tracks.append(track_ahead)
-                    if len(possible_tracks) > 0:
-                        # If there is only 1 possible track, select that.
-                        if len(possible_tracks) == 1:
-                            train.selected_track = possible_tracks[0]
-                        elif len(possible_tracks) == 2:
-                            # If there are more possible tracks, select the one that is 'bright'.
-                            for possible_track in possible_tracks:
-                                if possible_track.bright:
-                                    train.selected_track = possible_track
-                        if train.selected_track:
-                            logger.debug(f"Selected track: {train.selected_track.directions}")
-                    else:
-                        # If there are no possible tracks available. Should 'crash'.
-                        train.crash()
-                        logger.debug("No track to be selected. Train is not on track.")
-
-            move_train_along_cell(train, cell)
-            flip_tracks_if_needed(train, cell)
-
-
-    for empty_cell in field.empty_cells:
-        if empty_cell.rect is None:
-            raise ValueError("The cell's rect is None. Exiting.")
-        draw_empty_cell_tracks(screen, empty_cell)
-        check_track_delete(state, empty_cell)
-
+    draw_empty_cells_tracks(screen, field)
 
     check_train_merges(field)
     check_train_arrivals(state, field)
     delete_crashed_trains(field)
     tick_trains(state, field)
+
     field.train_sprites.draw(screen.surface)
     field.departure_stations_sprites.draw(screen.surface)
     field.arrival_stations_sprites.draw(screen.surface)
@@ -505,14 +555,18 @@ def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
     check_for_new_track_placement(state, field)
     check_for_level_completion(state, field)
     check_for_main_menu_command(state, field)
+
     draw_separator_line(screen)
+    
     tick_departures(state, field)
 
     determine_arrival_station_checkmarks(field)
+
     display_checkmarks(screen, field)
 
-    if UserControl.pressed_keys[UserControl.SAVE_GAME]:
-        save_field(field)
+    check_and_save_field(field)
+
+
 
 
 def exit_phase():
