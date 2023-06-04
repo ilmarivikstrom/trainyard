@@ -22,8 +22,8 @@ class Field:
         self.departure_stations: List[DepartureStation] = []
         self.arrival_stations: List[ArrivalStation] = []
         self.empty_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
-        self.stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
-        self.stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        self.departure_stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        self.arrival_stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
 
     def initialize_grid(self, file_name: str="level_0.csv") -> None:
@@ -35,11 +35,11 @@ class Field:
                     if saveable.type == "A":
                         arrival_station = ArrivalStation(i, j, saveable.angle, saveable.num_goals, saveable.color_goals)
                         self.full_grid.append(arrival_station)
-                        self.stations_sprites.add(arrival_station)
+                        self.arrival_stations_sprites.add(arrival_station)
                     elif saveable.type == "D":
                         departure_station = DepartureStation(i, j, saveable.angle, saveable.num_goals, saveable.color_goals)
                         self.full_grid.append(departure_station)
-                        self.stations_sprites.add(departure_station)
+                        self.departure_stations_sprites.add(departure_station)
                     elif saveable.type == "E":
                         empty_cell = EmptyCell(i, j)
                         self.full_grid.append(empty_cell)

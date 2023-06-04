@@ -1,7 +1,7 @@
 import csv
 import math
 import sys
-from typing import List, Union
+from typing import List
 
 import pygame as pg
 import pygame.gfxdraw
@@ -18,7 +18,7 @@ from src.field import Field, TrackType
 from src.game_state import Phase, State
 from src.graphics import Graphics
 from src.sound import Sound
-from src.station import CheckmarkSprite, Station
+from src.station import CheckmarkSprite
 from src.track import Track
 from src.train import Train
 from src.utils import setup_logging
@@ -395,13 +395,6 @@ def gameplay_phase(field: Field) -> None:
 
     reset_train_statuses()
 
-    for empty_cell in field.empty_cells:
-        if empty_cell.rect is None:
-            raise ValueError("The cell's rect is None. Exiting.")
-        draw_empty_cell_tracks(empty_cell)
-        check_track_delete(empty_cell)
-
-
     for cell in field.full_grid:
         if cell.check_mouse_collision():
             State.prev_cell_needs_checking = True
@@ -454,12 +447,20 @@ def gameplay_phase(field: Field) -> None:
             flip_tracks_if_needed(train, cell)
 
 
+    for empty_cell in field.empty_cells:
+        if empty_cell.rect is None:
+            raise ValueError("The cell's rect is None. Exiting.")
+        draw_empty_cell_tracks(empty_cell)
+        check_track_delete(empty_cell)
+
+
     check_train_merges()
     check_train_arrivals(field)
     delete_crashed_trains()
     tick_trains()
-    State.train_sprites.draw(State.screen_surface) # type: ignore
-    field.stations_sprites.draw(State.screen_surface) # type: ignore
+    State.train_sprites.draw(State.screen_surface)
+    field.departure_stations_sprites.draw(State.screen_surface)
+    field.arrival_stations_sprites.draw(State.screen_surface)
     draw_station_goals(field)
 
     check_for_new_track_placement(field)
@@ -486,8 +487,7 @@ def check_events(field: Field) -> None:
         if event.type == QUIT:
             State.game_phase = Phase.GAME_END
             logger.info(f"Moving to state {State.game_phase}")
-        elif event.type == MOUSEBUTTONDOWN:
-            if event.button == 3:
-                for empty_cell in field.empty_cells:
-                    if empty_cell.mouse_on and not State.trains_released and len(empty_cell.tracks) > 1:
-                        empty_cell.flip_tracks()
+        elif event.type == MOUSEBUTTONDOWN and event.button == 3:
+            for empty_cell in field.empty_cells:
+                if empty_cell.mouse_on and not State.trains_released and len(empty_cell.tracks) > 1:
+                    empty_cell.flip_tracks()
