@@ -79,6 +79,7 @@ class Track(pg.sprite.Sprite):
         self.rect.x = self.cell_rect.x
         self.rect.y = self.cell_rect.y
 
+
     def toggle_bright(self) -> None:
         self.bright = not self.bright
         if self.bright:

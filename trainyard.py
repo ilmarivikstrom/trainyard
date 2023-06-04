@@ -13,10 +13,11 @@ logger = setup_logging(log_level=Config.log_level)
 
 
 def main() -> None:
-    state = State()
     screen = Screen()
-    initial_setup()
-    field = initialize_level()
+    initial_pygame_setup()
+    state = State()
+    field = Field()
+    field.initialize_grid()
     clock = pg.time.Clock()
 
     if Config.play_music:
@@ -34,15 +35,10 @@ def main() -> None:
         clock.tick(Config.FPS)
 
 
-def initial_setup():
+def initial_pygame_setup():
     pg.display.set_caption("trainyard")
     Graphics.load_resources()
 
-
-def initialize_level() -> Field:
-    field = Field()
-    field.initialize_grid()
-    return field
 
 
 if __name__ == "__main__":

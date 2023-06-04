@@ -1,14 +1,11 @@
 from typing import Union
+
 from src.traincolor import TrainColor, color_as_short_string
 
 
 class SaveableAttributes:
     # TypeNumberColorOrientation
-    # Examples:
-    #  - D1y90
-    #  - E
-    #  - R
-    #  - A4r90
+    # Examples: D1y90, E, R, A4r90
     def __init__(self, block_type: str="", color: Union[TrainColor, str]="", number: Union[int, str]="", angle: Union[int, str]=""):
         self.block_type = block_type
         self.color = color_as_short_string(color)
@@ -23,7 +20,6 @@ class Saveable:
     def __init__(self, saveable_string: str):
         self.type = None
         self.num_goals = 0
-
         if len(saveable_string) == 1: # Case when e.g. "E"
             self.type = saveable_string
         else:

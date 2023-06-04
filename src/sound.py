@@ -23,15 +23,18 @@ class Sound:
     success = pg.mixer.Sound("assets/sounds/achievement.wav")
     success.set_volume(1.0 * master_volume)
 
+
     @staticmethod
     def play_sound_on_channel(sound: pg.mixer.Sound, channel: int) -> None:
         pg.mixer.Channel(channel).play(sound)
+
 
     @staticmethod
     def play_music() -> None:
         pg.mixer.music.load("assets/sounds/cyberpunk_synthwave2.mp3")
         pg.mixer.music.set_volume(0.03)
         pg.mixer.music.play(-1)
+
 
     @staticmethod
     def stop_music() -> None:

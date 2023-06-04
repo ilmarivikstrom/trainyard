@@ -29,7 +29,6 @@ class UserControl:
     curr_movement = Direction.NONE
     prev_movement = Direction.NONE
 
-
     @staticmethod
     def space_down_event() -> bool:
         if UserControl.pressed_keys[pg.K_SPACE] and not UserControl.wait_for_space_up:
@@ -41,7 +40,6 @@ class UserControl:
     def check_space_released_event() -> None:
         if UserControl.wait_for_space_up and not UserControl.pressed_keys[pg.K_SPACE]:
             UserControl.wait_for_space_up = False
-
 
     @staticmethod
     def update_user_control_state():

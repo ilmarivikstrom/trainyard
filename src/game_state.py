@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import Tuple
 
 from src.config import Config
 from src.profiling import Profiler
@@ -25,7 +26,8 @@ class GameplayStatus:
         self.delete_mode: bool = False
         self.prev_cell_needs_checking: bool = False
         self.current_level_passed = False
-        self.background_location: tuple[float, float] = (0.0, 0.0)
+        self.background_location: Tuple[float, float] = (0.0, 0.0)
+
 
     def reset(self):
         self.trains_crashed = 0
@@ -35,7 +37,7 @@ class GameplayStatus:
 
 class State:
     def __init__(self):
-        self.game_phase = Phase.MAIN_MENU
-        self.global_status = GlobalStatus()
-        self.gameplay = GameplayStatus()
+        self.game_phase: Phase = Phase.MAIN_MENU
+        self.global_status: GlobalStatus = GlobalStatus()
+        self.gameplay: GameplayStatus = GameplayStatus()
         self.profiler: Profiler = Profiler()

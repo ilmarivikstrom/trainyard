@@ -5,13 +5,12 @@ import pygame as pg
 from src.cell import Cell
 from src.config import Config
 from src.direction import Direction
-
 from src.graphics import Graphics
 from src.saveable import SaveableAttributes
 from src.sound import Sound
+from src.track import StationTrack, Track, TrackType
 from src.train import Train
 from src.traincolor import TrainColor
-from src.track import StationTrack, Track, TrackType
 from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
@@ -53,6 +52,7 @@ class Station(Cell):
             self.tracks: List[Track] = [StationTrack(i, j, self.rect, TrackType.VERT, self.angle)]
         self.create_goal_sprites()
 
+
     def create_goal_sprites(self) -> None:
         if self.train_color == TrainColor.BLUE:
             goal_sprite_color = "blue"
@@ -72,6 +72,7 @@ class Station(Cell):
             self.goals = [StationGoalSprite(goal_sprite_color, i+1, self.rect) for i in range(self.number_of_trains_left)]
             self.goal_sprites.add(self.goals) # type: ignore
 
+
     def reset(self) -> None:
         if not self.is_reset:
             self.number_of_trains_left = self.original_number_of_trains
@@ -82,10 +83,10 @@ class Station(Cell):
             self.checkmark = None
 
 
-
 class DepartureStation(Station):
     def __init__(self, i: int, j: int, angle: int, number_of_trains_left: int, train_color: TrainColor):
         super().__init__(i=i, j=j, image=Graphics.img_surfaces["departure"], angle=angle, number_of_trains_left=number_of_trains_left, train_color=train_color, block_short_char="D")
+
 
     def tick(self, current_tick: int) -> Optional[Train]:
         if self.number_of_trains_left > 0:
@@ -99,7 +100,6 @@ class DepartureStation(Station):
                 Sound.play_sound_on_channel(Sound.pop, 1)
                 return Train(self.i, self.j, self.train_color, Direction(self.angle))
         return None
-
 
 
 class ArrivalStation(Station):

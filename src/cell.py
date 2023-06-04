@@ -46,21 +46,13 @@ class Cell(pg.sprite.Sprite):
         UserControl.curr_cell = pg.Vector2(self.i, self.j)
         UserControl.prev_movement = UserControl.curr_movement
 
-        if (UserControl.curr_cell.x - UserControl.prev_cell.x == 1) and (
-            UserControl.curr_cell.y == UserControl.prev_cell.y
-        ):
+        if (UserControl.curr_cell.x - UserControl.prev_cell.x == 1) and (UserControl.curr_cell.y == UserControl.prev_cell.y):
             UserControl.curr_movement = Direction.RIGHT
-        elif (
-            UserControl.curr_cell.x - UserControl.prev_cell.x == -1
-        ) and (UserControl.curr_cell.y == UserControl.prev_cell.y):
+        elif (UserControl.curr_cell.x - UserControl.prev_cell.x == -1) and (UserControl.curr_cell.y == UserControl.prev_cell.y):
             UserControl.curr_movement = Direction.LEFT
-        elif (UserControl.curr_cell.x == UserControl.prev_cell.x) and (
-            UserControl.curr_cell.y - UserControl.prev_cell.y == 1
-        ):
+        elif (UserControl.curr_cell.x == UserControl.prev_cell.x) and (UserControl.curr_cell.y - UserControl.prev_cell.y == 1):
             UserControl.curr_movement = Direction.DOWN
-        elif (UserControl.curr_cell.x == UserControl.prev_cell.x) and (
-            UserControl.curr_cell.y - UserControl.prev_cell.y == -1
-        ):
+        elif (UserControl.curr_cell.x == UserControl.prev_cell.x) and (UserControl.curr_cell.y - UserControl.prev_cell.y == -1):
             UserControl.curr_movement = Direction.UP
         else:
             UserControl.curr_movement = Direction.NONE

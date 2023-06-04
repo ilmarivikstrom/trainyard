@@ -175,7 +175,6 @@ def check_for_level_completion(state: State, field: Field) -> None:
 def check_for_new_track_placement(state: State, field: Field) -> None:
     left_mouse_down_in_draw_mode = (UserControl.mouse_pressed[0] and not state.gameplay.delete_mode and not state.gameplay.trains_released)
     mouse_moved_over_cells = (UserControl.prev_cell and UserControl.curr_cell)
-
     if left_mouse_down_in_draw_mode and mouse_moved_over_cells and state.gameplay.prev_cell_needs_checking:
         mouse_moved_up =        (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.UP)
         mouse_moved_down =      (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.DOWN)
@@ -204,7 +203,7 @@ def check_for_new_track_placement(state: State, field: Field) -> None:
         state.gameplay.prev_cell_needs_checking = False
 
 
-def check_pygame_events(state: State, field: Field) -> None:
+def check_for_pygame_events(state: State, field: Field) -> None:
     for event in pg.event.get():
         if event.type == QUIT:
             state.game_phase = Phase.GAME_END
@@ -224,7 +223,6 @@ def select_tracks_and_move_trains(state: State, field: Field) -> None:
                 raise ValueError("Rect is None.")
             if not cell.rect.colliderect(pg.Rect(train.rect.centerx - 1, train.rect.centery - 1, 1, 1)):
                 continue
-
             entering_new_cell_and_track_not_selected = (cell not in train.last_collided_cells or train.selected_track is None)
             if entering_new_cell_and_track_not_selected:
                 train.add_last_collided_cell(cell)
@@ -263,7 +261,6 @@ def select_tracks_and_move_trains(state: State, field: Field) -> None:
                         # If there are no possible tracks available. Should 'crash'.
                         train.crash()
                         logger.debug("No track to be selected. Train is not on track.")
-
             move_train_along_cell(train, cell)
             check_and_flip_cell_tracks(train, cell)
 
@@ -408,7 +405,6 @@ def draw_middle_line(screen: Screen) -> None:
     pg.draw.line(screen.surface, WHITESMOKE, (screen.width / 2, 64), (screen.width / 2, 64 + 8 * 64))
 
 
-
 def draw_background_basecolor(screen: Screen, state: State) -> None:
     if state.gameplay.trains_released:
         screen.surface.fill(DELETE_MODE_BG_COLOR)
@@ -474,47 +470,35 @@ def draw_empty_cell_tracks(screen: Screen, empty_cell: EmptyCell) -> None:
 
 
 
-
-
 def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
-    check_pygame_events(state, field)
     check_and_toggle_profiling(state)
+    check_for_pygame_events(state, field)
     update_gameplay_state(state, field)
+    check_and_save_field(field)
+    reset_train_statuses(field)
+    select_tracks_and_move_trains(state, field)
+    check_and_delete_field_tracks(state, field)
+    check_train_merges(field)
+    check_train_arrivals(state, field)
+    delete_crashed_trains(field)
+    tick_trains(state, field)
+    check_for_new_track_placement(state, field)
+    check_for_level_completion(state, field)
+    check_for_main_menu_command(state)
+    tick_departures(state, field)
+    determine_arrival_station_checkmarks(field)
 
     draw_background_basecolor(screen, state)
     draw_background_day_cycle(screen, state)
     field.empty_cells_sprites.draw(screen.surface)
     field.rock_cells_sprites.draw(screen.surface)
-
-    reset_train_statuses(field)
-    select_tracks_and_move_trains(state, field)
-    check_and_delete_field_tracks(state, field)
-
     draw_empty_cells_tracks(screen, field)
-
-    check_train_merges(field)
-    check_train_arrivals(state, field)
-    delete_crashed_trains(field)
-    tick_trains(state, field)
-
     field.train_sprites.draw(screen.surface)
     field.departure_stations_sprites.draw(screen.surface)
     field.arrival_stations_sprites.draw(screen.surface)
     draw_station_goals(screen, field)
-
-    check_for_new_track_placement(state, field)
-    check_for_level_completion(state, field)
-    check_for_main_menu_command(state)
-
     draw_middle_line(screen)
-    
-    tick_departures(state, field)
-
-    determine_arrival_station_checkmarks(field)
-
     draw_checkmarks(screen, field)
-
-    check_and_save_field(field)
 
 
 
@@ -523,7 +507,7 @@ def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
 def main_menu_phase(state: State, screen: Screen, field: Field) -> None:
     UserControl.update_user_control_state()
     screen.surface.fill(GRAY10)
-    check_pygame_events(state, field)
+    check_for_pygame_events(state, field)
     check_for_gameplay_command(state)
     check_for_exit_command(state)
 
