@@ -79,6 +79,7 @@ class Station(Cell):
             self.create_goal_sprites()
             self.is_reset = True
             self.last_release_tick = None
+            self.checkmark = None
 
 
 
