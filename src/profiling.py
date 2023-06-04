@@ -22,6 +22,6 @@ class Profiler:
         if self.is_running:
             return
         print("INFO\tstarted profiling...")
-        self.profile.clear()
+        self.profile.clear() # type: ignore
         self.profile.enable()
         self.is_running = True

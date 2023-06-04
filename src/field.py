@@ -65,7 +65,7 @@ class Field:
     def get_grid_cell_list_index(self, i: int = 0, j: int = 0) -> int:
         return int(j) * self.cells_y + int(i)
 
-    def get_grid_cell_at(self, i: int, j: int) -> Union[EmptyCell, Station]:
+    def get_grid_cell_at(self, i: int, j: int) -> Union[EmptyCell, RockCell, Station]:
         return self.full_grid[self.get_grid_cell_list_index(i, j)]
 
     def insert_track_to_position(

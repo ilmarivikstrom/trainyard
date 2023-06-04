@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict
+from typing import Dict, List
 
 import pygame as pg
 
@@ -37,7 +37,7 @@ class Track(pg.sprite.Sprite):
         self.j = j
         self.cell_rect = cell_rect
         self.track_type = track_type
-        self.directions = tracktype_to_direction[track_type]
+        self.directions: List[Direction] = tracktype_to_direction[track_type]
         self.bright = True
         self.endpoints = [pg.Vector2(0, 0), pg.Vector2(0, 0)]
         self.images: Dict[str, pg.Surface] = {}
