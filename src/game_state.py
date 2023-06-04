@@ -1,12 +1,10 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
 
 import pygame as pg
 
 from src.config import Config
 from src.profiling import Profiler
-from src.train import Train
 from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
@@ -35,8 +33,6 @@ class GameplayStatus:
 class State:
     game_phase = Phase.MAIN_MENU
     screen_surface = pg.display.set_mode((Config.screen_width, Config.screen_height))
-    trains: List[Train] = []
-    train_sprites = pg.sprite.Group() # type: ignore
     global_status = GlobalStatus()
     gameplay = GameplayStatus()
     profiler: Profiler = Profiler()

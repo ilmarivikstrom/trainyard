@@ -8,6 +8,7 @@ from src.config import Config
 from src.saveable import Saveable
 from src.station import ArrivalStation, DepartureStation, Station
 from src.track import Track, TrackType
+from src.train import Train
 from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
@@ -26,6 +27,9 @@ class Field:
         self.rock_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.departure_stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.arrival_stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+
+        self.trains: List[Train] = []
+        self.train_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
 
     def initialize_grid(self, file_name: str="level_0.csv") -> None:

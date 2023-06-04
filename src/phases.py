@@ -40,8 +40,8 @@ def update_gameplay_state(field: Field) -> None:
             departure_station.reset()
         for arrival_station in field.arrival_stations:
             arrival_station.reset()
-        State.trains.clear()
-        State.train_sprites.empty() #type: ignore
+        field.trains.clear()
+        field.train_sprites.empty()
         State.gameplay.trains_crashed = 0
         State.gameplay.trains_released = False
         State.gameplay.current_level_passed = False
@@ -116,28 +116,28 @@ def draw_empty_cell_tracks(empty_cell: EmptyCell) -> None:
             draw_arcs_and_endpoints(track)
 
 
-def delete_crashed_trains() -> None:
-    for train in State.trains:
+def delete_crashed_trains(field: Field) -> None:
+    for train in field.trains:
         if train.crashed:
-            State.train_sprites.remove(train) # type: ignore
-            State.trains.remove(train)
-            logger.info(f"Train crashed. Trains left: {len(State.trains)}")
+            field.train_sprites.remove(train) # type: ignore
+            field.trains.remove(train)
+            logger.info(f"Train crashed. Trains left: {len(field.trains)}")
 
 
-def tick_trains() -> None:
-    for train in State.trains:
+def tick_trains(field: Field) -> None:
+    for train in field.trains:
         train.tick(State.gameplay.trains_released)
 
 
 def check_train_arrivals(field: Field) -> None:
-    for train in State.trains:
+    for train in field.trains:
         for arrival_station in field.arrival_stations:
             if arrival_station.rect is None:
                 raise ValueError(f"The rect of {arrival_station} is None.")
             if train.rect.collidepoint(arrival_station.rect.center):
                 if train.color == arrival_station.train_color and arrival_station.goals and arrival_station.number_of_trains_left > 0:
-                    State.trains.remove(train)
-                    State.train_sprites.remove(train) # type: ignore
+                    field.trains.remove(train)
+                    field.train_sprites.remove(train) # type: ignore
                     arrival_station.is_reset = False
                     arrival_station.number_of_trains_left -= 1
                     arrival_station.goals.pop().kill()
@@ -168,9 +168,9 @@ def draw_separator_line() -> None:
     pg.draw.line(State.screen_surface, WHITESMOKE, (State.screen_surface.get_width() / 2, 64), (State.screen_surface.get_width() / 2, 64 + 8 * 64))
 
 
-def add_new_train(train: Train) -> None:
-    State.trains.append(train)
-    State.train_sprites.add(train) # type: ignore
+def add_new_train(train: Train, field: Field) -> None:
+    field.trains.append(train)
+    field.train_sprites.add(train) # type: ignore
 
 
 def tick_departures(field: Field) -> None:
@@ -179,13 +179,13 @@ def tick_departures(field: Field) -> None:
     for departure_station in field.departure_stations:
         res = departure_station.tick(State.global_status.current_tick)
         if res is not None:
-            add_new_train(res)
+            add_new_train(res, field)
 
 
-def check_for_main_menu_command() -> None:
+def check_for_main_menu_command(field: Field) -> None:
     if UserControl.pressed_keys[UserControl.MAIN_MENU]:
         State.gameplay.trains_released = False
-        for train in State.trains:
+        for train in field.trains:
             train.reset()
         State.game_phase = Phase.MAIN_MENU
         logger.info(f"Moving to state {State.game_phase}")
@@ -199,13 +199,13 @@ def arrivals_pending(field: Field) -> bool:
 
 
 def check_for_level_completion(field: Field) -> None:
-    if not State.gameplay.current_level_passed and not arrivals_pending(field) and State.gameplay.trains_crashed == 0 and len(State.trains) == 0:
+    if not State.gameplay.current_level_passed and not arrivals_pending(field) and State.gameplay.trains_crashed == 0 and len(field.trains) == 0:
         Sound.success.play()
         State.gameplay.current_level_passed = True
 
 
-def reset_train_statuses() -> None:
-    for train in State.trains:
+def reset_train_statuses(field: Field) -> None:
+    for train in field.trains:
         train.on_track = False
 
 
@@ -310,9 +310,9 @@ def flip_tracks_if_needed(train: Train, cell: Cell) -> None:
         train.last_flipped_cell = cell
 
 
-def check_train_merges() -> None:
-    for train_1 in State.trains:
-        other_trains = State.trains.copy()
+def check_train_merges(field: Field) -> None:
+    for train_1 in field.trains:
+        other_trains = field.trains.copy()
         other_trains.remove(train_1)
         other_trains_pos = [x.pos for x in other_trains]
         other_trains_pos_dict = dict(zip(other_trains, other_trains_pos))
@@ -320,17 +320,17 @@ def check_train_merges() -> None:
             continue
         train_2 = [key for key, val in other_trains_pos_dict.items() if val == train_1.pos][0]
         if train_1.direction == train_2.direction:
-            merge_trains(train_1, train_2)
+            merge_trains(train_1, train_2, field)
         else:
             paint_trains(train_1, train_2)
 
 
-def merge_trains(train_1: Train, train_2: Train) -> None:
+def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
     upcoming_train_color = blend_train_colors(train_1.color, train_2.color)
     train_1.repaint(upcoming_train_color)
-    State.trains.remove(train_2)
+    field.trains.remove(train_2)
     train_2.kill()
-    logger.info(f"Removed a train! Trains remaining: {len(State.trains)} or {len(State.train_sprites)}") # type: ignore
+    logger.info(f"Removed a train! Trains remaining: {len(field.trains)} or {len(field.train_sprites)}") # type: ignore
     Sound.play_sound_on_channel(Sound.merge, 0)
 
 
@@ -411,12 +411,12 @@ def gameplay_phase(field: Field) -> None:
     field.empty_cells_sprites.draw(State.screen_surface)
     field.rock_cells_sprites.draw(State.screen_surface)
 
-    reset_train_statuses()
+    reset_train_statuses(field)
 
     for cell in field.full_grid:
         if cell.check_mouse_collision():
             State.gameplay.prev_cell_needs_checking = True
-        for train in State.trains:
+        for train in field.trains:
             if cell.rect is None:
                 raise ValueError("Rect is None.")
             if not cell.rect.colliderect(pg.Rect(train.rect.centerx - 1, train.rect.centery - 1, 1, 1)):
@@ -472,18 +472,18 @@ def gameplay_phase(field: Field) -> None:
         check_track_delete(empty_cell)
 
 
-    check_train_merges()
+    check_train_merges(field)
     check_train_arrivals(field)
-    delete_crashed_trains()
-    tick_trains()
-    State.train_sprites.draw(State.screen_surface)
+    delete_crashed_trains(field)
+    tick_trains(field)
+    field.train_sprites.draw(State.screen_surface)
     field.departure_stations_sprites.draw(State.screen_surface)
     field.arrival_stations_sprites.draw(State.screen_surface)
     draw_station_goals(field)
 
     check_for_new_track_placement(field)
     check_for_level_completion(field)
-    check_for_main_menu_command()
+    check_for_main_menu_command(field)
     draw_separator_line()
     tick_departures(field)
 
