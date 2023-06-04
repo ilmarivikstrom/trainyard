@@ -27,93 +27,93 @@ from src.utils import setup_logging
 logger = setup_logging(log_level=Config.log_level)
 
 
-def update_gameplay_state(field: Field) -> None:
+def update_gameplay_state(state: State, field: Field) -> None:
     UserControl.update_user_control_state()
-    check_delete_mode()
+    check_delete_mode(state)
 
     if UserControl.check_space_down_event():
-        State.gameplay.trains_released = not State.gameplay.trains_released
+        state.gameplay.trains_released = not state.gameplay.trains_released
     _ = UserControl.check_space_released_event()
 
-    if not State.gameplay.trains_released:
+    if not state.gameplay.trains_released:
         for departure_station in field.departure_stations:
             departure_station.reset()
         for arrival_station in field.arrival_stations:
             arrival_station.reset()
         field.trains.clear()
         field.train_sprites.empty()
-        State.gameplay.trains_crashed = 0
-        State.gameplay.trains_released = False
-        State.gameplay.current_level_passed = False
+        state.gameplay.trains_crashed = 0
+        state.gameplay.trains_released = False
+        state.gameplay.current_level_passed = False
 
 
-def check_delete_mode() -> None:
+def check_delete_mode(state: State) -> None:
     if UserControl.pressed_keys[UserControl.DELETE_MODE]:
-        State.gameplay.delete_mode = True
+        state.gameplay.delete_mode = True
     else:
-        State.gameplay.delete_mode = False
+        state.gameplay.delete_mode = False
 
 
-def check_for_gameplay_command() -> None:
+def check_for_gameplay_command(state: State) -> None:
     if UserControl.pressed_keys[UserControl.GAMEPLAY]:
-        State.game_phase = Phase.GAMEPLAY
-        logger.info(f"Moving to state {State.game_phase}")
+        state.game_phase = Phase.GAMEPLAY
+        logger.info(f"Moving to state {state.game_phase}")
 
 
-def check_for_exit_command() -> None:
+def check_for_exit_command(state: State) -> None:
     if UserControl.pressed_keys[UserControl.EXIT]:
-        State.game_phase = Phase.GAME_END
-        logger.info(f"Moving to state {State.game_phase}")
+        state.game_phase = Phase.GAME_END
+        logger.info(f"Moving to state {state.game_phase}")
 
 
-def main_menu_phase(field: Field) -> None:
+def main_menu_phase(state: State, field: Field) -> None:
     UserControl.update_user_control_state()
-    State.screen_surface.fill(GRAY10)
-    check_events(field)
-    check_for_gameplay_command()
-    check_for_exit_command()
+    state.screen_surface.fill(GRAY10)
+    check_events(state, field)
+    check_for_gameplay_command(state)
+    check_for_exit_command(state)
 
 
-def draw_arcs_and_endpoints(track: Track):
+def draw_arcs_and_endpoints(state: State, track: Track):
     if track.bright:
         color = WHITE
     else:
         color = GRAY
     if track.track_type == TrackType.VERT:
-        pg.draw.line(State.screen_surface, color, track.cell_rect.midtop, track.cell_rect.midbottom)
+        pg.draw.line(state.screen_surface, color, track.cell_rect.midtop, track.cell_rect.midbottom)
     elif track.track_type == TrackType.HORI:
-        pg.draw.line(State.screen_surface, color, track.cell_rect.midleft, track.cell_rect.midright)
+        pg.draw.line(state.screen_surface, color, track.cell_rect.midleft, track.cell_rect.midright)
     elif track.track_type == TrackType.TOP_RIGHT:
-        pygame.gfxdraw.arc(State.screen_surface, track.cell_rect.right, track.cell_rect.top, int(Config.cell_size / 2), 90, 180, color)
+        pygame.gfxdraw.arc(state.screen_surface, track.cell_rect.right, track.cell_rect.top, int(Config.cell_size / 2), 90, 180, color)
     elif track.track_type == TrackType.TOP_LEFT:
-        pygame.gfxdraw.arc(State.screen_surface, track.cell_rect.left, track.cell_rect.top, int(Config.cell_size / 2), 0, 90, color)
+        pygame.gfxdraw.arc(state.screen_surface, track.cell_rect.left, track.cell_rect.top, int(Config.cell_size / 2), 0, 90, color)
     elif track.track_type == TrackType.BOTTOM_LEFT:
-        pygame.gfxdraw.arc(State.screen_surface, track.cell_rect.left, track.cell_rect.bottom, int(Config.cell_size / 2), 270, 360, color)
+        pygame.gfxdraw.arc(state.screen_surface, track.cell_rect.left, track.cell_rect.bottom, int(Config.cell_size / 2), 270, 360, color)
     elif track.track_type == TrackType.BOTTOM_RIGHT:
-        pygame.gfxdraw.arc(State.screen_surface, track.cell_rect.right, track.cell_rect.bottom, int(Config.cell_size / 2), 180, 270, color)
+        pygame.gfxdraw.arc(state.screen_surface, track.cell_rect.right, track.cell_rect.bottom, int(Config.cell_size / 2), 180, 270, color)
 
     for endpoint in track.endpoints:
-        pygame.gfxdraw.pixel(State.screen_surface, int(endpoint.x), int(endpoint.y), RED1)
+        pygame.gfxdraw.pixel(state.screen_surface, int(endpoint.x), int(endpoint.y), RED1)
 
 
-def draw_background_basecolor() -> None:
-    if State.gameplay.trains_released:
-        State.screen_surface.fill(DELETE_MODE_BG_COLOR)
+def draw_background_basecolor(state: State) -> None:
+    if state.gameplay.trains_released:
+        state.screen_surface.fill(DELETE_MODE_BG_COLOR)
     else:
-        State.screen_surface.fill(NORMAL_MODE_BG_COLOR)
+        state.screen_surface.fill(NORMAL_MODE_BG_COLOR)
 
 
-def draw_background_day_cycle() -> None:
-    State.gameplay.background_location = (-State.global_status.current_tick * Config.background_scroll_speed, 0)
-    State.screen_surface.blit(Graphics.img_surfaces["day_cycle"], dest=State.gameplay.background_location)
+def draw_background_day_cycle(state: State) -> None:
+    state.gameplay.background_location = (-state.global_status.current_tick * Config.background_scroll_speed, 0)
+    state.screen_surface.blit(Graphics.img_surfaces["day_cycle"], dest=state.gameplay.background_location)
 
 
-def draw_empty_cell_tracks(empty_cell: EmptyCell) -> None:
+def draw_empty_cell_tracks(state: State, empty_cell: EmptyCell) -> None:
     for track in empty_cell.tracks:
         if track.image:
-            State.screen_surface.blit(track.image, dest=track.cell_rect)
+            state.screen_surface.blit(track.image, dest=track.cell_rect)
         if Config.draw_arcs:
-            draw_arcs_and_endpoints(track)
+            draw_arcs_and_endpoints(state, track)
 
 
 def delete_crashed_trains(field: Field) -> None:
@@ -124,12 +124,12 @@ def delete_crashed_trains(field: Field) -> None:
             logger.info(f"Train crashed. Trains left: {len(field.trains)}")
 
 
-def tick_trains(field: Field) -> None:
+def tick_trains(state: State, field: Field) -> None:
     for train in field.trains:
-        train.tick(State.gameplay.trains_released)
+        train.tick(state.gameplay.trains_released)
 
 
-def check_train_arrivals(field: Field) -> None:
+def check_train_arrivals(state: State, field: Field) -> None:
     for train in field.trains:
         for arrival_station in field.arrival_stations:
             if arrival_station.rect is None:
@@ -146,7 +146,7 @@ def check_train_arrivals(field: Field) -> None:
                 else:
                     logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
                     train.crash()
-                    State.gameplay.trains_crashed += 1
+                    state.gameplay.trains_crashed += 1
                     arrival_station.checkmark = None
                 logger.info(f"Arrival station saveable attributes: {arrival_station.saveable_attributes.serialize()}")
 
@@ -157,15 +157,15 @@ def determine_arrival_station_checkmarks(field: Field) -> None:
             arrival_station.checkmark = CheckmarkSprite(arrival_station.rect)
 
 
-def draw_station_goals(field: Field) -> None:
+def draw_station_goals(state: State, field: Field) -> None:
     for arrival_station in field.arrival_stations:
-        arrival_station.goal_sprites.draw(State.screen_surface) # type: ignore
+        arrival_station.goal_sprites.draw(state.screen_surface) # type: ignore
     for departure_station in field.departure_stations:
-        departure_station.goal_sprites.draw(State.screen_surface) # type: ignore
+        departure_station.goal_sprites.draw(state.screen_surface) # type: ignore
 
 
-def draw_separator_line() -> None:
-    pg.draw.line(State.screen_surface, WHITESMOKE, (State.screen_surface.get_width() / 2, 64), (State.screen_surface.get_width() / 2, 64 + 8 * 64))
+def draw_separator_line(state: State) -> None:
+    pg.draw.line(state.screen_surface, WHITESMOKE, (state.screen_surface.get_width() / 2, 64), (state.screen_surface.get_width() / 2, 64 + 8 * 64))
 
 
 def add_new_train(train: Train, field: Field) -> None:
@@ -173,22 +173,22 @@ def add_new_train(train: Train, field: Field) -> None:
     field.train_sprites.add(train) # type: ignore
 
 
-def tick_departures(field: Field) -> None:
-    if not State.gameplay.trains_released:
+def tick_departures(state: State, field: Field) -> None:
+    if not state.gameplay.trains_released:
         return
     for departure_station in field.departure_stations:
-        res = departure_station.tick(State.global_status.current_tick)
+        res = departure_station.tick(state.global_status.current_tick)
         if res is not None:
             add_new_train(res, field)
 
 
-def check_for_main_menu_command(field: Field) -> None:
+def check_for_main_menu_command(state: State, field: Field) -> None:
     if UserControl.pressed_keys[UserControl.MAIN_MENU]:
-        State.gameplay.trains_released = False
+        state.gameplay.trains_released = False
         for train in field.trains:
             train.reset()
-        State.game_phase = Phase.MAIN_MENU
-        logger.info(f"Moving to state {State.game_phase}")
+        state.game_phase = Phase.MAIN_MENU
+        logger.info(f"Moving to state {state.game_phase}")
 
 
 def arrivals_pending(field: Field) -> bool:
@@ -198,10 +198,10 @@ def arrivals_pending(field: Field) -> bool:
     return False
 
 
-def check_for_level_completion(field: Field) -> None:
-    if not State.gameplay.current_level_passed and not arrivals_pending(field) and State.gameplay.trains_crashed == 0 and len(field.trains) == 0:
+def check_for_level_completion(state: State, field: Field) -> None:
+    if not state.gameplay.current_level_passed and not arrivals_pending(field) and state.gameplay.trains_crashed == 0 and len(field.trains) == 0:
         Sound.success.play()
-        State.gameplay.current_level_passed = True
+        state.gameplay.current_level_passed = True
 
 
 def reset_train_statuses(field: Field) -> None:
@@ -209,8 +209,8 @@ def reset_train_statuses(field: Field) -> None:
         train.on_track = False
 
 
-def check_track_delete(empty_cell: EmptyCell) -> None:
-    mouse_pressed_cell_while_in_delete_mode = (empty_cell.mouse_on and UserControl.mouse_pressed[0] and State.gameplay.delete_mode and not State.gameplay.trains_released)
+def check_track_delete(state: State, empty_cell: EmptyCell) -> None:
+    mouse_pressed_cell_while_in_delete_mode = (empty_cell.mouse_on and UserControl.mouse_pressed[0] and state.gameplay.delete_mode and not state.gameplay.trains_released)
     if mouse_pressed_cell_while_in_delete_mode:
         empty_cell.tracks.clear()
 
@@ -341,11 +341,11 @@ def paint_trains(train_1: Train, train_2: Train) -> None:
     Sound.play_sound_on_channel(Sound.merge, 0)
 
 
-def check_for_new_track_placement(field: Field) -> None:
-    left_mouse_down_in_draw_mode = (UserControl.mouse_pressed[0] and not State.gameplay.delete_mode and not State.gameplay.trains_released)
+def check_for_new_track_placement(state: State, field: Field) -> None:
+    left_mouse_down_in_draw_mode = (UserControl.mouse_pressed[0] and not state.gameplay.delete_mode and not state.gameplay.trains_released)
     mouse_moved_over_cells = (UserControl.prev_cell and UserControl.curr_cell)
 
-    if left_mouse_down_in_draw_mode and mouse_moved_over_cells and State.gameplay.prev_cell_needs_checking:
+    if left_mouse_down_in_draw_mode and mouse_moved_over_cells and state.gameplay.prev_cell_needs_checking:
         mouse_moved_up =        (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.UP)
         mouse_moved_down =      (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.DOWN)
         mouse_moved_right =     (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.RIGHT)
@@ -370,21 +370,21 @@ def check_for_new_track_placement(field: Field) -> None:
             field.insert_track_to_position(TrackType.TOP_RIGHT, UserControl.prev_cell)
         elif mouse_moved_downleft or mouse_moved_rightup:
             field.insert_track_to_position(TrackType.TOP_LEFT, UserControl.prev_cell)
-        State.gameplay.prev_cell_needs_checking = False
+        state.gameplay.prev_cell_needs_checking = False
 
 
-def display_checkmarks(field: Field) -> None:
+def display_checkmarks(state: State, field: Field) -> None:
     for arrival_station in field.arrival_stations:
         if arrival_station.checkmark is None or arrival_station.checkmark.image is None or arrival_station.rect is None:
             continue
-        State.screen_surface.blit(source=arrival_station.checkmark.image, dest=arrival_station.rect.topleft)
+        state.screen_surface.blit(source=arrival_station.checkmark.image, dest=arrival_station.rect.topleft)
 
 
-def check_profiling_command() -> None:
+def check_profiling_command(state: State) -> None:
     if UserControl.pressed_keys[pg.K_F1]:
-        State.profiler.continue_profiling()
+        state.profiler.continue_profiling()
     else:
-        State.profiler.discontinue_profiling()
+        state.profiler.discontinue_profiling()
 
 
 def save_field(field: Field, file_name: str="level_tmp.csv") -> None:
@@ -401,21 +401,21 @@ def save_field(field: Field, file_name: str="level_tmp.csv") -> None:
 
 
 
-def gameplay_phase(field: Field) -> None:
-    check_events(field)
-    check_profiling_command()
-    update_gameplay_state(field)
-    draw_background_basecolor()
-    draw_background_day_cycle()
+def gameplay_phase(state: State, field: Field) -> None:
+    check_events(state, field)
+    check_profiling_command(state)
+    update_gameplay_state(state, field)
+    draw_background_basecolor(state)
+    draw_background_day_cycle(state)
 
-    field.empty_cells_sprites.draw(State.screen_surface)
-    field.rock_cells_sprites.draw(State.screen_surface)
+    field.empty_cells_sprites.draw(state.screen_surface)
+    field.rock_cells_sprites.draw(state.screen_surface)
 
     reset_train_statuses(field)
 
     for cell in field.full_grid:
         if cell.check_mouse_collision():
-            State.gameplay.prev_cell_needs_checking = True
+            state.gameplay.prev_cell_needs_checking = True
         for train in field.trains:
             if cell.rect is None:
                 raise ValueError("Rect is None.")
@@ -431,7 +431,7 @@ def gameplay_phase(field: Field) -> None:
                 if len(cell.tracks) == 0:
                     # Stop the train. Should mean 'crash'.
                     train.crash()
-                    State.gameplay.trains_crashed += 1
+                    state.gameplay.trains_crashed += 1
                 else:
                     # If there are some tracks in this cell.
                     train.tracks_ahead = cell.tracks
@@ -468,27 +468,27 @@ def gameplay_phase(field: Field) -> None:
     for empty_cell in field.empty_cells:
         if empty_cell.rect is None:
             raise ValueError("The cell's rect is None. Exiting.")
-        draw_empty_cell_tracks(empty_cell)
-        check_track_delete(empty_cell)
+        draw_empty_cell_tracks(state, empty_cell)
+        check_track_delete(state, empty_cell)
 
 
     check_train_merges(field)
-    check_train_arrivals(field)
+    check_train_arrivals(state, field)
     delete_crashed_trains(field)
-    tick_trains(field)
-    field.train_sprites.draw(State.screen_surface)
-    field.departure_stations_sprites.draw(State.screen_surface)
-    field.arrival_stations_sprites.draw(State.screen_surface)
-    draw_station_goals(field)
+    tick_trains(state, field)
+    field.train_sprites.draw(state.screen_surface)
+    field.departure_stations_sprites.draw(state.screen_surface)
+    field.arrival_stations_sprites.draw(state.screen_surface)
+    draw_station_goals(state, field)
 
-    check_for_new_track_placement(field)
-    check_for_level_completion(field)
-    check_for_main_menu_command(field)
-    draw_separator_line()
-    tick_departures(field)
+    check_for_new_track_placement(state, field)
+    check_for_level_completion(state, field)
+    check_for_main_menu_command(state, field)
+    draw_separator_line(state)
+    tick_departures(state, field)
 
     determine_arrival_station_checkmarks(field)
-    display_checkmarks(field)
+    display_checkmarks(state, field)
 
     if UserControl.pressed_keys[UserControl.SAVE_GAME]:
         save_field(field)
@@ -500,12 +500,12 @@ def exit_phase():
     sys.exit()
 
 
-def check_events(field: Field) -> None:
+def check_events(state: State, field: Field) -> None:
     for event in pg.event.get():
         if event.type == QUIT:
-            State.game_phase = Phase.GAME_END
-            logger.info(f"Moving to state {State.game_phase}")
+            state.game_phase = Phase.GAME_END
+            logger.info(f"Moving to state {state.game_phase}")
         elif event.type == MOUSEBUTTONDOWN and event.button == 3:
             for empty_cell in field.empty_cells:
-                if empty_cell.mouse_on and not State.gameplay.trains_released and len(empty_cell.tracks) > 1:
+                if empty_cell.mouse_on and not state.gameplay.trains_released and len(empty_cell.tracks) > 1:
                     empty_cell.flip_tracks()

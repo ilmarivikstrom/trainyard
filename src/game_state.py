@@ -31,8 +31,9 @@ class GameplayStatus:
 
 
 class State:
-    game_phase = Phase.MAIN_MENU
-    screen_surface = pg.display.set_mode((Config.screen_width, Config.screen_height))
-    global_status = GlobalStatus()
-    gameplay = GameplayStatus()
-    profiler: Profiler = Profiler()
+    def __init__(self):
+        self.game_phase = Phase.MAIN_MENU
+        self.screen_surface = pg.display.set_mode((Config.screen_width, Config.screen_height))
+        self.global_status = GlobalStatus()
+        self.gameplay = GameplayStatus()
+        self.profiler: Profiler = Profiler()

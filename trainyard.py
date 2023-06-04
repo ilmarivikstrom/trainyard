@@ -12,6 +12,7 @@ logger = setup_logging(log_level=Config.log_level)
 
 
 def main() -> None:
+    state = State()
     initial_setup()
     field = initialize_level()
     clock = pg.time.Clock()
@@ -20,13 +21,13 @@ def main() -> None:
         Sound.play_music()
 
     while True:
-        State.global_status.current_tick += 1
-        if State.game_phase == Phase.MAIN_MENU:
-            main_menu_phase(field)
-        elif State.game_phase == Phase.GAME_END:
+        state.global_status.current_tick += 1
+        if state.game_phase == Phase.MAIN_MENU:
+            main_menu_phase(state, field)
+        elif state.game_phase == Phase.GAME_END:
             exit_phase()
-        elif State.game_phase == Phase.GAMEPLAY:
-            gameplay_phase(field)
+        elif state.game_phase == Phase.GAMEPLAY:
+            gameplay_phase(state, field)
         pg.display.update()
         clock.tick(Config.FPS)
 
