@@ -23,16 +23,16 @@ def check_for_pg_mainmenu_events(state: State) -> None:
     for event in pg.event.get():
         if event.type == QUIT:
             state.game_phase = Phase.EXIT
-            logger.info(f"Moving to state {state.game_phase}")
+            logger.info(f"Moving to phase {state.game_phase}")
 
 
 def check_for_exit_command(state: State) -> None:
     if UserControl.pressed_keys[UserControl.EXIT]:
         state.game_phase = Phase.EXIT
-        logger.info(f"Moving to state {state.game_phase}")
+        logger.info(f"Moving to phase {state.game_phase}")
 
 
 def check_for_gameplay_command(state: State) -> None:
     if UserControl.pressed_keys[UserControl.GAMEPLAY]:
         state.game_phase = Phase.GAMEPLAY
-        logger.info(f"Moving to state {state.game_phase}")
+        logger.info(f"Moving to phase {state.game_phase}")

@@ -23,6 +23,11 @@ from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
 
+def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
+    execute_logic(state, field)
+    draw_game_objects(field, screen)
+
+
 def execute_logic(state: State, field: Field) -> None:
     check_and_save_field(field)
     check_and_toggle_profiling(state)
@@ -61,17 +66,12 @@ def draw_game_objects(field: Field, screen: Screen) -> None:
     draw_middle_line(screen) # Separator line.
 
 
-def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
-    execute_logic(state, field)
-    draw_game_objects(field, screen)
-
-
 
 
 def check_for_mainmenu_command(state: State) -> None:
     if UserControl.pressed_keys[UserControl.MAIN_MENU]:
         state.game_phase = Phase.MAIN_MENU
-        logger.info(f"Moving to state {state.game_phase}")
+        logger.info(f"Moving to phase {state.game_phase}")
 
 
 def check_and_toggle_profiling(state: State) -> None:
@@ -196,21 +196,21 @@ def check_for_new_track_placement(state: State, field: Field) -> None:
     left_mouse_down_in_draw_mode = (UserControl.mouse_pressed[0] and not state.gameplay.in_delete_mode and not field.is_released)
     mouse_moved_over_cells = (UserControl.prev_cell and UserControl.curr_cell)
     if left_mouse_down_in_draw_mode and mouse_moved_over_cells and UserControl.mouse_entered_new_cell:
-        mouse_moved_up =        (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.UP)
-        mouse_moved_down =      (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.DOWN)
-        mouse_moved_right =     (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.RIGHT)
-        mouse_moved_left =      (UserControl.prev_movement == Direction.LEFT    and UserControl.curr_movement == Direction.LEFT)
-        moues_moved_upleft =    (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.LEFT)
-        mouse_moved_rightdown = (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.DOWN)
-        mouse_moved_upright =   (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.RIGHT)
-        mouse_moved_leftdown =  (UserControl.prev_movement == Direction.LEFT    and UserControl.curr_movement == Direction.DOWN)
-        mouse_moved_downright = (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.RIGHT)
-        mouse_moved_leftup =    (UserControl.prev_movement == Direction.LEFT    and UserControl.curr_movement == Direction.UP)
-        mouse_moved_downleft =  (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.LEFT)
-        mouse_moved_rightup =   (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.UP)
-        if mouse_moved_up or mouse_moved_down:
+        mouse_moved_up_twice =      (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.UP)
+        mouse_moved_down_twice =    (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.DOWN)
+        mouse_moved_right_twice =   (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.RIGHT)
+        mouse_moved_left_twice =    (UserControl.prev_movement == Direction.LEFT    and UserControl.curr_movement == Direction.LEFT)
+        moues_moved_upleft =        (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.LEFT)
+        mouse_moved_rightdown =     (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.DOWN)
+        mouse_moved_upright =       (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.RIGHT)
+        mouse_moved_leftdown =      (UserControl.prev_movement == Direction.LEFT    and UserControl.curr_movement == Direction.DOWN)
+        mouse_moved_downright =     (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.RIGHT)
+        mouse_moved_leftup =        (UserControl.prev_movement == Direction.LEFT    and UserControl.curr_movement == Direction.UP)
+        mouse_moved_downleft =      (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.LEFT)
+        mouse_moved_rightup =       (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.UP)
+        if mouse_moved_up_twice or mouse_moved_down_twice:
             field.insert_track_to_position(TrackType.VERT, UserControl.prev_cell)
-        elif mouse_moved_right or mouse_moved_left:
+        elif mouse_moved_right_twice or mouse_moved_left_twice:
             field.insert_track_to_position(TrackType.HORI, UserControl.prev_cell)
         elif moues_moved_upleft or mouse_moved_rightdown:
             field.insert_track_to_position(TrackType.BOTTOM_LEFT, UserControl.prev_cell)
@@ -227,7 +227,7 @@ def check_for_pg_gameplay_events(state: State, field: Field) -> None:
     for event in pg.event.get():
         if event.type == QUIT:
             state.game_phase = Phase.EXIT
-            logger.info(f"Moving to state {state.game_phase}")
+            logger.info(f"Moving to phase {state.game_phase}")
         elif event.type == MOUSEBUTTONDOWN and event.button == 3:
             for empty_cell in field.empty_cells:
                 if empty_cell.mouse_on and not field.is_released and len(empty_cell.tracks) > 1:

@@ -52,8 +52,8 @@ class UserControl:
         UserControl.pressed_keys = pg.key.get_pressed()
         UserControl.mouse_pressed = pg.mouse.get_pressed()
         if not UserControl.mouse_pressed[0]:
-            UserControl.curr_movement = None
-            UserControl.prev_movement = None
+            UserControl.curr_movement = Direction.NONE
+            UserControl.prev_movement = Direction.NONE
             UserControl.prev_cell = None
         if UserControl.pressed_keys[pg.K_1]:
             Config.FPS = Config.FPS_list[0]

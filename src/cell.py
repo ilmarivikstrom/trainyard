@@ -43,11 +43,9 @@ class Cell(pg.sprite.Sprite):
 
     def handle_mouse_cell_enter(self) -> None:
         logger.info(f"Mouse entered cell: {self.i, self.j}")
-        previous_cell = UserControl.curr_cell
-        UserControl.prev_cell = previous_cell
+        UserControl.prev_cell = UserControl.curr_cell.copy()
         UserControl.curr_cell = pg.Vector2(self.i, self.j)
         UserControl.prev_movement = UserControl.curr_movement
-
         if (UserControl.curr_cell.x - UserControl.prev_cell.x == 1) and (UserControl.curr_cell.y == UserControl.prev_cell.y):
             UserControl.curr_movement = Direction.RIGHT
         elif (UserControl.curr_cell.x - UserControl.prev_cell.x == -1) and (UserControl.curr_cell.y == UserControl.prev_cell.y):
