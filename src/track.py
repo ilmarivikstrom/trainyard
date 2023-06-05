@@ -1,10 +1,31 @@
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import pygame as pg
 
 from src.direction import Direction
 from src.graphics import Graphics
+
+
+NAVIGATION_DOWN = [(0, 1)] * 64
+NAVIGATION_UP = [(-navigation[0], -navigation[1]) for navigation in NAVIGATION_DOWN]
+
+NAVIGATION_RIGHT = [(1, 0)] * 64
+NAVIGATION_LEFT = [(-navigation[0], -navigation[1]) for navigation in NAVIGATION_RIGHT]
+
+# Exactly 48 ticks long ellipse arc.
+NAVIGATION_RIGHTDOWN = [(1,0), (1,0), (1,0), (1,0), (1,0), (1,0), (1,0), (1,0), (1,1), (1,0), (1,0), (1,0), (1,0), (1,1), (1,0), (1,0), (1,1), (1,0), (1,1), (1,0), (1,1), (1,0), (1,1), (1,1), (1,1), (1,1), (0,1), (1,1), (0,1), (1,1), (0,1), (1,1), (0,1), (0,1), (1,1), (0,1), (0,1), (0,1), (0,1), (1,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1)]
+NAVIGATION_UPLEFT = [(-navigation[0], -navigation[1]) for navigation in NAVIGATION_RIGHTDOWN][::-1]
+
+NAVIGATION_RIGHTUP = [(navigation[0], -navigation[1]) for navigation in NAVIGATION_RIGHTDOWN]
+NAVIGATION_DOWNLEFT = [(-navigation[0], -navigation[1]) for navigation in NAVIGATION_RIGHTUP][::-1]
+
+NAVIGATION_LEFTDOWN = [(-navigation[0], navigation[1]) for navigation in NAVIGATION_RIGHTDOWN]
+NAVIGATION_UPRIGHT = [(-navigation[0], -navigation[1]) for navigation in NAVIGATION_LEFTDOWN][::-1]
+
+NAVIGATION_LEFTUP = [(-navigation[0], -navigation[1]) for navigation in NAVIGATION_RIGHTDOWN]
+NAVIGATION_DOWNRIGHT = [(-navigation[0], -navigation[1]) for navigation in NAVIGATION_LEFTUP][::-1]
+
 
 class TrackType(Enum):
     VERT = 0
@@ -42,36 +63,51 @@ class Track(pg.sprite.Sprite):
         self.endpoints = [pg.Vector2(0, 0), pg.Vector2(0, 0)]
         self.images: Dict[str, pg.Surface] = {}
 
+        self.navigation: List[Tuple[int, int]] = []
+        self.navigation_reversed: List[Tuple[int, int]] = []
+
         if self.track_type == TrackType.VERT:
             self.endpoints = [pg.Vector2(self.cell_rect.midtop), pg.Vector2(self.cell_rect.midbottom)]
             self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_s_bright"], Direction.UP.value)
             self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_s_dark"], Direction.UP.value)
             self.image = self.images["bright"]
+            self.navigation = NAVIGATION_DOWN
+            self.navigation_reversed = NAVIGATION_UP
         elif self.track_type == TrackType.HORI:
             self.endpoints = [pg.Vector2(self.cell_rect.midleft), pg.Vector2(self.cell_rect.midright)]
             self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_s_bright"], Direction.RIGHT.value)
             self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_s_dark"], Direction.RIGHT.value)
             self.image = self.images["bright"]
+            self.navigation = NAVIGATION_RIGHT
+            self.navigation_reversed = NAVIGATION_LEFT
         elif self.track_type == TrackType.TOP_RIGHT:
             self.endpoints = [pg.Vector2(self.cell_rect.midtop), pg.Vector2(self.cell_rect.midright)]
             self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_c_bright"], 90)
             self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_c_dark"], 90)
             self.image = self.images["bright"]
+            self.navigation = NAVIGATION_DOWNRIGHT
+            self.navigation_reversed = NAVIGATION_LEFTUP
         elif self.track_type == TrackType.TOP_LEFT:
             self.endpoints = [pg.Vector2(self.cell_rect.midtop), pg.Vector2(self.cell_rect.midleft)]
             self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_c_bright"], 180)
             self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_c_dark"], 180)
             self.image = self.images["bright"]
+            self.navigation = NAVIGATION_RIGHTUP
+            self.navigation_reversed = NAVIGATION_DOWNLEFT
         elif self.track_type == TrackType.BOTTOM_LEFT:
             self.endpoints = [pg.Vector2(self.cell_rect.midleft), pg.Vector2(self.cell_rect.midbottom)]
             self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_c_bright"], 270)
             self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_c_dark"], 270)
             self.image = self.images["bright"]
+            self.navigation = NAVIGATION_RIGHTDOWN
+            self.navigation_reversed = NAVIGATION_UPLEFT
         elif self.track_type == TrackType.BOTTOM_RIGHT:
             self.endpoints = [pg.Vector2(self.cell_rect.midbottom), pg.Vector2(self.cell_rect.midright)]
             self.images["bright"] = Graphics.img_surfaces["track_c_bright"]
             self.images["dark"] = Graphics.img_surfaces["track_c_dark"]
             self.image = self.images["bright"]
+            self.navigation = NAVIGATION_UPRIGHT
+            self.navigation_reversed = NAVIGATION_LEFTDOWN
         else:
             raise ValueError("Track type not recognized.")
 

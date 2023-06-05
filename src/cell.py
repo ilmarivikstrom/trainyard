@@ -26,6 +26,7 @@ class Cell(pg.sprite.Sprite):
         self.tracks: List[Track] = []
         self.blocks_placement = blocks_placement
 
+
     def check_mouse_collision(self) -> bool:
         prev_cell_needs_checking = False
         if self.rect is None:
@@ -38,6 +39,7 @@ class Cell(pg.sprite.Sprite):
         else:
             self.mouse_on = False
         return prev_cell_needs_checking
+
 
     def handle_mouse_cell_enter(self) -> None:
         logger.info(f"Mouse entered cell: {self.i, self.j}")
@@ -65,6 +67,7 @@ class EmptyCell(Cell):
     def __init__(self, i: int, j: int):
         super().__init__(i, j, Graphics.img_surfaces["bg_tile"], 0, False)
         self.saveable_attributes = SaveableAttributes(block_type="E")
+
 
     def flip_tracks(self):
         if len(self.tracks) < 1:

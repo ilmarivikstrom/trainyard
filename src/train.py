@@ -1,5 +1,5 @@
 import math
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import pygame as pg
 
@@ -8,44 +8,99 @@ from src.config import Config
 from src.direction import Direction
 from src.graphics import Graphics
 from src.sound import Sound
-from src.track import Track, StationTrack
+from src.track import Track, StationTrack, TrackType
 from src.traincolor import TrainColor
+from src.utils import rot_center
 
 
 class Train(pg.sprite.Sprite):
-    def __init__(self, i: int, j: int, color: TrainColor, direction: Direction = Direction.RIGHT):
+    def __init__(self, i: int, j: int, color: TrainColor, angle: float, selected_track: Track, direction: Direction):
         super().__init__()
         self.i = i
         self.j = j
-        self.color = color
-        self.direction = direction
-
-        self.original_direction = direction
+        self.color: TrainColor = color
+        self.direction: Direction = direction
 
         self.image: pg.Surface = Graphics.img_surfaces[color.value]
         self.original_image: pg.Surface = self.image
         self.rect: pg.Rect = self.image.get_rect() # type: ignore
         self.rect.x = int(i * Config.cell_size - 0.5 * Config.cell_size + Config.padding_x + 48)
         self.rect.y = j * Config.cell_size + Config.padding_y + 16
-        self.pos: pg.Vector2 = pg.Vector2(float(self.rect.x), float(self.rect.y))
 
-        self.angle = 0 * math.pi / 2
-        self.base_speed = 1
-        self.on_track = False
+        self.original_direction: Direction = direction
+        self.angle = angle
         self.last_collided_cells: List[Cell] = []
         self.last_flipped_cell: Optional[EmptyCell] = None
         self.tracks_ahead: List[Union[Track, StationTrack]] = []
-        self.selected_track: Optional[Track] = None
+
+        self.selected_track: Optional[Track] = selected_track
+
+        self.next_cell_coords: Tuple[int, int] = ()
+        self.next_cell_direction: Direction = Direction.RIGHT
+
         self.is_reset = True
-        self.original_pos = self.pos.copy()
+        self.original_pos = (self.rect.x, self.rect.y)
         self.crashed = False
+
+        self.current_navigation_index = 32
+        self.determine_next_cell_coords_and_direction()
+
+
+    def determine_next_cell_coords_and_direction(self) -> None:
+        if self.direction == Direction.UP:
+            if self.selected_track.track_type == TrackType.VERT:
+                self.next_cell_coords = (self.selected_track.i, self.selected_track.j - 1)
+                self.next_cell_direction = Direction.UP
+            elif self.selected_track.track_type == TrackType.BOTTOM_LEFT:
+                self.next_cell_coords = (self.selected_track.i - 1, self.selected_track.j)
+                self.next_cell_direction = Direction.LEFT
+            elif self.selected_track.track_type == TrackType.BOTTOM_RIGHT:
+                self.next_cell_coords = (self.selected_track.i + 1, self.selected_track.j)
+                self.next_cell_direction = Direction.RIGHT
+            else:
+                raise ValueError("Bad tracktype and/or direction.")
+        elif self.direction == Direction.DOWN:
+            if self.selected_track.track_type == TrackType.VERT:
+                self.next_cell_coords = (self.selected_track.i, self.selected_track.j + 1)
+                self.next_cell_direction = Direction.DOWN
+            elif self.selected_track.track_type == TrackType.TOP_LEFT:
+                self.next_cell_coords = (self.selected_track.i - 1, self.selected_track.j)
+                self.next_cell_direction = Direction.LEFT
+            elif self.selected_track.track_type == TrackType.TOP_RIGHT:
+                self.next_cell_coords = (self.selected_track.i + 1, self.selected_track.j)
+                self.next_cell_direction = Direction.RIGHT
+            else:
+                raise ValueError("Bad tracktype and/or direction.")
+        elif self.direction == Direction.RIGHT:
+            if self.selected_track.track_type == TrackType.HORI:
+                self.next_cell_coords = (self.selected_track.i + 1, self.selected_track.j)
+                self.next_cell_direction = Direction.RIGHT
+            elif self.selected_track.track_type == TrackType.TOP_LEFT:
+                self.next_cell_coords = (self.selected_track.i, self.selected_track.j - 1)
+                self.next_cell_direction = Direction.UP
+            elif self.selected_track.track_type == TrackType.BOTTOM_LEFT:
+                self.next_cell_coords = (self.selected_track.i, self.selected_track.j + 1)
+                self.next_cell_direction = Direction.DOWN
+            else:
+                raise ValueError("Bad tracktype and/or direction.")
+        elif self.direction == Direction.LEFT:
+            if self.selected_track.track_type == TrackType.HORI:
+                self.next_cell_coords = (self.selected_track.i - 1, self.selected_track.j)
+                self.next_cell_direction = Direction.LEFT
+            elif self.selected_track.track_type == TrackType.TOP_RIGHT:
+                self.next_cell_coords = (self.selected_track.i, self.selected_track.j - 1)
+                self.next_cell_direction = Direction.UP
+            elif self.selected_track.track_type == TrackType.BOTTOM_RIGHT:
+                self.next_cell_coords = (self.selected_track.i, self.selected_track.j + 1)
+                self.next_cell_direction = Direction.DOWN
+            else:
+                raise ValueError("Bad tracktype and/or direction.")
 
 
     def reset(self) -> None:
-        self.pos = self.original_pos.copy()
+        self.rect.x = self.original_pos[0]
+        self.rect.y = self.original_pos[1]
         self.image = self.original_image
-        self.rect.x = round(self.pos.x)
-        self.rect.y = round(self.pos.y)
         self.angle = 0
         self.direction = self.original_direction
         self.last_collided_cells = []
@@ -59,30 +114,86 @@ class Train(pg.sprite.Sprite):
         self.original_image = self.image
 
 
-    def rot_center(self, angle: float) -> pg.Surface:
-        """rotate an image while keeping its center and size"""
-        orig_rect = self.original_image.get_rect()
-        rot_image = pg.transform.rotate(self.original_image, angle * 180 / math.pi)
-        rot_rect = orig_rect.copy()
-        rot_rect.center = rot_image.get_rect().center
-        rot_image = rot_image.subsurface(rot_rect).copy()
-        return rot_image
-
-
     def move(self) -> None:
-        self.image = self.rot_center(self.angle) # type: ignore
-        self.pos.x = self.pos.x + self.base_speed * math.cos(self.angle)
-        self.pos.y = self.pos.y - self.base_speed * math.sin(self.angle)
-        self.rect.x = round(self.pos.x)
-        self.rect.y = round(self.pos.y)
-        self.is_reset = False
+        self.image = rot_center(self.original_image, self.angle) # type: ignore
+
+        if not self.crashed:
+            if self.selected_track.track_type == TrackType.VERT:
+                if self.direction == Direction.DOWN or round(self.angle) == Direction.DOWN.value:
+                    self.angle = 270
+                    self.rect.centerx += self.selected_track.navigation[self.current_navigation_index][0]
+                    self.rect.centery += self.selected_track.navigation[self.current_navigation_index][1]
+                elif self.direction == Direction.UP or round(self.angle) == Direction.UP.value:
+                    self.angle = 90
+                    self.rect.centerx += self.selected_track.navigation_reversed[self.current_navigation_index][0]
+                    self.rect.centery += self.selected_track.navigation_reversed[self.current_navigation_index][1]
+                else:
+                    raise ValueError("Bad direction.")
+                self.current_navigation_index += 1
+            elif self.selected_track.track_type == TrackType.HORI:
+                if self.direction == Direction.RIGHT or round(self.angle) == Direction.RIGHT.value:
+                    self.angle = 0
+                    self.rect.centerx += self.selected_track.navigation[self.current_navigation_index][0]
+                    self.rect.centery += self.selected_track.navigation[self.current_navigation_index][1]
+                elif self.direction == Direction.LEFT or round(self.angle) == Direction.LEFT.value:
+                    self.angle = 180
+                    self.rect.centerx += self.selected_track.navigation_reversed[self.current_navigation_index][0]
+                    self.rect.centery += self.selected_track.navigation_reversed[self.current_navigation_index][1]
+                else:
+                    raise ValueError("Bad direction.")
+                self.current_navigation_index += 1
+            elif self.selected_track.track_type == TrackType.TOP_LEFT:
+                if self.direction == Direction.RIGHT or round(self.angle) == Direction.RIGHT.value:
+                    self.angle = 0 + math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.rect.centerx += self.selected_track.navigation[self.current_navigation_index][0]
+                    self.rect.centery += self.selected_track.navigation[self.current_navigation_index][1]
+                elif self.direction == Direction.DOWN or round(self.angle) == Direction.DOWN.value:
+                    self.angle = 270 - math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.rect.centerx += self.selected_track.navigation_reversed[self.current_navigation_index][0]
+                    self.rect.centery += self.selected_track.navigation_reversed[self.current_navigation_index][1]
+                else:
+                    raise ValueError("Bad direction.")
+                self.current_navigation_index += 1
+            elif self.selected_track.track_type == TrackType.TOP_RIGHT:
+                if self.direction == Direction.DOWN or round(self.angle) == Direction.DOWN.value:
+                    self.angle = 270 + math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.rect.centerx += self.selected_track.navigation[self.current_navigation_index][0]
+                    self.rect.centery += self.selected_track.navigation[self.current_navigation_index][1]
+                elif self.direction == Direction.LEFT or round(self.angle) == Direction.LEFT.value:
+                    self.angle = 180 - math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.rect.centerx += self.selected_track.navigation_reversed[self.current_navigation_index][0]
+                    self.rect.centery += self.selected_track.navigation_reversed[self.current_navigation_index][1]
+                else:
+                    raise ValueError("Bad direction.")
+                self.current_navigation_index += 1
+            elif self.selected_track.track_type == TrackType.BOTTOM_LEFT:
+                if self.direction == Direction.RIGHT or round(self.angle) == Direction.RIGHT.value:
+                    self.angle = 0 - math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.rect.centerx += self.selected_track.navigation[self.current_navigation_index][0]
+                    self.rect.centery += self.selected_track.navigation[self.current_navigation_index][1]
+                elif self.direction == Direction.UP or round(self.angle) == Direction.UP.value:
+                    self.angle = 90 + math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.rect.centerx += self.selected_track.navigation_reversed[self.current_navigation_index][0]
+                    self.rect.centery += self.selected_track.navigation_reversed[self.current_navigation_index][1]
+                else:
+                    raise ValueError("Bad direction.")
+                self.current_navigation_index += 1
+            elif self.selected_track.track_type == TrackType.BOTTOM_RIGHT:
+                if self.direction == Direction.UP or round(self.angle) == Direction.UP.value:
+                    self.angle = 90 - math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.rect.centerx += self.selected_track.navigation[self.current_navigation_index][0]
+                    self.rect.centery += self.selected_track.navigation[self.current_navigation_index][1]
+                elif self.direction == Direction.LEFT or round(self.angle) == Direction.LEFT.value:
+                    self.angle = 180 + math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.rect.centerx += self.selected_track.navigation_reversed[self.current_navigation_index][0]
+                    self.rect.centery += self.selected_track.navigation_reversed[self.current_navigation_index][1]
+                else:
+                    raise ValueError("Bad direction.")
+                self.current_navigation_index += 1
+            self.is_reset = False
 
 
     def tick(self, train_go: bool) -> None:
-        if not self.on_track:
-            self.base_speed = 0
-        else:
-            self.base_speed = 1
         if not train_go:
             self.reset()
         else:
@@ -90,7 +201,6 @@ class Train(pg.sprite.Sprite):
 
 
     def crash(self) -> None:
-        self.on_track = False
         self.selected_track = None
         self.crashed = True
         Sound.play_sound_on_channel(Sound.crash, 3)

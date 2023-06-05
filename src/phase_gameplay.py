@@ -1,5 +1,4 @@
 import csv
-import math
 from typing import List
 
 import pygame as pg
@@ -7,15 +6,13 @@ import pygame.gfxdraw
 from pygame.locals import QUIT, MOUSEBUTTONDOWN
 
 from src.cell import Cell, EmptyCell
-from src.color_constants import (DELETE_MODE_BG_COLOR,
-                                 NORMAL_MODE_BG_COLOR, WHITESMOKE)
+from src.color_constants import WHITESMOKE
 from src.color_constants import GRAY, RED1, WHITE
 from src.config import Config
 from src.controls import UserControl
 from src.direction import Direction
 from src.field import Field, TrackType
 from src.state import Phase, State
-from src.graphics import Graphics
 from src.screen import Screen
 from src.sound import Sound
 from src.station import CheckmarkSprite
@@ -53,20 +50,16 @@ def arrivals_pending(field: Field) -> bool:
     return False
 
 
-def reset_train_statuses(field: Field) -> None:
-    for train in field.trains:
-        train.on_track = False
-
 
 def check_train_merges(field: Field) -> None:
     for train_1 in field.trains:
         other_trains = field.trains.copy()
         other_trains.remove(train_1)
-        other_trains_pos = [x.pos for x in other_trains]
+        other_trains_pos = [x.rect.center for x in other_trains]
         other_trains_pos_dict = dict(zip(other_trains, other_trains_pos))
-        if train_1.pos not in other_trains_pos_dict.values():
+        if train_1.rect.center not in other_trains_pos_dict.values():
             continue
-        train_2 = [key for key, val in other_trains_pos_dict.items() if val == train_1.pos][0]
+        train_2 = [key for key, val in other_trains_pos_dict.items() if val == train_1.rect.center][0]
         if train_1.direction == train_2.direction:
             merge_trains(train_1, train_2, field)
         else:
@@ -105,10 +98,6 @@ def update_gameplay_state(state: State) -> None:
 
     if UserControl.space_down_event():
         state.gameplay.trains_released = not state.gameplay.trains_released
-    if state.gameplay.trains_released:
-        state.gameplay.current_tick += 1
-    else:
-        state.gameplay.current_tick = 0
     UserControl.check_space_released_event()
 
 
@@ -202,54 +191,44 @@ def check_for_pg_gameplay_events(state: State, field: Field) -> None:
 
 
 def select_tracks_and_move_trains(state: State, field: Field) -> None:
-    for cell in field.full_grid:
-        if cell.check_mouse_collision():
-            state.gameplay.prev_cell_needs_checking = True
+    if state.gameplay.trains_released:
         for train in field.trains:
-            if cell.rect is None:
-                raise ValueError("Rect is None.")
-            if not cell.rect.colliderect(pg.Rect(train.rect.centerx - 1, train.rect.centery - 1, 1, 1)):
+            if train.selected_track is None:
+                train.crash()
+                state.gameplay.trains_crashed += 1
                 continue
-            entering_new_cell_and_track_not_selected = (cell not in train.last_collided_cells or train.selected_track is None)
-            if entering_new_cell_and_track_not_selected:
-                train.add_last_collided_cell(cell)
-                # Reset the last flipped cell.
-                train.last_flipped_cell = None
-                # If there are no tracks in this cell.
-                if len(cell.tracks) == 0:
-                    # Stop the train. Should mean 'crash'.
+            if train.current_navigation_index == len(train.selected_track.navigation):
+                train.determine_next_cell_coords_and_direction()
+                next_cell_tracks = field.get_grid_cell_at(train.next_cell_coords[0], train.next_cell_coords[1]).tracks
+                if len(next_cell_tracks) == 0:
+                    logger.info("No tracks. Crash!")
                     train.crash()
                     state.gameplay.trains_crashed += 1
                 else:
-                    # If there are some tracks in this cell.
-                    train.tracks_ahead = cell.tracks
-                    possible_tracks: List[Track] = []
-                    # If the state has just been reset, select the only available track.
-                    if train.is_reset:
-                        possible_tracks.append(cell.tracks[0])
-                    else:
-                        # Let's find all tracks in this cell that have an endpoint where the train is.
-                        for track_ahead in cell.tracks:
-                            for endpoint in track_ahead.endpoints:
-                                if train.rect.collidepoint(endpoint):
-                                    possible_tracks.append(track_ahead)
-                    if len(possible_tracks) > 0:
-                        # If there is only 1 possible track, select that.
-                        if len(possible_tracks) == 1:
-                            train.selected_track = possible_tracks[0]
-                        elif len(possible_tracks) == 2:
-                            # If there are more possible tracks, select the one that is 'bright'.
-                            for possible_track in possible_tracks:
-                                if possible_track.bright:
-                                    train.selected_track = possible_track
-                        if train.selected_track:
-                            logger.debug(f"Selected track: {train.selected_track.directions}")
-                    else:
-                        # If there are no possible tracks available. Should 'crash'.
+                    found_track = False
+                    for track in next_cell_tracks:
+                        for endpoint in track.endpoints:
+                            if train.rect.collidepoint(endpoint):
+                                found_track = True
+                                train.selected_track = track
+                                train.rect.centerx = endpoint[0]
+                                train.rect.centery = endpoint[1]
+                    if not found_track:
                         train.crash()
-                        logger.debug("No track to be selected. Train is not on track.")
-            move_train_along_cell(train, cell)
-            check_and_flip_cell_tracks(train, cell)
+                        state.gameplay.trains_crashed += 1
+                train.current_navigation_index = 0
+                train.direction = train.next_cell_direction
+                train.next_cell_direction = None
+            if train.selected_track is None:
+                train.crash()
+                state.gameplay.trains_crashed += 1
+                continue
+
+
+def check_and_mark_prev_cell(state: State, field: Field) -> None:
+    for cell in field.full_grid:
+        if cell.check_mouse_collision():
+            state.gameplay.prev_cell_needs_checking = True
 
 
 def check_and_delete_field_tracks(state: State, field: Field) -> None:
@@ -270,99 +249,17 @@ def check_and_delete_empty_cell_tracks(state: State, empty_cell: EmptyCell) -> N
         empty_cell.tracks.clear()
 
 
-def check_and_flip_cell_tracks(train: Train, cell: Cell) -> None:
-    cell_contains_train_and_has_multiple_tracks = (cell.rect and cell.rect.contains(train.rect) and train.last_flipped_cell != cell and len(cell.tracks) == 2)
-    if cell_contains_train_and_has_multiple_tracks and isinstance(cell, EmptyCell):
-        cell.flip_tracks()
-        train.last_flipped_cell = cell
-
-
-def move_train_along_cell(train: Train, cell: Cell) -> None:
-    if train.selected_track is None or cell.rect is None:
-        return
-    train.on_track = True
-    # If the selected track is vertical.
-    if train.selected_track.track_type == TrackType.VERT:
-        if train.direction == Direction.UP:
-            train.angle = math.radians(90)
-            train.pos = pg.Vector2(round(train.pos.x), round(train.pos.y))
-        elif train.direction == Direction.DOWN:
-            train.angle = math.radians(270)
-            train.pos = pg.Vector2(round(train.pos.x), round(train.pos.y))
-    # If the selected track is horizontal.
-    elif train.selected_track.track_type == TrackType.HORI:
-        if train.direction == Direction.RIGHT:
-            train.angle = math.radians(0)
-            train.pos = pg.Vector2(round(train.pos.x), round(train.pos.y))
-        elif train.direction == Direction.LEFT:
-            train.angle = math.radians(180)
-            train.pos = pg.Vector2(round(train.pos.x), round(train.pos.y))
-    # If the selected track is top-right.
-    elif train.selected_track.track_type == TrackType.TOP_RIGHT:
-        if train.direction == Direction.LEFT:
-            train.angle -= Config.angular_vel
-            if train.angle <= math.radians(90) + 0.5 * Config.angular_vel:
-                train.direction = Direction.UP
-                train.angle = math.radians(90)
-                train.rect.center = cell.rect.midtop
-                train.pos = pg.Vector2(train.rect.topleft)
-        elif train.direction == Direction.DOWN:
-            train.angle += Config.angular_vel
-            if train.angle >= math.radians(360) - 0.5 * Config.angular_vel:
-                train.direction = Direction.RIGHT
-                train.angle = math.radians(0)
-                train.rect.center = cell.rect.midright
-                train.pos = pg.Vector2(train.rect.topleft)
-    # If the selected track is top-left.
-    elif train.selected_track.track_type == TrackType.TOP_LEFT:
-        if train.direction == Direction.RIGHT:
-            train.angle += Config.angular_vel
-            if train.angle >= math.radians(90) - 0.5 * Config.angular_vel:
-                train.direction = Direction.UP
-                train.angle = math.radians(90)
-                train.rect.center = cell.rect.midtop
-                train.pos = pg.Vector2(train.rect.topleft)
-        elif train.direction == Direction.DOWN:
-            train.angle -= Config.angular_vel
-            if train.angle <= math.radians(180) + 0.5 * Config.angular_vel:
-                train.direction = Direction.LEFT
-                train.angle = math.radians(180)
-                train.rect.center = cell.rect.midleft
-                train.pos = pg.Vector2(train.rect.topleft)
-    # If the selected track is bottom-left.
-    elif train.selected_track.track_type == TrackType.BOTTOM_LEFT:
-        if train.direction == Direction.RIGHT:
-            train.angle -= Config.angular_vel
-            if train.angle <= math.radians(-90) + 0.5 * Config.angular_vel:
-                train.direction = Direction.DOWN
-                train.angle = math.radians(270)
-                train.rect.center = cell.rect.midbottom
-                train.pos = pg.Vector2(train.rect.topleft)
-        elif train.direction == Direction.UP:
-            train.angle += Config.angular_vel
-            if train.angle >= math.radians(180) - 0.5 * Config.angular_vel:
-                train.direction = Direction.LEFT
-                train.angle = math.radians(180)
-                train.rect.center = cell.rect.midleft
-                train.pos = pg.Vector2(train.rect.topleft)
-    # If the selected track is bottom-right.
-    elif train.selected_track.track_type == TrackType.BOTTOM_RIGHT:
-        if train.direction == Direction.LEFT:
-            train.angle += Config.angular_vel
-            if train.angle >= math.radians(270) - 0.5 * Config.angular_vel:
-                train.direction = Direction.DOWN
-                train.angle = math.radians(270)
-                train.rect.center = cell.rect.midbottom
-                train.pos = pg.Vector2(train.rect.topleft)
-        elif train.direction == Direction.UP:
-            train.angle -= Config.angular_vel
-            if train.angle <= math.radians(0) + 0.5 * Config.angular_vel:
-                train.direction = Direction.RIGHT
-                train.angle = math.radians(0)
-                train.rect.center = cell.rect.midright
-                train.pos = pg.Vector2(train.rect.topleft)
-    else:
-        raise ValueError(f"Selected track type is {train.selected_track.track_type}")
+def check_and_flip_cell_tracks(field: Field) -> None:
+    for cell in field.full_grid:
+        for train in field.trains:
+            if train.current_navigation_index % 16 != 0:
+                return
+            #cell_contains_train_and_has_multiple_tracks = (cell.rect and cell.rect.contains(train.rect) and train.last_flipped_cell != cell and len(cell.tracks) == 2)
+            # Experimental:
+            cell_contains_train_and_has_multiple_tracks = (cell.rect and cell.rect.collidepoint(train.rect.center) and train.current_navigation_index >= 23 and train.last_flipped_cell != cell and len(cell.tracks) == 2)
+            if cell_contains_train_and_has_multiple_tracks and isinstance(cell, EmptyCell):
+                cell.flip_tracks()
+                train.last_flipped_cell = cell
 
 
 def paint_trains(train_1: Train, train_2: Train) -> None:
@@ -453,29 +350,34 @@ def check_and_reset_gameplay(state: State, field: Field) -> None:
         reset_to_beginning(state, field)
 
 
+def tick_state(state: State) -> None:
+    state.tick()
+
+
 def execute_business_logic(state: State, field: Field) -> None:
     check_and_toggle_profiling(state)
     check_for_pg_gameplay_events(state, field)
     update_gameplay_state(state)
     check_and_reset_gameplay(state, field)
     check_and_save_field(field)
-    reset_train_statuses(field)
+    check_and_flip_cell_tracks(field) #
+    tick_departures(state, field)
+    delete_crashed_trains(field)
     select_tracks_and_move_trains(state, field)
+    check_and_mark_prev_cell(state, field)
     check_and_delete_field_tracks(state, field)
     check_train_merges(field)
     check_train_arrivals(state, field)
-    delete_crashed_trains(field)
     tick_trains(state, field)
     check_for_new_track_placement(state, field)
     check_for_level_completion(state, field)
     check_for_mainmenu_command(state)
-    tick_departures(state, field)
     determine_arrival_station_checkmarks(field)
+    tick_state(state)
 
 
 def draw_game_objects(state: State, field: Field, screen: Screen) -> None:
     draw_background_basecolor(screen, state)
-    #draw_background_day_cycle(screen, state)
     field.empty_cells_sprites.draw(screen.surface)
     field.rock_cells_sprites.draw(screen.surface)
     draw_empty_cells_tracks(screen, field)

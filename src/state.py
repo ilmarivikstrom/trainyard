@@ -18,6 +18,7 @@ class Phase(Enum):
 class GlobalStatus:
     current_tick: int = 0
 
+
 @dataclass
 class GameplayStatus:
     trains_crashed: int = 0
@@ -27,6 +28,7 @@ class GameplayStatus:
     current_level_passed = False
     background_location: Tuple[float, float] = (0.0, 0.0)
     current_tick: int = 0
+
 
 @dataclass
 class MainMenuStatus:
@@ -41,7 +43,15 @@ class State:
         self.gameplay: GameplayStatus = GameplayStatus()
         self.mainmenu: MainMenuStatus = MainMenuStatus()
 
+
     def reset_gameplay_status(self) -> None:
         self.gameplay.trains_crashed = 0
         self.gameplay.trains_released = False
         self.gameplay.current_level_passed = False
+
+
+    def tick(self) -> None:
+        if self.gameplay.trains_released:
+            self.gameplay.current_tick += 1
+        else:
+            self.gameplay.current_tick = 0
