@@ -31,6 +31,10 @@ class Field:
         self.trains: List[Train] = []
         self.train_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
+        self.num_crashed: int = 0
+        self.is_released: bool = False
+        self.current_tick: int = 0
+
 
     def initialize_grid(self, file_name: str="level_0.csv") -> None:
         with open(f"levels/{file_name}", newline="", encoding="utf-8") as level_file:
@@ -62,6 +66,13 @@ class Field:
         self.arrival_stations = [cell for cell in self.full_grid if isinstance(cell, ArrivalStation)]
 
 
+    def set_current_tick(self) -> None:
+        if self.is_released:
+            self.current_tick += 1
+        else:
+            self.current_tick = 0
+
+
     def reset(self) -> None:
         for departure_station in self.departure_stations:
             departure_station.reset()
@@ -69,6 +80,8 @@ class Field:
             arrival_station.reset()
         self.trains.clear()
         self.train_sprites.empty()
+        self.num_crashed = 0
+        self.is_released = False
 
 
     def get_grid_cell_list_index(self, i: int = 0, j: int = 0) -> int:

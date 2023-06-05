@@ -5,7 +5,7 @@ import pygame as pg
 import pygame.gfxdraw
 from pygame.locals import QUIT, MOUSEBUTTONDOWN
 
-from src.cell import Cell, EmptyCell
+from src.cell import EmptyCell
 from src.color_constants import WHITESMOKE
 from src.color_constants import GRAY, RED1, WHITE
 from src.config import Config
@@ -22,6 +22,50 @@ from src.traincolor import blend_train_colors
 from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
+
+def execute_logic(state: State, field: Field) -> None:
+    check_and_save_field(field)
+    check_and_toggle_profiling(state)
+    check_for_pg_gameplay_events(state, field)
+    check_and_set_delete_mode(state)
+    check_and_toggle_train_release(field)
+    check_and_reset_gameplay(state, field)
+
+    check_and_flip_cell_tracks(field) # if is_released: for cells, for trains
+    tick_departures(field) # if is_released: for departure_stations
+    check_train_departure_station_crashes(field) # if is_released: for trains, for departure_stations
+    delete_crashed_trains(field) # if is_released: for trains
+    select_tracks_for_trains(field) # if is_released: for trains, for track, for endpoint
+    check_train_arrivals(field) # if is_released: for trains, for arrival_stations
+    check_for_level_completion(state, field) # if is_released
+    check_train_merges(field) # if is_released: for trains
+
+    check_and_mark_prev_cell(field) # if NOT is_released: for cells (UserControl)
+    check_and_delete_field_tracks(state, field) # if NOT is_released: for empty_cells
+    check_for_new_track_placement(state, field) # if NOT is_released
+
+    tick_trains(field) # for trains
+
+    check_for_mainmenu_command(state)
+    determine_arrival_station_checkmarks(field) # for arrival_stations
+    tick_field(field)
+
+
+def draw_game_objects(field: Field, screen: Screen) -> None:
+    draw_background_basecolor(screen, field.current_tick) # Background
+    field.empty_cells_sprites.draw(screen.surface) # Empty cells (base).
+    draw_empty_cells_tracks(screen, field) # Tracks (on empty cells).
+    field.train_sprites.draw(screen.surface) # Trains.
+    field.rock_cells_sprites.draw(screen.surface) # Rock cells.
+    draw_stations(field, screen) # Stations.
+    draw_middle_line(screen) # Separator line.
+
+
+def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
+    execute_logic(state, field)
+    draw_game_objects(field, screen)
+
+
 
 
 def check_for_mainmenu_command(state: State) -> None:
@@ -50,8 +94,9 @@ def arrivals_pending(field: Field) -> bool:
     return False
 
 
-
 def check_train_merges(field: Field) -> None:
+    if not field.is_released:
+        return
     for train_1 in field.trains:
         other_trains = field.trains.copy()
         other_trains.remove(train_1)
@@ -67,6 +112,8 @@ def check_train_merges(field: Field) -> None:
 
 
 def delete_crashed_trains(field: Field) -> None:
+    if not field.is_released:
+        return
     for train in field.trains:
         if train.crashed:
             field.train_sprites.remove(train) # type: ignore
@@ -88,17 +135,12 @@ def check_and_save_field(field: Field, file_name: str="level_tmp.csv") -> None:
         logger.info(f"Saved game to '{file_path}'")
 
 
-def update_gameplay_state(state: State) -> None:
+def check_and_set_delete_mode(state: State) -> None:
     UserControl.update_user_controls()
-
     if UserControl.pressed_keys[UserControl.DELETE_MODE]:
-        state.gameplay.delete_mode = True
+        state.gameplay.in_delete_mode = True
     else:
-        state.gameplay.delete_mode = False
-
-    if UserControl.space_down_event():
-        state.gameplay.trains_released = not state.gameplay.trains_released
-    UserControl.check_space_released_event()
+        state.gameplay.in_delete_mode = False
 
 
 def reset_to_beginning(state: State, field: Field) -> None:
@@ -106,52 +148,54 @@ def reset_to_beginning(state: State, field: Field) -> None:
     state.reset_gameplay_status()
 
 
-def tick_trains(state: State, field: Field) -> None:
+def tick_trains(field: Field) -> None:
     for train in field.trains:
-        train.tick(state.gameplay.trains_released)
+        train.tick(field.is_released)
 
 
-def check_train_arrivals(state: State, field: Field) -> None:
+def check_train_arrivals(field: Field) -> None:
+    if not field.is_released:
+        return
     for train in field.trains:
         for arrival_station in field.arrival_stations:
             if arrival_station.rect is None:
                 raise ValueError(f"The rect of {arrival_station} is None.")
-            if train.rect.collidepoint(arrival_station.rect.center):
-                if train.color == arrival_station.train_color and arrival_station.goals and arrival_station.number_of_trains_left > 0:
-                    field.trains.remove(train)
-                    field.train_sprites.remove(train) # type: ignore
-                    arrival_station.is_reset = False
-                    arrival_station.number_of_trains_left -= 1
-                    arrival_station.goals.pop().kill()
-                    logger.debug(f"Caught a train! Number of trains still expecting: {arrival_station.number_of_trains_left}")
-                    Sound.play_sound_on_channel(Sound.pop, 1)
-                else:
-                    logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
-                    train.crash()
-                    state.gameplay.trains_crashed += 1
-                    arrival_station.checkmark = None
-                logger.info(f"Arrival station saveable attributes: {arrival_station.saveable_attributes.serialize()}")
+            if not train.rect.collidepoint(arrival_station.rect.center):
+                continue
+            if train.color == arrival_station.train_color and arrival_station.goals and arrival_station.number_of_trains_left > 0:
+                field.trains.remove(train)
+                field.train_sprites.remove(train) # type: ignore
+                arrival_station.number_of_trains_left -= 1
+                arrival_station.goals.pop().kill()
+                logger.debug(f"Caught a train! Number of trains still expecting: {arrival_station.number_of_trains_left}")
+                Sound.play_sound_on_channel(Sound.pop, 1)
+            else:
+                logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
+                train.crash()
+                field.num_crashed += 1
+                arrival_station.checkmark = None
+            logger.info(f"Arrival station saveable attributes: {arrival_station.saveable_attributes.serialize()}")
 
 
-def tick_departures(state: State, field: Field) -> None:
-    if not state.gameplay.trains_released:
+def tick_departures(field: Field) -> None:
+    if not field.is_released:
         return
     for departure_station in field.departure_stations:
-        res = departure_station.tick(state.gameplay.current_tick)
+        res = departure_station.tick(field.current_tick)
         if res is not None:
             add_new_train(field, res)
 
 
 def check_for_level_completion(state: State, field: Field) -> None:
-    if not state.gameplay.current_level_passed and not arrivals_pending(field) and state.gameplay.trains_crashed == 0 and len(field.trains) == 0:
+    if not state.gameplay.current_level_passed and not arrivals_pending(field) and field.num_crashed == 0 and len(field.trains) == 0 and field.is_released:
         Sound.success.play()
         state.gameplay.current_level_passed = True
 
 
 def check_for_new_track_placement(state: State, field: Field) -> None:
-    left_mouse_down_in_draw_mode = (UserControl.mouse_pressed[0] and not state.gameplay.delete_mode and not state.gameplay.trains_released)
+    left_mouse_down_in_draw_mode = (UserControl.mouse_pressed[0] and not state.gameplay.in_delete_mode and not field.is_released)
     mouse_moved_over_cells = (UserControl.prev_cell and UserControl.curr_cell)
-    if left_mouse_down_in_draw_mode and mouse_moved_over_cells and state.gameplay.prev_cell_needs_checking:
+    if left_mouse_down_in_draw_mode and mouse_moved_over_cells and UserControl.mouse_entered_new_cell:
         mouse_moved_up =        (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.UP)
         mouse_moved_down =      (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.DOWN)
         mouse_moved_right =     (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.RIGHT)
@@ -176,7 +220,7 @@ def check_for_new_track_placement(state: State, field: Field) -> None:
             field.insert_track_to_position(TrackType.TOP_RIGHT, UserControl.prev_cell)
         elif mouse_moved_downleft or mouse_moved_rightup:
             field.insert_track_to_position(TrackType.TOP_LEFT, UserControl.prev_cell)
-        state.gameplay.prev_cell_needs_checking = False
+        UserControl.mouse_entered_new_cell = False
 
 
 def check_for_pg_gameplay_events(state: State, field: Field) -> None:
@@ -186,16 +230,16 @@ def check_for_pg_gameplay_events(state: State, field: Field) -> None:
             logger.info(f"Moving to state {state.game_phase}")
         elif event.type == MOUSEBUTTONDOWN and event.button == 3:
             for empty_cell in field.empty_cells:
-                if empty_cell.mouse_on and not state.gameplay.trains_released and len(empty_cell.tracks) > 1:
+                if empty_cell.mouse_on and not field.is_released and len(empty_cell.tracks) > 1:
                     empty_cell.flip_tracks()
 
 
-def select_tracks_and_move_trains(state: State, field: Field) -> None:
-    if state.gameplay.trains_released:
+def select_tracks_for_trains(field: Field) -> None:
+    if field.is_released:
         for train in field.trains:
             if train.selected_track is None:
                 train.crash()
-                state.gameplay.trains_crashed += 1
+                field.num_crashed += 1
                 continue
             if train.current_navigation_index == len(train.selected_track.navigation):
                 train.determine_next_cell_coords_and_direction()
@@ -203,7 +247,7 @@ def select_tracks_and_move_trains(state: State, field: Field) -> None:
                 if len(next_cell_tracks) == 0:
                     logger.info("No tracks. Crash!")
                     train.crash()
-                    state.gameplay.trains_crashed += 1
+                    field.num_crashed += 1
                 else:
                     found_track = False
                     for track in next_cell_tracks:
@@ -215,23 +259,27 @@ def select_tracks_and_move_trains(state: State, field: Field) -> None:
                                 train.rect.centery = endpoint[1]
                     if not found_track:
                         train.crash()
-                        state.gameplay.trains_crashed += 1
+                        field.num_crashed += 1
                 train.current_navigation_index = 0
                 train.direction = train.next_cell_direction
                 train.next_cell_direction = None
             if train.selected_track is None:
                 train.crash()
-                state.gameplay.trains_crashed += 1
+                field.num_crashed += 1
                 continue
 
 
-def check_and_mark_prev_cell(state: State, field: Field) -> None:
+def check_and_mark_prev_cell(field: Field) -> None:
+    if field.is_released:
+        return
     for cell in field.full_grid:
         if cell.check_mouse_collision():
-            state.gameplay.prev_cell_needs_checking = True
+            UserControl.mouse_entered_new_cell = True
 
 
 def check_and_delete_field_tracks(state: State, field: Field) -> None:
+    if field.is_released:
+        return
     for empty_cell in field.empty_cells:
         if empty_cell.rect is None:
             raise ValueError("The cell's rect is None. Exiting.")
@@ -244,12 +292,14 @@ def add_new_train(field: Field, train: Train) -> None:
 
 
 def check_and_delete_empty_cell_tracks(state: State, empty_cell: EmptyCell) -> None:
-    mouse_pressed_cell_while_in_delete_mode = (empty_cell.mouse_on and UserControl.mouse_pressed[0] and state.gameplay.delete_mode and not state.gameplay.trains_released)
+    mouse_pressed_cell_while_in_delete_mode = (empty_cell.mouse_on and UserControl.mouse_pressed[0] and state.gameplay.in_delete_mode)
     if mouse_pressed_cell_while_in_delete_mode:
         empty_cell.tracks.clear()
 
 
 def check_and_flip_cell_tracks(field: Field) -> None:
+    if not field.is_released:
+        return
     for cell in field.full_grid:
         for train in field.trains:
             if train.current_navigation_index % 16 != 0:
@@ -281,16 +331,12 @@ def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
 
 
 
-
-
-
-
 def draw_middle_line(screen: Screen) -> None:
     pg.draw.line(screen.surface, WHITESMOKE, (screen.width / 2, 64), (screen.width / 2, 64 + 8 * 64))
 
 
-def draw_background_basecolor(screen: Screen, state: State) -> None:
-    tick_index = int((Config.background_scroll_speed * state.gameplay.current_tick) % len(screen.background_color_array))
+def draw_background_basecolor(screen: Screen, current_tick: int) -> None:
+    tick_index = int((Config.background_scroll_speed * current_tick) % len(screen.background_color_array))
     screen.surface.fill(screen.background_color_array[tick_index])
 
 
@@ -313,6 +359,13 @@ def draw_empty_cells_tracks(screen: Screen, field: Field) -> None:
         if empty_cell.rect is None:
             raise ValueError("The cell's rect is None. Exiting.")
         draw_empty_cell_tracks(screen, empty_cell)
+
+
+def draw_stations(field: Field, screen: Screen) -> None:
+    field.departure_stations_sprites.draw(screen.surface)
+    field.arrival_stations_sprites.draw(screen.surface)
+    draw_station_goals(screen, field)
+    draw_checkmarks(screen, field)
 
 
 def draw_arcs_and_endpoints(screen: Screen, track: Track):
@@ -346,51 +399,25 @@ def draw_empty_cell_tracks(screen: Screen, empty_cell: EmptyCell) -> None:
 
 
 def check_and_reset_gameplay(state: State, field: Field) -> None:
-    if not state.gameplay.trains_released:
+    if not field.is_released:
         reset_to_beginning(state, field)
 
 
-def tick_state(state: State) -> None:
-    state.tick()
+def tick_field(field: Field) -> None:
+    field.set_current_tick()
 
 
-def execute_business_logic(state: State, field: Field) -> None:
-    check_and_toggle_profiling(state)
-    check_for_pg_gameplay_events(state, field)
-    update_gameplay_state(state)
-    check_and_reset_gameplay(state, field)
-    check_and_save_field(field)
-    check_and_flip_cell_tracks(field) #
-    tick_departures(state, field)
-    delete_crashed_trains(field)
-    select_tracks_and_move_trains(state, field)
-    check_and_mark_prev_cell(state, field)
-    check_and_delete_field_tracks(state, field)
-    check_train_merges(field)
-    check_train_arrivals(state, field)
-    tick_trains(state, field)
-    check_for_new_track_placement(state, field)
-    check_for_level_completion(state, field)
-    check_for_mainmenu_command(state)
-    determine_arrival_station_checkmarks(field)
-    tick_state(state)
+def check_train_departure_station_crashes(field: Field) -> None:
+    if not field.is_released:
+        return
+    for train in field.trains:
+        for departure_station in field.departure_stations:
+            if departure_station.rect.collidepoint(train.rect.center) and train.angle != departure_station.angle:
+                train.crash()
+                field.num_crashed += 1
 
 
-def draw_game_objects(state: State, field: Field, screen: Screen) -> None:
-    draw_background_basecolor(screen, state)
-    field.empty_cells_sprites.draw(screen.surface)
-    field.rock_cells_sprites.draw(screen.surface)
-    draw_empty_cells_tracks(screen, field)
-    field.train_sprites.draw(screen.surface)
-    field.departure_stations_sprites.draw(screen.surface)
-    field.arrival_stations_sprites.draw(screen.surface)
-    draw_station_goals(screen, field)
-    draw_middle_line(screen)
-    draw_checkmarks(screen, field)
-
-
-
-
-def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
-    execute_business_logic(state, field)
-    draw_game_objects(state, field, screen)
+def check_and_toggle_train_release(field: Field) -> None:
+    if UserControl.space_down_event():
+        field.is_released = not field.is_released
+    UserControl.check_space_released_event()

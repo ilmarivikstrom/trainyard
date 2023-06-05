@@ -38,7 +38,6 @@ class Train(pg.sprite.Sprite):
         self.next_cell_coords: Tuple[int, int] = ()
         self.next_cell_direction: Direction = Direction.RIGHT
 
-        self.is_reset = True
         self.original_pos = (self.rect.x, self.rect.y)
         self.crashed = False
 
@@ -105,7 +104,6 @@ class Train(pg.sprite.Sprite):
         self.direction = self.original_direction
         self.last_collided_cells = []
         self.last_flipped_cell = None
-        self.is_reset = True
 
 
     def repaint(self, train_color: TrainColor) -> None:
@@ -190,11 +188,10 @@ class Train(pg.sprite.Sprite):
                 else:
                     raise ValueError("Bad direction.")
                 self.current_navigation_index += 1
-            self.is_reset = False
 
 
-    def tick(self, train_go: bool) -> None:
-        if not train_go:
+    def tick(self, trains_released: bool) -> None:
+        if not trains_released:
             self.reset()
         else:
             self.move()

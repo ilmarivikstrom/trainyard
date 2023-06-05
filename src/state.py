@@ -21,13 +21,10 @@ class GlobalStatus:
 
 @dataclass
 class GameplayStatus:
-    trains_crashed: int = 0
-    trains_released: bool = False
-    delete_mode: bool = False
-    prev_cell_needs_checking: bool = False
+    in_delete_mode: bool = False
     current_level_passed = False
     background_location: Tuple[float, float] = (0.0, 0.0)
-    current_tick: int = 0
+    current_global_tick: int = 0
 
 
 @dataclass
@@ -45,13 +42,4 @@ class State:
 
 
     def reset_gameplay_status(self) -> None:
-        self.gameplay.trains_crashed = 0
-        self.gameplay.trains_released = False
         self.gameplay.current_level_passed = False
-
-
-    def tick(self) -> None:
-        if self.gameplay.trains_released:
-            self.gameplay.current_tick += 1
-        else:
-            self.gameplay.current_tick = 0

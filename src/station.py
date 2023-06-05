@@ -36,7 +36,6 @@ class Station(Cell):
         self.train_color = train_color
         self.block_short_char = block_short_char
         self.original_number_of_trains = number_of_trains_left
-        self.is_reset = False
         self.goals: List[StationGoalSprite] = []
         self.goal_sprites = pg.sprite.Group() # type: ignore
         self.checkmark: Optional[CheckmarkSprite] = None
@@ -74,13 +73,11 @@ class Station(Cell):
 
 
     def reset(self) -> None:
-        if not self.is_reset:
-            self.number_of_trains_left = self.original_number_of_trains
-            self.goal_sprites.empty() # type: ignore
-            self.create_goal_sprites()
-            self.is_reset = True
-            self.last_release_tick = None
-            self.checkmark = None
+        self.number_of_trains_left = self.original_number_of_trains
+        self.goal_sprites.empty() # type: ignore
+        self.create_goal_sprites()
+        self.last_release_tick = None
+        self.checkmark = None
 
 
 class DepartureStation(Station):
@@ -89,17 +86,15 @@ class DepartureStation(Station):
 
 
     def tick(self, current_tick: int) -> Optional[Train]:
-        if self.number_of_trains_left > 0:
-            self.is_reset = False
-            station_needs_to_release = (self.last_release_tick is None or current_tick - self.last_release_tick == 32)
-            if station_needs_to_release:
-                self.number_of_trains_left -= 1
-                self.goals.pop().kill()
-                logger.debug("Train released.")
-                self.last_release_tick = current_tick
-                Sound.play_sound_on_channel(Sound.pop, 1)
-                return Train(self.i, self.j, self.train_color, self.angle, self.tracks[0], Direction(self.angle))
-        return None
+        station_needs_to_release = (self.number_of_trains_left > 0 and (self.last_release_tick is None or current_tick - self.last_release_tick == 32))
+        if not station_needs_to_release:
+            return
+        self.number_of_trains_left -= 1
+        self.goals.pop().kill()
+        logger.debug("Train released.")
+        self.last_release_tick = current_tick
+        Sound.play_sound_on_channel(Sound.pop, 1)
+        return Train(self.i, self.j, self.train_color, self.angle, self.tracks[0], Direction(self.angle))
 
 
 class ArrivalStation(Station):

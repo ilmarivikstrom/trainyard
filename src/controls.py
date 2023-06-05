@@ -18,16 +18,19 @@ class UserControl:
 
     mouse_pos = pg.Vector2(-1, -1)
     mouse_pressed: Tuple[bool, bool, bool] = (False, False, False)
-    curr_cell = pg.Vector2(-1, -1)
-    prev_cell = pg.Vector2(-1, -1)
+    curr_cell: pg.Vector2 = pg.Vector2(-1, -1)
+    prev_cell: pg.Vector2 = pg.Vector2(-1, -1)
+
+    mouse_entered_new_cell: bool = False
 
     pressed_keys: pg.key.ScancodeWrapper = pg.key.ScancodeWrapper()
 
-    spacebar_down = False
-    wait_for_space_up = False
+    spacebar_down: bool = False
+    wait_for_space_up: bool = False
 
-    curr_movement = Direction.NONE
-    prev_movement = Direction.NONE
+    curr_movement: Direction = Direction.NONE
+    prev_movement: Direction = Direction.NONE
+
 
     @staticmethod
     def space_down_event() -> bool:
@@ -36,10 +39,12 @@ class UserControl:
             return True
         return False
 
+
     @staticmethod
     def check_space_released_event() -> None:
         if UserControl.wait_for_space_up and not UserControl.pressed_keys[pg.K_SPACE]:
             UserControl.wait_for_space_up = False
+
 
     @staticmethod
     def update_user_controls():

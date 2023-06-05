@@ -28,17 +28,17 @@ class Cell(pg.sprite.Sprite):
 
 
     def check_mouse_collision(self) -> bool:
-        prev_cell_needs_checking = False
+        mouse_entered_this_cell = False
         if self.rect is None:
             return False
         if self.rect.collidepoint(UserControl.mouse_pos):
             if not self.mouse_on:
                 self.handle_mouse_cell_enter()
-                prev_cell_needs_checking = True
+                mouse_entered_this_cell = True
             self.mouse_on = True
         else:
             self.mouse_on = False
-        return prev_cell_needs_checking
+        return mouse_entered_this_cell
 
 
     def handle_mouse_cell_enter(self) -> None:
