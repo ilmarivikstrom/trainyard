@@ -7,6 +7,14 @@ class RGB(Color):
         return "#{:02X}{:02X}{:02X}".format(self.red, self.green, self.blue)
 
 
+TRAIN_RED = RGB(192, 35, 97)
+TRAIN_BLUE = RGB(73, 136, 161)
+TRAIN_YELLOW = RGB(250, 194, 30)
+TRAIN_GREEN = RGB(143, 198, 89)
+TRAIN_PURPLE = RGB(109, 49, 138)
+TRAIN_ORANGE = RGB(253, 54, 23)
+TRAIN_BROWN = RGB(120, 68, 33)
+
 DELETE_MODE_BG_COLOR = RGB(20, 20, 20)
 NORMAL_MODE_BG_COLOR = RGB(20, 20, 30)
 

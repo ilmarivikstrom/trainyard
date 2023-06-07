@@ -12,6 +12,7 @@ from src.config import Config
 from src.controls import UserControl
 from src.direction import Direction
 from src.field import Field, TrackType
+from src.graphics import Graphics
 from src.state import Phase, State
 from src.screen import Screen
 from src.sound import Sound
@@ -19,7 +20,7 @@ from src.station import CheckmarkSprite
 from src.track import Track
 from src.train import Train
 from src.traincolor import blend_train_colors
-from src.utils import setup_logging
+from src.utils import setup_logging, rot_center
 
 logger = setup_logging(log_level=Config.log_level)
 
@@ -29,10 +30,10 @@ def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
 
 
 def execute_logic(state: State, field: Field) -> None:
+    check_and_set_delete_mode(state)
     check_and_save_field(field)
     check_and_toggle_profiling(state)
     check_for_pg_gameplay_events(state, field)
-    check_and_set_delete_mode(state)
     check_and_toggle_train_release(field)
     check_and_reset_gameplay(state, field)
 
@@ -63,8 +64,6 @@ def draw_game_objects(field: Field, screen: Screen) -> None:
     field.train_sprites.draw(screen.surface) # Trains.
     field.rock_cells_sprites.draw(screen.surface) # Rock cells.
     draw_stations(field, screen) # Stations.
-    draw_middle_line(screen) # Separator line.
-
 
 
 
@@ -167,14 +166,12 @@ def check_train_arrivals(field: Field) -> None:
                 field.train_sprites.remove(train) # type: ignore
                 arrival_station.number_of_trains_left -= 1
                 arrival_station.goals.pop().kill()
-                logger.debug(f"Caught a train! Number of trains still expecting: {arrival_station.number_of_trains_left}")
                 Sound.play_sound_on_channel(Sound.pop, 1)
             else:
                 logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
                 train.crash()
                 field.num_crashed += 1
                 arrival_station.checkmark = None
-            logger.info(f"Arrival station saveable attributes: {arrival_station.saveable_attributes.serialize()}")
 
 
 def tick_departures(field: Field) -> None:
@@ -331,12 +328,9 @@ def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
 
 
 
-def draw_middle_line(screen: Screen) -> None:
-    pg.draw.line(screen.surface, WHITESMOKE, (screen.width / 2, 64), (screen.width / 2, 64 + 8 * 64))
-
-
 def draw_background_basecolor(screen: Screen, current_tick: int) -> None:
-    tick_index = int((Config.background_scroll_speed * current_tick) % len(screen.background_color_array))
+    #tick_index = int((Config.background_scroll_speed * current_tick) % len(screen.background_color_array))
+    tick_index = 300
     screen.surface.fill(screen.background_color_array[tick_index])
 
 

@@ -7,7 +7,7 @@ from src.direction import Direction
 from src.graphics import Graphics
 from src.saveable import SaveableAttributes
 from src.sound import Sound
-from src.track import Track
+from src.track import Track, TrackType
 from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
@@ -68,7 +68,10 @@ class EmptyCell(Cell):
 
 
     def flip_tracks(self):
-        if len(self.tracks) < 1:
+        if len(self.tracks) < 2:
+            return
+        track_types = [track.track_type for track in self.tracks]
+        if (TrackType.BOTTOM_LEFT in track_types and TrackType.TOP_RIGHT in track_types) or (TrackType.TOP_LEFT in track_types and TrackType.BOTTOM_RIGHT in track_types):
             return
         for track in self.tracks:
             track.toggle_bright()

@@ -35,10 +35,10 @@ class MainMenuStatus:
 class State:
     def __init__(self):
         self.profiler: Profiler = Profiler()
-        self.game_phase: Phase = Phase.MAIN_MENU
         self.global_status: GlobalStatus = GlobalStatus()
         self.gameplay: GameplayStatus = GameplayStatus()
         self.mainmenu: MainMenuStatus = MainMenuStatus()
+        self.game_phase: Phase = Phase.GAMEPLAY
 
 
     def reset_gameplay_status(self) -> None:
