@@ -1,5 +1,7 @@
-from typing import Tuple
+from typing import Dict, List, Tuple
 import pygame as pg
+from pygame.locals import QUIT, MOUSEBUTTONDOWN, K_p, K_SPACE, KEYDOWN
+from pygame.event import Event
 
 from src.config import Config
 from src.direction import Direction
@@ -31,26 +33,19 @@ class UserControl:
     curr_movement: Direction = Direction.NONE
     prev_movement: Direction = Direction.NONE
 
-
-    @staticmethod
-    def space_down_event() -> bool:
-        if UserControl.pressed_keys[pg.K_SPACE] and not UserControl.wait_for_space_up:
-            UserControl.wait_for_space_up = True
-            return True
-        return False
+    events: List[Event] = []
 
 
     @staticmethod
-    def check_space_released_event() -> None:
-        if UserControl.wait_for_space_up and not UserControl.pressed_keys[pg.K_SPACE]:
-            UserControl.wait_for_space_up = False
+    def update_user_events() -> None:
+        UserControl.events = []
+        for event in pg.event.get():
+            UserControl.events.append(event)
 
-
-    @staticmethod
-    def update_user_controls():
         UserControl.mouse_pos = pg.mouse.get_pos()
         UserControl.pressed_keys = pg.key.get_pressed()
         UserControl.mouse_pressed = pg.mouse.get_pressed()
+
         if not UserControl.mouse_pressed[0]:
             UserControl.curr_movement = Direction.NONE
             UserControl.prev_movement = Direction.NONE

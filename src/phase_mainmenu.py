@@ -1,9 +1,9 @@
 import pygame as pg
-from pygame.locals import QUIT
+from pygame.locals import QUIT, KEYDOWN
 
 from src.color_constants import GRAY10
 from src.config import Config
-from src.controls import UserControl
+from src.user_control import UserControl
 from src.screen import Screen
 from src.state import Phase, State
 from src.utils import setup_logging
@@ -12,7 +12,7 @@ logger = setup_logging(log_level=Config.log_level)
 
 
 def mainmenu_phase(state: State, screen: Screen) -> None:
-    UserControl.update_user_controls()
+    UserControl.update_user_events()
     screen.surface.fill(GRAY10)
     check_for_pg_mainmenu_events(state)
     check_for_gameplay_command(state)
@@ -27,12 +27,14 @@ def check_for_pg_mainmenu_events(state: State) -> None:
 
 
 def check_for_exit_command(state: State) -> None:
-    if UserControl.pressed_keys[UserControl.EXIT]:
-        state.game_phase = Phase.EXIT
-        logger.info(f"Moving to phase {state.game_phase}")
+    for event in UserControl.events:
+        if event.type == KEYDOWN and event.key == UserControl.EXIT:
+            state.game_phase = Phase.EXIT
+            logger.info(f"Moving to phase {state.game_phase}")
 
 
 def check_for_gameplay_command(state: State) -> None:
-    if UserControl.pressed_keys[UserControl.GAMEPLAY]:
-        state.game_phase = Phase.GAMEPLAY
-        logger.info(f"Moving to phase {state.game_phase}")
+    for event in UserControl.events:
+        if event.type == KEYDOWN and event.key == UserControl.GAMEPLAY:
+            state.game_phase = Phase.GAMEPLAY
+            logger.info(f"Moving to phase {state.game_phase}")

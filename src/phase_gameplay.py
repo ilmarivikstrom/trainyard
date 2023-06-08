@@ -3,16 +3,15 @@ from typing import List
 
 import pygame as pg
 import pygame.gfxdraw
-from pygame.locals import QUIT, MOUSEBUTTONDOWN
+from pygame.locals import QUIT, MOUSEBUTTONDOWN, KEYDOWN, K_p, K_SPACE
 
 from src.cell import EmptyCell
-from src.color_constants import WHITESMOKE
-from src.color_constants import GRAY, RED1, WHITE
+from src.color_constants import GRAY, RED1, WHITE, TRAIN_GREEN, TRAIN_RED, TRAIN_YELLOW
 from src.config import Config
-from src.controls import UserControl
+from src.user_control import UserControl
 from src.direction import Direction
 from src.field import Field, TrackType
-from src.graphics import Graphics
+from src.menus import BuildPurgeMenu, EditTestMenu, LevelMenu, RunningCrashedCompleteMenu
 from src.state import Phase, State
 from src.screen import Screen
 from src.sound import Sound
@@ -20,9 +19,23 @@ from src.station import CheckmarkSprite
 from src.track import Track
 from src.train import Train
 from src.traincolor import blend_train_colors
-from src.utils import setup_logging, rot_center
+from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
+
+
+
+
+
+build_purge_menu = BuildPurgeMenu(topleft=(64, 16))
+edit_test_menu = EditTestMenu(topleft=(4 * 64, 16))
+running_crashed_complete_menu = RunningCrashedCompleteMenu(topleft=(9 * 64, 16))
+level_menu = LevelMenu(topleft=(12 * 64, 16))
+
+
+
+
+
 
 def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
     execute_logic(state, field)
@@ -30,14 +43,18 @@ def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
 
 
 def execute_logic(state: State, field: Field) -> None:
+    check_for_pg_gameplay_events()
+    check_for_level_change(field)
+    check_for_exit_command(state)
     check_and_set_delete_mode(state)
     check_and_save_field(field)
     check_and_toggle_profiling(state)
-    check_for_pg_gameplay_events(state, field)
     check_and_toggle_train_release(field)
     check_and_reset_gameplay(state, field)
 
     check_and_flip_cell_tracks(field) # if is_released: for cells, for trains
+    check_for_track_flip_command(field)
+    check_for_music_toggle_command()
     tick_departures(field) # if is_released: for departure_stations
     check_train_departure_station_crashes(field) # if is_released: for trains, for departure_stations
     delete_crashed_trains(field) # if is_released: for trains
@@ -55,6 +72,8 @@ def execute_logic(state: State, field: Field) -> None:
     check_for_mainmenu_command(state)
     determine_arrival_station_checkmarks(field) # for arrival_stations
     tick_field(field)
+    update_field_border(state, field)
+    update_menu_indicators(state, field)
 
 
 def draw_game_objects(field: Field, screen: Screen) -> None:
@@ -64,13 +83,119 @@ def draw_game_objects(field: Field, screen: Screen) -> None:
     field.train_sprites.draw(screen.surface) # Trains.
     field.rock_cells_sprites.draw(screen.surface) # Rock cells.
     draw_stations(field, screen) # Stations.
+    draw_field_border(field, screen) # Field border.
+    draw_menus(screen) # Menus.
+
+
+
+def check_for_level_change(field: Field) -> None:
+    for i, indicator_item in enumerate(level_menu.indicator_items):
+        if indicator_item.activated:
+            if i != field.level:
+                field.load_level(i)
+
+def draw_field_border(field: Field, screen: Screen) -> None:
+    field.border.draw(screen.surface)
+
+
+def draw_menus(screen: Screen) -> None:
+    build_purge_menu.draw(screen.surface)
+    edit_test_menu.draw(screen.surface)
+    running_crashed_complete_menu.draw(screen.surface)
+    level_menu.draw(screen.surface)
+
+
+def check_for_exit_command(state: State) -> None:
+    for event in UserControl.events:
+        if event.type == QUIT:
+            state.game_phase = Phase.EXIT
+            logger.info(f"Moving to phase {state.game_phase}")
+            return
+
+
+def check_for_track_flip_command(field: Field) -> None:
+    for event in UserControl.events:
+        if event.type == MOUSEBUTTONDOWN and event.button == 3:
+            for empty_cell in field.empty_cells:
+                if empty_cell.mouse_on and not field.is_released and len(empty_cell.tracks) > 1:
+                    empty_cell.flip_tracks()
+            return
+
+
+def check_for_music_toggle_command() -> None:
+    for event in UserControl.events:
+        if event.type == KEYDOWN and event.key == K_p:
+            Sound.toggle_music(ms=500)
+            return
+
+
+def update_field_border(state: State, field: Field) -> None:
+    if field.is_released:
+        if field.num_crashed > 0:
+            field.border.color = TRAIN_RED
+        elif state.gameplay.current_level_passed:
+            field.border.color = TRAIN_GREEN
+        else:
+            field.border.color = TRAIN_YELLOW
+        return
+    if state.gameplay.in_delete_mode:
+        field.border.color = TRAIN_RED
+    else:
+        field.border.color = TRAIN_YELLOW
+
+
+def update_menu_indicators(state: State, field: Field) -> None:
+    update_build_purge_menu(state, field)
+    update_edit_test_menu(field)
+    update_running_crashed_complete_menu(state, field)
+    update_level_menu()
+
+
+def update_level_menu() -> None:
+    activated_items = level_menu.get_activated_items()
+    if len(activated_items) == 0:
+        level_menu.activate_item(0)
+        return
+    for event in UserControl.events:
+        if event.type == KEYDOWN and event.key == pg.K_DOWN:
+            level_menu.activate_next_item()
+        elif event.type == KEYDOWN and event.key == pg.K_UP:
+            level_menu.activate_previous_item()
+
+
+def update_build_purge_menu(state: State, field: Field) -> None:
+    if state.gameplay.in_delete_mode:
+        build_purge_menu.activate_item(1)
+    else:
+        build_purge_menu.activate_item(0)
+    if field.is_released:
+        build_purge_menu.deactivate_all()
+
+
+def update_edit_test_menu(field: Field) -> None:
+    if field.is_released:
+        edit_test_menu.activate_item(1)
+    else:
+        edit_test_menu.activate_item(0)
+
+
+def update_running_crashed_complete_menu(state: State, field: Field) -> None:
+    if state.gameplay.current_level_passed:
+        running_crashed_complete_menu.activate_item(2)
+    elif field.num_crashed > 0:
+        running_crashed_complete_menu.activate_item(1)
+    elif field.is_released:
+        running_crashed_complete_menu.activate_item(0)
+    else:
+        running_crashed_complete_menu.deactivate_all()
 
 
 
 def check_for_mainmenu_command(state: State) -> None:
-    if UserControl.pressed_keys[UserControl.MAIN_MENU]:
-        state.game_phase = Phase.MAIN_MENU
-        logger.info(f"Moving to phase {state.game_phase}")
+    for event in UserControl.events:
+        if event.type == KEYDOWN and event.key == UserControl.MAIN_MENU:
+            state.game_phase = Phase.MAIN_MENU
+            logger.info(f"Moving to phase {state.game_phase}")
 
 
 def check_and_toggle_profiling(state: State) -> None:
@@ -121,21 +246,21 @@ def delete_crashed_trains(field: Field) -> None:
 
 
 def check_and_save_field(field: Field, file_name: str="level_tmp.csv") -> None:
-    if UserControl.pressed_keys[UserControl.SAVE_GAME]:
-        file_path = f"levels/{file_name}"
-        with open(file_path, newline="", mode="w", encoding="utf-8") as level_file:
-            level_writer = csv.writer(level_file, delimiter="-")
-            row: List[str] = []
-            for i, cell in enumerate(field.full_grid):
-                row.append(cell.saveable_attributes.serialize())
-                if (i+1) % 8 == 0:
-                    level_writer.writerow(row)
-                    row.clear()
-        logger.info(f"Saved game to '{file_path}'")
+    for event in UserControl.events:
+        if event.type == KEYDOWN and event.key == UserControl.SAVE_GAME:
+            file_path = f"levels/{file_name}"
+            with open(file_path, newline="", mode="w", encoding="utf-8") as level_file:
+                level_writer = csv.writer(level_file, delimiter="-")
+                row: List[str] = []
+                for i, cell in enumerate(field.full_grid):
+                    row.append(cell.saveable_attributes.serialize())
+                    if (i+1) % 8 == 0:
+                        level_writer.writerow(row)
+                        row.clear()
+            logger.info(f"Saved game to '{file_path}'")
 
 
 def check_and_set_delete_mode(state: State) -> None:
-    UserControl.update_user_controls()
     if UserControl.pressed_keys[UserControl.DELETE_MODE]:
         state.gameplay.in_delete_mode = True
     else:
@@ -166,7 +291,7 @@ def check_train_arrivals(field: Field) -> None:
                 field.train_sprites.remove(train) # type: ignore
                 arrival_station.number_of_trains_left -= 1
                 arrival_station.goals.pop().kill()
-                Sound.play_sound_on_channel(Sound.pop, 1)
+                Sound.play_sound_on_any_channel(Sound.pop)
             else:
                 logger.debug("CRASH! Wrong color train or not expecting further arrivals.")
                 train.crash()
@@ -207,28 +332,28 @@ def check_for_new_track_placement(state: State, field: Field) -> None:
         mouse_moved_rightup =       (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.UP)
         if mouse_moved_up_twice or mouse_moved_down_twice:
             field.insert_track_to_position(TrackType.VERT, UserControl.prev_cell)
+            Sound.play_sound_on_any_channel(Sound.track_place)
         elif mouse_moved_right_twice or mouse_moved_left_twice:
             field.insert_track_to_position(TrackType.HORI, UserControl.prev_cell)
+            Sound.play_sound_on_any_channel(Sound.track_place)
         elif moues_moved_upleft or mouse_moved_rightdown:
             field.insert_track_to_position(TrackType.BOTTOM_LEFT, UserControl.prev_cell)
+            Sound.play_sound_on_any_channel(Sound.track_place)
         elif mouse_moved_upright or mouse_moved_leftdown:
             field.insert_track_to_position(TrackType.BOTTOM_RIGHT, UserControl.prev_cell)
+            Sound.play_sound_on_any_channel(Sound.track_place)
         elif mouse_moved_downright or mouse_moved_leftup:
             field.insert_track_to_position(TrackType.TOP_RIGHT, UserControl.prev_cell)
+            Sound.play_sound_on_any_channel(Sound.track_place)
         elif mouse_moved_downleft or mouse_moved_rightup:
             field.insert_track_to_position(TrackType.TOP_LEFT, UserControl.prev_cell)
+            Sound.play_sound_on_any_channel(Sound.track_place)
         UserControl.mouse_entered_new_cell = False
 
 
-def check_for_pg_gameplay_events(state: State, field: Field) -> None:
-    for event in pg.event.get():
-        if event.type == QUIT:
-            state.game_phase = Phase.EXIT
-            logger.info(f"Moving to phase {state.game_phase}")
-        elif event.type == MOUSEBUTTONDOWN and event.button == 3:
-            for empty_cell in field.empty_cells:
-                if empty_cell.mouse_on and not field.is_released and len(empty_cell.tracks) > 1:
-                    empty_cell.flip_tracks()
+def check_for_pg_gameplay_events() -> None:
+    UserControl.update_user_events()
+
 
 
 def select_tracks_for_trains(field: Field) -> None:
@@ -313,7 +438,7 @@ def paint_trains(train_1: Train, train_2: Train) -> None:
     upcoming_color = blend_train_colors(train_1.color, train_2.color)
     train_1.repaint(upcoming_color)
     train_2.repaint(upcoming_color)
-    Sound.play_sound_on_channel(Sound.merge, 0)
+    Sound.play_sound_on_any_channel(Sound.merge)
 
 
 def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
@@ -322,7 +447,7 @@ def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
     field.trains.remove(train_2)
     train_2.kill()
     logger.info(f"Removed a train! Trains remaining: {len(field.trains)} or {len(field.train_sprites)}") # type: ignore
-    Sound.play_sound_on_channel(Sound.merge, 0)
+    Sound.play_sound_on_any_channel(Sound.merge)
 
 
 
@@ -412,6 +537,6 @@ def check_train_departure_station_crashes(field: Field) -> None:
 
 
 def check_and_toggle_train_release(field: Field) -> None:
-    if UserControl.space_down_event():
-        field.is_released = not field.is_released
-    UserControl.check_space_released_event()
+    for event in UserControl.events:
+        if event.type == KEYDOWN and event.key == K_SPACE:
+            field.is_released = not field.is_released

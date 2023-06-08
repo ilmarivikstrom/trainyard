@@ -93,7 +93,7 @@ class DepartureStation(Station):
         self.goals.pop().kill()
         logger.debug("Train released.")
         self.last_release_tick = current_tick
-        Sound.play_sound_on_channel(Sound.pop, 1)
+        Sound.play_sound_on_any_channel(Sound.pop)
         return Train(self.i, self.j, self.train_color, self.angle, self.tracks[0], Direction(self.angle))
 
 

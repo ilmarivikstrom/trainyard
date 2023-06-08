@@ -8,20 +8,25 @@ class Sound:
 
     master_volume = 1.0
 
-    crash = pg.mixer.Sound("assets/sounds/crash.mp3")
-    crash.set_volume(0.4 * master_volume)
+    music_playing = False
+
+    crash = pg.mixer.Sound("assets/sounds/Modern9.ogg")
+    crash.set_volume(0.1 * master_volume)
 
     merge = pg.mixer.Sound("assets/sounds/merge.wav")
-    merge.set_volume(0.05 * master_volume)
+    merge.set_volume(0.03 * master_volume)
 
-    pop = pg.mixer.Sound("assets/sounds/pop.mp3")
+    pop = pg.mixer.Sound("assets/sounds/pop.ogg")
     pop.set_volume(0.1 * master_volume)
 
-    track_flip = pg.mixer.Sound("assets/sounds/click.wav")
+    track_flip = pg.mixer.Sound("assets/sounds/Minimalist13_short.ogg")
     track_flip.set_volume(0.1 * master_volume)
 
+    track_place = pg.mixer.Sound("assets/sounds/Minimalist13_short.ogg")
+    track_place.set_volume(0.1 * master_volume)
+
     success = pg.mixer.Sound("assets/sounds/achievement.wav")
-    success.set_volume(1.0 * master_volume)
+    success.set_volume(0.1 * master_volume)
 
 
     @staticmethod
@@ -30,12 +35,37 @@ class Sound:
 
 
     @staticmethod
+    def play_sound_on_any_channel(sound: pg.mixer.Sound) -> None:
+        pg.mixer.find_channel(force=True).play(sound)
+
+
+    @staticmethod
+    def init_music() -> None:
+        pg.mixer.music.load("assets/sounds/Loop.ogg")
+        pg.mixer.music.set_volume(0.02 * Sound.master_volume)
+
+
+    @staticmethod
     def play_music() -> None:
-        pg.mixer.music.load("assets/sounds/cyberpunk_synthwave2.mp3")
-        pg.mixer.music.set_volume(0.03)
         pg.mixer.music.play(-1)
+        Sound.music_playing = True
 
 
     @staticmethod
     def stop_music() -> None:
         pg.mixer.music.stop()
+        Sound.music_playing = False
+
+
+    @staticmethod
+    def fadeout_music(ms: int) -> None:
+        pg.mixer.music.fadeout(ms)
+        Sound.music_playing = False
+
+
+    @staticmethod
+    def toggle_music(ms: int) -> None:
+        if Sound.music_playing:
+            Sound.fadeout_music(ms)
+        else:
+            Sound.play_music()

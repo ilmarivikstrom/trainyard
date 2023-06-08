@@ -2,7 +2,7 @@ from typing import List
 import pygame as pg
 
 from src.config import Config
-from src.controls import UserControl
+from src.user_control import UserControl
 from src.direction import Direction
 from src.graphics import Graphics
 from src.saveable import SaveableAttributes
@@ -76,7 +76,7 @@ class EmptyCell(Cell):
         for track in self.tracks:
             track.toggle_bright()
         self.tracks.reverse()
-        Sound.play_sound_on_channel(Sound.track_flip, 2)
+        Sound.play_sound_on_any_channel(Sound.track_flip)
 
 
 class RockCell(Cell):

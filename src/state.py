@@ -24,7 +24,6 @@ class GameplayStatus:
     in_delete_mode: bool = False
     current_level_passed = False
     background_location: Tuple[float, float] = (0.0, 0.0)
-    current_global_tick: int = 0
 
 
 @dataclass

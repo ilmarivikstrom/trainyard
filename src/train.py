@@ -200,7 +200,7 @@ class Train(pg.sprite.Sprite):
     def crash(self) -> None:
         self.selected_track = None
         self.crashed = True
-        Sound.play_sound_on_channel(Sound.crash, 3)
+        Sound.play_sound_on_any_channel(Sound.crash)
 
 
     def add_last_collided_cell(self, empty_cell: Cell):
