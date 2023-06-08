@@ -6,7 +6,7 @@ class Config:
     screen_height: int = 720
     padding_x: int = 64
     padding_y: int = 128
-    FPS: int = 100
+    FPS: int = 150
     cell_size: int = 64
     cells_x: int = 8
     cells_y: int = 8

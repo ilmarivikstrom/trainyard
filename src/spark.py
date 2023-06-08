@@ -26,9 +26,24 @@ class Spark():
 
     def bounce_from_edge(self, allowed_area: pg.Rect, collide_rects: Optional[List[pg.Rect]]) -> None:
         if not allowed_area.collidepoint(self.loc):
-            self.angle = 180 + self.angle
+            to_top = abs(self.loc[1] - allowed_area.top)
+            to_left = abs(self.loc[0] - allowed_area.left)
+            to_bottom = abs(self.loc[1] - allowed_area.bottom)
+            to_right = abs(self.loc[0] - allowed_area.right)
+            minimum = min(to_top, to_left, to_bottom, to_right)
+            if to_top == minimum:
+                self.angle = -2*math.pi - self.angle
+            elif to_left == minimum:
+                self.angle = math.pi - self.angle
+            elif to_bottom == minimum:
+                self.angle = -2*math.pi - self.angle
+            elif to_right == minimum:
+                self.angle = math.pi - self.angle
+            self.angle += random.uniform(math.radians(-10), math.radians(10))
             self.last_collision = self.loc
         else:
+            if collide_rects is None:
+                return
             for collide_rect in collide_rects:
                 if collide_rect.collidepoint(self.loc):
                     self.angle = 180 + self.angle

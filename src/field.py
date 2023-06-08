@@ -8,6 +8,7 @@ from src.color_constants import TRAIN_YELLOW
 from src.config import Config
 from src.fieldborder import FieldBorder
 from src.saveable import Saveable
+from src.spark import Spark
 from src.station import ArrivalStation, DepartureStation, Station
 from src.track import Track, TrackType
 from src.train import Train
@@ -41,7 +42,9 @@ class Field:
         self.width_px = self.cells_x * Config.cell_size
         self.height_px = self.cells_y * Config.cell_size
 
-        self.border = FieldBorder(color=TRAIN_YELLOW, topleft=(64, 128), width=self.width_px, height=self.height_px, thickness=1)
+        self.border: FieldBorder = FieldBorder(color=TRAIN_YELLOW, topleft=(64, 128), width=self.width_px, height=self.height_px, thickness=1)
+
+        self.sparks: List[Spark] = []
 
 
     def initialize_grid(self) -> None:

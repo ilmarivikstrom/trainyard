@@ -1,5 +1,7 @@
 import csv
-from typing import List
+import math
+import random
+from typing import List, Tuple
 
 import pygame as pg
 import pygame.gfxdraw
@@ -15,6 +17,7 @@ from src.menus import BuildPurgeMenu, EditTestMenu, LevelMenu, RunningCrashedCom
 from src.state import Phase, State
 from src.screen import Screen
 from src.sound import Sound
+from src.spark import Spark
 from src.station import CheckmarkSprite
 from src.track import Track
 from src.train import Train
@@ -30,7 +33,7 @@ logger = setup_logging(log_level=Config.log_level)
 build_purge_menu = BuildPurgeMenu(topleft=(64, 16))
 edit_test_menu = EditTestMenu(topleft=(4 * 64, 16))
 running_crashed_complete_menu = RunningCrashedCompleteMenu(topleft=(9 * 64, 16))
-level_menu = LevelMenu(topleft=(12 * 64, 16), num_levels=5) # Hardcoded number of levels (for now).
+level_menu = LevelMenu(topleft=(12 * 64, 16), num_levels=10) # Hardcoded number of levels (for now).
 
 
 
@@ -75,6 +78,8 @@ def execute_logic(state: State, field: Field) -> None:
     update_field_border(state, field)
     update_menu_indicators(state, field)
 
+    update_sparks(field)
+
 
 def draw_game_objects(field: Field, screen: Screen) -> None:
     draw_background_basecolor(screen, field.current_tick) # Background
@@ -86,7 +91,42 @@ def draw_game_objects(field: Field, screen: Screen) -> None:
     draw_field_border(field, screen) # Field border.
     draw_menus(screen) # Menus.
 
+    draw_sparks(field, screen)
 
+
+def draw_sparks(field: Field, screen: Screen) -> None:
+    for i, spark in sorted(enumerate(field.sparks), reverse=True):
+        spark.draw(screen.surface)
+
+
+def update_sparks(field: Field) -> None:
+    for i, spark in sorted(enumerate(field.sparks), reverse=True):
+        spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), None)
+        if not spark.alive:
+            field.sparks.pop(i)
+
+
+def generate_sparks(field: Field, pos: Tuple[int, int], angle: float) -> None:
+    spark_colors = [
+        (255, 207, 119),
+        (254, 126, 5),
+        (239, 99, 5),
+        (177, 72, 3),
+        (255, 237, 168)
+    ]
+
+    for _ in range(50):
+        field.sparks.append(
+            Spark(
+                loc=[pos[0] + random.randint(0, 20) - 10, pos[1] + random.randint(0, 20) - 10],
+                angle=math.radians(random.randint(-int(angle) - 30, -int(angle) + 30)),
+                base_speed=random.uniform(1, 2),
+                friction=random.uniform(0.01, 0.03),
+                color=random.sample(spark_colors, 1)[0],
+                scale=5.0,
+                speed_multiplier=1.0
+            )
+        )
 
 def check_for_level_change(field: Field) -> None:
     for i, indicator_item in enumerate(level_menu.indicator_items):
@@ -242,6 +282,7 @@ def delete_crashed_trains(field: Field) -> None:
         if train.crashed:
             field.train_sprites.remove(train) # type: ignore
             field.trains.remove(train)
+            generate_sparks(field, (train.rect.centerx, train.rect.centery), train.angle)
             logger.info(f"Train crashed. Trains left: {len(field.trains)}")
 
 
