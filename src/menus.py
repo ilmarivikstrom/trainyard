@@ -161,8 +161,8 @@ class RunningCrashedCompleteMenu(BaseMenu):
         )
         self.third = IndicatorItem(
             font=Font.normal,
-            text="COMPLETE",
-            padding_spaces=3,
+            text="COMPLETED",
+            padding_spaces=2,
             activated_text_color=GRAY5,
             activated_bg_color=TRAIN_GREEN,
             dest=(self.topleft[0], self.topleft[1] + 3 * self.row_height)
@@ -172,34 +172,25 @@ class RunningCrashedCompleteMenu(BaseMenu):
 
 
 class LevelMenu(BaseMenu):
-    def __init__(self, topleft: Tuple[int, int]) -> None:
+    def __init__(self, topleft: Tuple[int, int], num_levels: int) -> None:
         self.topleft: Tuple[int, int] = topleft
+        self.num_levels = num_levels
         self.row_height = 20
 
         self.tooltip = Tooltip("LEVEL SELECT", (self.topleft[0] + 36, self.topleft[1]))
 
-        self.first = IndicatorItem(
-            font=Font.normal,
-            text="LEVEL 0",
-            padding_spaces=3,
-            activated_text_color=GRAY5,
-            activated_bg_color=TRAIN_YELLOW,
-            dest=(self.topleft[0], self.topleft[1] + 1 * self.row_height)
-        )
-        self.second = IndicatorItem(
-            font=Font.normal,
-            text="LEVEL 1",
-            padding_spaces=3,
-            activated_text_color=GRAY5,
-            activated_bg_color=TRAIN_YELLOW,
-            dest=(self.topleft[0], self.topleft[1] + 2 * self.row_height)
-        )
-        self.third = IndicatorItem(
-            font=Font.normal,
-            text="LEVEL 2",
-            padding_spaces=3,
-            activated_text_color=GRAY5,
-            activated_bg_color=TRAIN_YELLOW,
-            dest=(self.topleft[0], self.topleft[1] + 3 * self.row_height)
-        )
-        super().__init__(self.tooltip, [self.first, self.second, self.third])
+        self.levels: List[IndicatorItem] = []
+
+        for i in range(num_levels):
+            self.levels.append(
+                IndicatorItem(
+                    font=Font.normal,
+                    text=f"LEVEL {i}",
+                    padding_spaces=3,
+                    activated_text_color=GRAY5,
+                    activated_bg_color=TRAIN_YELLOW,
+                    dest=(self.topleft[0], self.topleft[1] + (i+1) * self.row_height)
+                )
+            )
+
+        super().__init__(self.tooltip, self.levels)

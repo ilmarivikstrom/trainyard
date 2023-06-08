@@ -115,6 +115,8 @@ class Train(pg.sprite.Sprite):
     def move(self) -> None:
         self.image = rot_center(self.original_image, self.angle) # type: ignore
 
+        num_navigation_indices = 64
+
         if not self.crashed:
             if self.selected_track.track_type == TrackType.VERT:
                 if self.direction == Direction.DOWN or round(self.angle) == Direction.DOWN.value:
@@ -142,11 +144,11 @@ class Train(pg.sprite.Sprite):
                 self.current_navigation_index += 1
             elif self.selected_track.track_type == TrackType.TOP_LEFT:
                 if self.direction == Direction.RIGHT or round(self.angle) == Direction.RIGHT.value:
-                    self.angle = 0 + math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.angle = 0 + math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / num_navigation_indices)))
                     self.rect.centerx += self.selected_track.navigation[self.current_navigation_index][0]
                     self.rect.centery += self.selected_track.navigation[self.current_navigation_index][1]
                 elif self.direction == Direction.DOWN or round(self.angle) == Direction.DOWN.value:
-                    self.angle = 270 - math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.angle = 270 - math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / num_navigation_indices)))
                     self.rect.centerx += self.selected_track.navigation_reversed[self.current_navigation_index][0]
                     self.rect.centery += self.selected_track.navigation_reversed[self.current_navigation_index][1]
                 else:
@@ -154,11 +156,11 @@ class Train(pg.sprite.Sprite):
                 self.current_navigation_index += 1
             elif self.selected_track.track_type == TrackType.TOP_RIGHT:
                 if self.direction == Direction.DOWN or round(self.angle) == Direction.DOWN.value:
-                    self.angle = 270 + math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.angle = 270 + math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / num_navigation_indices)))
                     self.rect.centerx += self.selected_track.navigation[self.current_navigation_index][0]
                     self.rect.centery += self.selected_track.navigation[self.current_navigation_index][1]
                 elif self.direction == Direction.LEFT or round(self.angle) == Direction.LEFT.value:
-                    self.angle = 180 - math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.angle = 180 - math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / num_navigation_indices)))
                     self.rect.centerx += self.selected_track.navigation_reversed[self.current_navigation_index][0]
                     self.rect.centery += self.selected_track.navigation_reversed[self.current_navigation_index][1]
                 else:
@@ -166,11 +168,11 @@ class Train(pg.sprite.Sprite):
                 self.current_navigation_index += 1
             elif self.selected_track.track_type == TrackType.BOTTOM_LEFT:
                 if self.direction == Direction.RIGHT or round(self.angle) == Direction.RIGHT.value:
-                    self.angle = 0 - math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.angle = 0 - math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / num_navigation_indices)))
                     self.rect.centerx += self.selected_track.navigation[self.current_navigation_index][0]
                     self.rect.centery += self.selected_track.navigation[self.current_navigation_index][1]
                 elif self.direction == Direction.UP or round(self.angle) == Direction.UP.value:
-                    self.angle = 90 + math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.angle = 90 + math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / num_navigation_indices)))
                     self.rect.centerx += self.selected_track.navigation_reversed[self.current_navigation_index][0]
                     self.rect.centery += self.selected_track.navigation_reversed[self.current_navigation_index][1]
                 else:
@@ -178,11 +180,11 @@ class Train(pg.sprite.Sprite):
                 self.current_navigation_index += 1
             elif self.selected_track.track_type == TrackType.BOTTOM_RIGHT:
                 if self.direction == Direction.UP or round(self.angle) == Direction.UP.value:
-                    self.angle = 90 - math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.angle = 90 - math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / num_navigation_indices)))
                     self.rect.centerx += self.selected_track.navigation[self.current_navigation_index][0]
                     self.rect.centery += self.selected_track.navigation[self.current_navigation_index][1]
                 elif self.direction == Direction.LEFT or round(self.angle) == Direction.LEFT.value:
-                    self.angle = 180 + math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / 48)))
+                    self.angle = 180 + math.degrees(0.5 * math.pi * math.sin(0.5 * math.pi * (self.current_navigation_index / num_navigation_indices)))
                     self.rect.centerx += self.selected_track.navigation_reversed[self.current_navigation_index][0]
                     self.rect.centery += self.selected_track.navigation_reversed[self.current_navigation_index][1]
                 else:

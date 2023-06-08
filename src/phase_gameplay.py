@@ -30,7 +30,7 @@ logger = setup_logging(log_level=Config.log_level)
 build_purge_menu = BuildPurgeMenu(topleft=(64, 16))
 edit_test_menu = EditTestMenu(topleft=(4 * 64, 16))
 running_crashed_complete_menu = RunningCrashedCompleteMenu(topleft=(9 * 64, 16))
-level_menu = LevelMenu(topleft=(12 * 64, 16))
+level_menu = LevelMenu(topleft=(12 * 64, 16), num_levels=5) # Hardcoded number of levels (for now).
 
 
 
@@ -224,11 +224,11 @@ def check_train_merges(field: Field) -> None:
     for train_1 in field.trains:
         other_trains = field.trains.copy()
         other_trains.remove(train_1)
-        other_trains_pos = [x.rect.center for x in other_trains]
-        other_trains_pos_dict = dict(zip(other_trains, other_trains_pos))
-        if train_1.rect.center not in other_trains_pos_dict.values():
+        other_trains_pos = [(x.rect.centerx, x.rect.centery, 1, 1) for x in other_trains]
+        collided_train_index = pg.Rect((train_1.rect.centerx, train_1.rect.centery, 2, 2)).collidelist(other_trains_pos)
+        if collided_train_index == -1:
             continue
-        train_2 = [key for key, val in other_trains_pos_dict.items() if val == train_1.rect.center][0]
+        train_2 = other_trains[collided_train_index]
         if train_1.direction == train_2.direction:
             merge_trains(train_1, train_2, field)
         else:
@@ -428,7 +428,7 @@ def check_and_flip_cell_tracks(field: Field) -> None:
                 return
             #cell_contains_train_and_has_multiple_tracks = (cell.rect and cell.rect.contains(train.rect) and train.last_flipped_cell != cell and len(cell.tracks) == 2)
             # Experimental:
-            cell_contains_train_and_has_multiple_tracks = (cell.rect and cell.rect.collidepoint(train.rect.center) and train.current_navigation_index >= 23 and train.last_flipped_cell != cell and len(cell.tracks) == 2)
+            cell_contains_train_and_has_multiple_tracks = (cell.rect and cell.rect.contains(train.rect) and train.current_navigation_index >= 23 and train.last_flipped_cell != cell and len(cell.tracks) == 2)
             if cell_contains_train_and_has_multiple_tracks and isinstance(cell, EmptyCell):
                 cell.flip_tracks()
                 train.last_flipped_cell = cell

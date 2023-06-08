@@ -86,7 +86,7 @@ class DepartureStation(Station):
 
 
     def tick(self, current_tick: int) -> Optional[Train]:
-        station_needs_to_release = (self.number_of_trains_left > 0 and (self.last_release_tick is None or current_tick - self.last_release_tick == 32))
+        station_needs_to_release = (self.number_of_trains_left > 0 and (self.last_release_tick is None or current_tick - self.last_release_tick == 64))
         if not station_needs_to_release:
             return
         self.number_of_trains_left -= 1
