@@ -7,8 +7,10 @@ from src.cell import EmptyCell, RockCell
 from src.color_constants import TRAIN_YELLOW
 from src.config import Config
 from src.fieldborder import FieldBorder
+from src.painter import Painter
 from src.saveable import Saveable
 from src.spark import Spark
+from src.splitter import Splitter
 from src.station import ArrivalStation, DepartureStation, Station
 from src.track import Track, TrackType
 from src.train import Train
@@ -32,6 +34,12 @@ class Field:
         self.departure_stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.arrival_stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
+        self.painter_cells: List[Painter] = []
+        self.painter_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+
+        self.splitter_cells: List[Painter] = []
+        self.splitter_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+
         self.trains: List[Train] = []
         self.train_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
@@ -54,11 +62,11 @@ class Field:
                 for i, item in enumerate(row[0].split("-")):
                     saveable = Saveable(item)
                     if saveable.type == "A":
-                        arrival_station = ArrivalStation(i, j, saveable.angle, saveable.num_goals, saveable.color_goals)
+                        arrival_station = ArrivalStation(i, j, saveable.angle, saveable.num_goals, saveable.color)
                         self.full_grid.append(arrival_station)
                         self.arrival_stations_sprites.add(arrival_station)
                     elif saveable.type == "D":
-                        departure_station = DepartureStation(i, j, saveable.angle, saveable.num_goals, saveable.color_goals)
+                        departure_station = DepartureStation(i, j, saveable.angle, saveable.num_goals, saveable.color)
                         self.full_grid.append(departure_station)
                         self.departure_stations_sprites.add(departure_station)
                     elif saveable.type == "E":
@@ -69,12 +77,22 @@ class Field:
                         rock_cell = RockCell(i, j)
                         self.full_grid.append(rock_cell)
                         self.rock_cells_sprites.add(rock_cell)
+                    elif saveable.type == "P":
+                        painter_cell = Painter(i, j, saveable.angle, saveable.color)
+                        self.full_grid.append(painter_cell)
+                        self.painter_cells_sprites.add(painter_cell)
+                    elif saveable.type == "S":
+                        splitter_cell = Splitter(i, j, saveable.angle)
+                        self.full_grid.append(splitter_cell)
+                        self.splitter_cells_sprites.add(splitter_cell)
                     else:
                         raise ValueError(f"Saveable type was unexpected: '{saveable.type}")
         self.empty_cells = [cell for cell in self.full_grid if isinstance(cell, EmptyCell)]
         self.rock_cells = [cell for cell in self.full_grid if isinstance(cell, RockCell)]
         self.departure_stations = [cell for cell in self.full_grid if isinstance(cell, DepartureStation)]
         self.arrival_stations = [cell for cell in self.full_grid if isinstance(cell, ArrivalStation)]
+        self.painter_cells = [cell for cell in self.full_grid if isinstance(cell, Painter)]
+        self.splitter_cells = [cell for cell in self.full_grid if isinstance(cell, Splitter)]
 
 
     def load_level(self, level: int) -> None:
@@ -95,6 +113,10 @@ class Field:
         self.arrival_stations_sprites.empty()
         self.trains.clear()
         self.train_sprites.empty()
+        self.splitter_cells.clear()
+        self.splitter_cells_sprites.empty()
+        self.painter_cells.clear()
+        self.painter_cells_sprites.empty()
 
         self.num_crashed: int = 0
         self.is_released: bool = False
@@ -145,6 +167,8 @@ class Field:
             grid_cell.tracks.append(track_to_be_added)
             grid_cell.tracks = grid_cell.tracks[-2:]
         if len(grid_cell.tracks) > 1:
-            grid_cell.tracks[0].bright = False
-            grid_cell.tracks[0].image = grid_cell.tracks[0].images["dark"]
+            track_types = [track.track_type for track in grid_cell.tracks]
+            if not ((TrackType.BOTTOM_LEFT in track_types and TrackType.TOP_RIGHT in track_types) or (TrackType.TOP_LEFT in track_types and TrackType.BOTTOM_RIGHT in track_types) or (TrackType.VERT in track_types and TrackType.HORI in track_types)):
+                grid_cell.tracks[0].bright = False
+                grid_cell.tracks[0].image = grid_cell.tracks[0].images["dark"]
         logger.info(f"Added track to pos {pos}")

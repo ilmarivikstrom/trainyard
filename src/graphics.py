@@ -28,6 +28,8 @@ class Graphics:
             "departure": pg.image.load("assets/sprites/departure_station.png").convert_alpha(),
             "arrival": pg.image.load("assets/sprites/arrival_station.png").convert_alpha(),
             "blue_goal_1": pg.image.load("assets/sprites/goal_blue.png").convert_alpha(),
+            "painter": pg.image.load("assets/sprites/painter.png").convert_alpha(),
+            "splitter": pg.image.load("assets/sprites/splitter.png").convert_alpha(),
             "blue_goal_2": pg.transform.rotate(pg.image.load("assets/sprites/goal_blue.png").convert_alpha(), -90),
             "blue_goal_3": pg.transform.rotate(pg.image.load("assets/sprites/goal_blue.png").convert_alpha(), 90),
             "blue_goal_4": pg.transform.rotate(pg.image.load("assets/sprites/goal_blue.png").convert_alpha(), 180),
