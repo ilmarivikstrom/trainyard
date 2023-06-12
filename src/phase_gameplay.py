@@ -5,13 +5,13 @@ from typing import List, Tuple, Union
 
 import pygame as pg
 import pygame.gfxdraw
-from pygame.locals import QUIT, MOUSEBUTTONDOWN, KEYDOWN, K_p, K_SPACE
+from pygame.constants import QUIT, MOUSEBUTTONDOWN, KEYDOWN, K_p, K_SPACE, K_UP, K_DOWN, K_F1 # pylint: disable=no-name-in-module;
 
-from src.cell import EmptyCell, RockCell
+from src.cell import DrawingCell, RockCell
 from src.color_constants import GRAY, RED1, WHITE, TRAIN_GREEN, TRAIN_RED, TRAIN_YELLOW
 from src.config import Config
 from src.user_control import UserControl
-from src.direction import Direction
+from src.direction import Direction, turn
 from src.field import Field, TrackType
 from src.menus import BuildPurgeMenu, EditTestMenu, LevelMenu, RunningCrashedCompleteMenu, InfoMenu
 from src.state import Phase, State
@@ -73,7 +73,7 @@ def execute_logic(state: State, field: Field) -> None:
     check_train_splitters(field)
 
     check_and_mark_prev_cell(field) # if NOT is_released: for cells (UserControl)
-    check_and_delete_field_tracks(state, field) # if NOT is_released: for empty_cells
+    check_and_delete_field_tracks(state, field) # if NOT is_released: for drawing cells
     check_for_new_track_placement(state, field) # if NOT is_released
 
     tick_trains(field) # for trains
@@ -88,9 +88,9 @@ def execute_logic(state: State, field: Field) -> None:
 
 
 def draw_game_objects(field: Field, screen: Screen) -> None:
-    draw_background_basecolor(screen, field.current_tick) # Background
-    field.empty_cells_sprites.draw(screen.surface) # Empty cells (base).
-    draw_empty_cells_tracks(screen, field) # Tracks (on empty cells).
+    draw_background_basecolor(screen) # Background
+    field.drawing_cells_sprites.draw(screen.surface) # Empty cells (base).
+    draw_drawing_cells_tracks(screen, field) # Tracks (on empty cells).
     field.train_sprites.draw(screen.surface) # Trains.
     field.rock_cells_sprites.draw(screen.surface) # Rock cells.
     draw_stations(field, screen) # Stations.
@@ -108,35 +108,28 @@ def check_train_splitters(field: Field) -> None:
     trains_to_add: List[Train] = []
     for train in field.trains:
         for splitter in field.splitter_cells:
+            if splitter.rect is None:
+                raise ValueError("Rect is None.")
             if train.rect.center == splitter.rect.center:
                 logger.info("At center.")
-                new_train_1 = Train(train.i, train.j, train.color, train.angle - 90, splitter.tracks[1], direction=Direction.UP)
+                new_train_1 = Train(train.i, train.j, train.color, splitter.tracks[1], direction=turn(train.direction, left=True))
                 new_train_1.rect.x = train.rect.x
                 new_train_1.rect.y = train.rect.y
                 trains_to_add.append(new_train_1)
                 train.selected_track = splitter.tracks[2]
-                train.angle = train.angle + 90
-                train.direction = Direction.DOWN
+                train.direction = turn(train.direction, right=True)
+                train.angle = train.direction.value
 
     for new_train in trains_to_add:
         field.trains.append(new_train)
         field.train_sprites.add(new_train)
-            # tracks_endpoints = [track.endpoints for track in splitter.tracks]
-            # for track_endpoints in tracks_endpoints:
-            #     for endpoint in track_endpoints:
-            #         if train.rect.center == endpoint:
-            #             new_train = Train(train.i, train.j, train.color, train.angle, splitter.tracks[0], train.direction)
-            #             new_train.rect.x = train.rect.x # TODO: Need a copy constructor.
-            #             new_train.rect.y = train.rect.y
-            #             field.trains.append(new_train)
-            #             field.train_sprites.add(new_train)
-            #             train.selected_track = splitter.tracks[1]
-            #             return # Make sure the trains don't merge afterwards.
 
 
 def check_train_painters(field: Field) -> None:
     for train in field.trains:
         for painter in field.painter_cells:
+            if painter.rect is None:
+                raise ValueError("Rect is None.")
             if train.rect.center == painter.rect.center:
                 train.repaint(painter.color)
 
@@ -150,11 +143,13 @@ def draw_sparks(field: Field, screen: Screen) -> None:
 def update_sparks(field: Field) -> None:
     solid_rects: List[pg.Rect] = []
     for item in field.full_grid:
+        if item.rect is None:
+            raise ValueError("Rect is None.")
         solid_types = Union[DepartureStation, ArrivalStation, RockCell]
         if isinstance(item, solid_types):
             solid_rects.append(item.rect)
     for i, spark in sorted(enumerate(field.sparks), reverse=True):
-        spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), solid_rects) # Colliderects.
+        spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), solid_rects)
         if not spark.alive:
             field.sparks.pop(i)
 
@@ -170,7 +165,7 @@ def generate_sparks(field: Field, pos: Tuple[int, int], angle: float) -> None:
     for _ in range(random.randint(10, 30)):
         field.sparks.append(
             Spark(
-                loc=[pos[0] + random.randint(-10, 10), pos[1] + random.randint(10, 10)],
+                loc=(pos[0] + random.randint(-10, 10), pos[1] + random.randint(10, 10)),
                 angle=math.radians(random.randint(-int(angle) - 70, -int(angle) + 70)),
                 base_speed=random.uniform(1, 2),
                 friction=random.uniform(0.01, 0.03),
@@ -211,9 +206,9 @@ def check_for_exit_command(state: State) -> None:
 def check_for_track_flip_command(field: Field) -> None:
     for event in UserControl.events:
         if event.type == MOUSEBUTTONDOWN and event.button == 3:
-            for empty_cell in field.empty_cells:
-                if empty_cell.mouse_on and not field.is_released and len(empty_cell.tracks) > 1:
-                    empty_cell.flip_tracks()
+            for drawing_cell in field.drawing_cells:
+                if drawing_cell.mouse_on and not field.is_released and len(drawing_cell.tracks) > 1:
+                    drawing_cell.flip_tracks()
             return
 
 
@@ -259,9 +254,9 @@ def update_level_menu() -> None:
         level_menu.activate_item(0)
         return
     for event in UserControl.events:
-        if event.type == KEYDOWN and event.key == pg.K_DOWN:
+        if event.type == KEYDOWN and event.key == K_DOWN:
             level_menu.activate_next_item()
-        elif event.type == KEYDOWN and event.key == pg.K_UP:
+        elif event.type == KEYDOWN and event.key == K_UP:
             level_menu.activate_previous_item()
 
 
@@ -299,7 +294,7 @@ def update_info_menu(field: Field) -> None:
 def update_track_menu(field: Field) -> None:
     tracks = 0
     for item in field.full_grid:
-        if isinstance(item, EmptyCell):
+        if isinstance(item, DrawingCell):
             tracks += len(item.tracks)
     track_menu.set_text(text=str(tracks), item_index=0)
 
@@ -312,7 +307,7 @@ def check_for_mainmenu_command(state: State) -> None:
 
 
 def check_and_toggle_profiling(state: State) -> None:
-    if UserControl.pressed_keys[pg.K_F1]:
+    if UserControl.pressed_keys[K_F1]:
         state.profiler.continue_profiling()
     else:
         state.profiler.discontinue_profiling()
@@ -430,8 +425,8 @@ def check_for_level_completion(state: State, field: Field) -> None:
 
 def check_for_new_track_placement(state: State, field: Field) -> None:
     left_mouse_down_in_draw_mode = (UserControl.mouse_pressed[0] and not state.gameplay.in_delete_mode and not field.is_released)
-    mouse_moved_over_cells = (UserControl.prev_cell and UserControl.curr_cell)
-    if left_mouse_down_in_draw_mode and mouse_moved_over_cells and UserControl.mouse_entered_new_cell:
+
+    if left_mouse_down_in_draw_mode and UserControl.prev_cell is not None and UserControl.mouse_entered_new_cell:
         mouse_moved_up_twice =      (UserControl.prev_movement == Direction.UP      and UserControl.curr_movement == Direction.UP)
         mouse_moved_down_twice =    (UserControl.prev_movement == Direction.DOWN    and UserControl.curr_movement == Direction.DOWN)
         mouse_moved_right_twice =   (UserControl.prev_movement == Direction.RIGHT   and UserControl.curr_movement == Direction.RIGHT)
@@ -514,10 +509,10 @@ def check_and_mark_prev_cell(field: Field) -> None:
 def check_and_delete_field_tracks(state: State, field: Field) -> None:
     if field.is_released:
         return
-    for empty_cell in field.empty_cells:
-        if empty_cell.rect is None:
+    for drawing_cell in field.drawing_cells:
+        if drawing_cell.rect is None:
             raise ValueError("The cell's rect is None. Exiting.")
-        check_and_delete_empty_cell_tracks(state, empty_cell)
+        check_and_delete_drawing_cell_tracks(state, drawing_cell)
 
 
 def add_new_train(field: Field, train: Train) -> None:
@@ -525,10 +520,10 @@ def add_new_train(field: Field, train: Train) -> None:
     field.train_sprites.add(train) # type: ignore
 
 
-def check_and_delete_empty_cell_tracks(state: State, empty_cell: EmptyCell) -> None:
-    mouse_pressed_cell_while_in_delete_mode = (empty_cell.mouse_on and UserControl.mouse_pressed[0] and state.gameplay.in_delete_mode)
+def check_and_delete_drawing_cell_tracks(state: State, drawing_cell: DrawingCell) -> None:
+    mouse_pressed_cell_while_in_delete_mode = (drawing_cell.mouse_on and UserControl.mouse_pressed[0] and state.gameplay.in_delete_mode)
     if mouse_pressed_cell_while_in_delete_mode:
-        empty_cell.tracks.clear()
+        drawing_cell.tracks.clear()
 
 
 def check_and_flip_cell_tracks(field: Field) -> None:
@@ -539,7 +534,7 @@ def check_and_flip_cell_tracks(field: Field) -> None:
             if train.current_navigation_index % 16 != 0:
                 return
             cell_contains_train_and_has_multiple_tracks = (cell.rect and cell.rect.contains(train.rect) and train.current_navigation_index >= 23 and train.last_flipped_cell != cell and len(cell.tracks) == 2)
-            if cell_contains_train_and_has_multiple_tracks and isinstance(cell, EmptyCell):
+            if cell_contains_train_and_has_multiple_tracks and isinstance(cell, DrawingCell):
                 cell.flip_tracks()
                 train.last_flipped_cell = cell
 
@@ -563,8 +558,7 @@ def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
 
 
 
-def draw_background_basecolor(screen: Screen, current_tick: int) -> None:
-    #tick_index = int((Config.background_scroll_speed * current_tick) % len(screen.background_color_array))
+def draw_background_basecolor(screen: Screen) -> None:
     tick_index = 300
     screen.surface.fill(screen.background_color_array[tick_index])
 
@@ -583,11 +577,11 @@ def draw_checkmarks(screen: Screen, field: Field) -> None:
         screen.surface.blit(source=arrival_station.checkmark.image, dest=arrival_station.rect.topleft)
 
 
-def draw_empty_cells_tracks(screen: Screen, field: Field) -> None:
-    for empty_cell in field.empty_cells:
-        if empty_cell.rect is None:
+def draw_drawing_cells_tracks(screen: Screen, field: Field) -> None:
+    for drawing_cell in field.drawing_cells:
+        if drawing_cell.rect is None:
             raise ValueError("The cell's rect is None. Exiting.")
-        draw_empty_cell_tracks(screen, empty_cell)
+        draw_drawing_cell_tracks(screen, drawing_cell)
 
 
 def draw_stations(field: Field, screen: Screen) -> None:
@@ -619,8 +613,8 @@ def draw_arcs_and_endpoints(screen: Screen, track: Track):
         pygame.gfxdraw.pixel(screen.surface, int(endpoint.x), int(endpoint.y), RED1)
 
 
-def draw_empty_cell_tracks(screen: Screen, empty_cell: EmptyCell) -> None:
-    for track in empty_cell.tracks:
+def draw_drawing_cell_tracks(screen: Screen, drawing_cell: DrawingCell) -> None:
+    for track in drawing_cell.tracks:
         if track.image:
             screen.surface.blit(track.image, dest=track.cell_rect)
         if Config.draw_arcs:
@@ -641,6 +635,8 @@ def check_train_departure_station_crashes(field: Field) -> None:
         return
     for train in field.trains:
         for departure_station in field.departure_stations:
+            if departure_station.rect is None:
+                raise ValueError("Rect is None.")
             if departure_station.rect.collidepoint(train.rect.center) and train.angle != departure_station.angle:
                 train.crash()
                 field.num_crashed += 1

@@ -1,9 +1,9 @@
 import csv
-from typing import List, Union
+from typing import List, Optional, Union
 
 import pygame as pg
 
-from src.cell import EmptyCell, RockCell
+from src.cell import DrawingCell, RockCell
 from src.color_constants import TRAIN_YELLOW
 from src.config import Config
 from src.fieldborder import FieldBorder
@@ -24,12 +24,12 @@ class Field:
         self.level = level
         self.cells_x = Config.cells_x
         self.cells_y = Config.cells_y
-        self.full_grid: List[Union[EmptyCell, RockCell, Station]] = []
-        self.empty_cells: List[EmptyCell] = []
+        self.full_grid: List[Union[DrawingCell, RockCell, Station, Painter, Splitter]] = []
+        self.drawing_cells: List[DrawingCell] = []
         self.rock_cells: List[RockCell] = []
         self.departure_stations: List[DepartureStation] = []
         self.arrival_stations: List[ArrivalStation] = []
-        self.empty_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        self.drawing_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.rock_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.departure_stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.arrival_stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
@@ -37,7 +37,7 @@ class Field:
         self.painter_cells: List[Painter] = []
         self.painter_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
-        self.splitter_cells: List[Painter] = []
+        self.splitter_cells: List[Splitter] = []
         self.splitter_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
         self.trains: List[Train] = []
@@ -50,7 +50,7 @@ class Field:
         self.width_px = self.cells_x * Config.cell_size
         self.height_px = self.cells_y * Config.cell_size
 
-        self.border: FieldBorder = FieldBorder(color=TRAIN_YELLOW, topleft=(64, 128), width=self.width_px, height=self.height_px, thickness=1)
+        self.border: FieldBorder = FieldBorder(color=TRAIN_YELLOW, topleft=(64, 128), width=self.width_px, height=self.height_px, thickness=1) # TODO: Field should have topleft coords and this guy should use them as well.
 
         self.sparks: List[Spark] = []
 
@@ -70,9 +70,9 @@ class Field:
                         self.full_grid.append(departure_station)
                         self.departure_stations_sprites.add(departure_station)
                     elif saveable.type == "E":
-                        empty_cell = EmptyCell(i, j)
-                        self.full_grid.append(empty_cell)
-                        self.empty_cells_sprites.add(empty_cell)
+                        drawing_cell = DrawingCell(i, j)
+                        self.full_grid.append(drawing_cell)
+                        self.drawing_cells_sprites.add(drawing_cell)
                     elif saveable.type == "R":
                         rock_cell = RockCell(i, j)
                         self.full_grid.append(rock_cell)
@@ -87,7 +87,7 @@ class Field:
                         self.splitter_cells_sprites.add(splitter_cell)
                     else:
                         raise ValueError(f"Saveable type was unexpected: '{saveable.type}")
-        self.empty_cells = [cell for cell in self.full_grid if isinstance(cell, EmptyCell)]
+        self.drawing_cells = [cell for cell in self.full_grid if isinstance(cell, DrawingCell)]
         self.rock_cells = [cell for cell in self.full_grid if isinstance(cell, RockCell)]
         self.departure_stations = [cell for cell in self.full_grid if isinstance(cell, DepartureStation)]
         self.arrival_stations = [cell for cell in self.full_grid if isinstance(cell, ArrivalStation)]
@@ -103,11 +103,11 @@ class Field:
 
     def clear(self) -> None:
         self.full_grid.clear()
-        self.empty_cells.clear()
+        self.drawing_cells.clear()
         self.rock_cells.clear()
         self.departure_stations.clear()
         self.arrival_stations.clear()
-        self.empty_cells_sprites.empty()
+        self.drawing_cells_sprites.empty()
         self.rock_cells_sprites.empty()
         self.departure_stations_sprites.empty()
         self.arrival_stations_sprites.empty()
@@ -145,8 +145,15 @@ class Field:
         return int(j) * self.cells_y + int(i)
 
 
-    def get_grid_cell_at(self, i: int, j: int) -> Union[EmptyCell, RockCell, Station]:
+    def get_grid_cell_at(self, i: int, j: int) -> Union[DrawingCell, RockCell, Station, Painter, Splitter]:
         return self.full_grid[self.get_grid_cell_list_index(i, j)]
+
+
+    def get_drawing_cell_at(self, i: int, j: int) -> Optional[DrawingCell]:
+        cell = self.full_grid[self.get_grid_cell_list_index(i, j)]
+        if not isinstance(cell, DrawingCell):
+            return None
+        return cell
 
 
     def insert_track_to_position(
@@ -154,21 +161,22 @@ class Field:
             track_type: TrackType,
             pos: pg.Vector2
     ) -> None:
-        grid_cell = self.get_grid_cell_at(round(pos.x), round(pos.y))
-        if grid_cell.blocks_placement:
+        drawing_cell = self.get_drawing_cell_at(round(pos.x), round(pos.y))
+        if drawing_cell is None:
+            logger.warning(f"Tried to insert track on a non-existing drawing cell at {pos}")
             return
-        if grid_cell.rect is None:
-            raise ValueError("Rect of empty_cell is None")
-        track_to_be_added = Track(round(pos.x), round(pos.y), grid_cell.rect, track_type)
-        if track_type in [existing_track.track_type for existing_track in grid_cell.tracks]:
-            grid_cell.tracks.clear()
-            grid_cell.tracks.append(track_to_be_added)
+        if drawing_cell.rect is None:
+            raise ValueError("Rect of drawing cell is None")
+        track_to_be_added = Track(round(pos.x), round(pos.y), drawing_cell.rect, track_type)
+        if track_type in [existing_track.track_type for existing_track in drawing_cell.tracks]:
+            drawing_cell.tracks.clear()
+            drawing_cell.tracks.append(track_to_be_added)
         else:
-            grid_cell.tracks.append(track_to_be_added)
-            grid_cell.tracks = grid_cell.tracks[-2:]
-        if len(grid_cell.tracks) > 1:
-            track_types = [track.track_type for track in grid_cell.tracks]
+            drawing_cell.tracks.append(track_to_be_added)
+            drawing_cell.tracks = drawing_cell.tracks[-2:]
+        if len(drawing_cell.tracks) > 1:
+            track_types = [track.track_type for track in drawing_cell.tracks]
             if not ((TrackType.BOTTOM_LEFT in track_types and TrackType.TOP_RIGHT in track_types) or (TrackType.TOP_LEFT in track_types and TrackType.BOTTOM_RIGHT in track_types) or (TrackType.VERT in track_types and TrackType.HORI in track_types)):
-                grid_cell.tracks[0].bright = False
-                grid_cell.tracks[0].image = grid_cell.tracks[0].images["dark"]
+                drawing_cell.tracks[0].bright = False
+                drawing_cell.tracks[0].image = drawing_cell.tracks[0].images["dark"]
         logger.info(f"Added track to pos {pos}")

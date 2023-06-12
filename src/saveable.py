@@ -6,7 +6,7 @@ from src.traincolor import TrainColor, color_as_short_string
 class SaveableAttributes:
     # TypeNumberColorOrientation
     # Examples: D1y90, E, R, A4r90
-    def __init__(self, block_type: str="", color: Union[TrainColor, str]="", number: Union[int, str]="", angle: Union[int, str]=""):
+    def __init__(self, block_type: str="", number: Union[int, str]="", color: Union[TrainColor, str]="", angle: Union[int, str]=""):
         self.block_type = block_type
         self.color = color_as_short_string(color)
         self.number = number
@@ -20,26 +20,35 @@ class Saveable:
     def __init__(self, saveable_string: str):
         self.type = None
         self.num_goals = 0
+        self.type = saveable_string[0]
         if len(saveable_string) == 1: # Case when e.g. "E"
             self.type = saveable_string
-        elif len(saveable_string) in [2, 3]: # Case when e.g. "S0", "P90"
-            self.type = saveable_string[0]
+            return
+        if saveable_string[0]  == "S":
             self.angle = int(saveable_string[1:])
-        else:
-            self.type = saveable_string[0]
+        elif saveable_string[2] == "r":
+            self.color = TrainColor.RED
             self.num_goals = int(saveable_string[1])
-            if saveable_string[2] == "r":
-                self.color = TrainColor.RED
-            elif saveable_string[2] == "g":
-                self.color = TrainColor.GREEN
-            elif saveable_string[2] == "b":
-                self.color = TrainColor.BLUE
-            elif saveable_string[2] == "y":
-                self.color = TrainColor.YELLOW
-            elif saveable_string[2] == "o":
-                self.color = TrainColor.ORANGE
-            elif saveable_string[2] == "p":
-                self.color = TrainColor.PURPLE
-            else:
-                raise ValueError(f"Color is not valid. Expected one of TrainColor but got '{saveable_string[2]}'")
             self.angle = int(saveable_string[3:])
+        elif saveable_string[2] == "g":
+            self.color = TrainColor.GREEN
+            self.num_goals = int(saveable_string[1])
+            self.angle = int(saveable_string[3:])
+        elif saveable_string[2] == "b":
+            self.color = TrainColor.BLUE
+            self.num_goals = int(saveable_string[1])
+            self.angle = int(saveable_string[3:])
+        elif saveable_string[2] == "y":
+            self.color = TrainColor.YELLOW
+            self.num_goals = int(saveable_string[1])
+            self.angle = int(saveable_string[3:])
+        elif saveable_string[2] == "o":
+            self.color = TrainColor.ORANGE
+            self.num_goals = int(saveable_string[1])
+            self.angle = int(saveable_string[3:])
+        elif saveable_string[2] == "p":
+            self.color = TrainColor.PURPLE
+            self.num_goals = int(saveable_string[1])
+            self.angle = int(saveable_string[3:])
+        else: # Case when e.g. S0, P90
+            self.angle = int(saveable_string[1:])

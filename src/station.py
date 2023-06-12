@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import pygame as pg
 
@@ -8,7 +8,7 @@ from src.direction import Direction
 from src.graphics import Graphics
 from src.saveable import SaveableAttributes
 from src.sound import Sound
-from src.track import InsideTrack, Track, TrackType
+from src.track import InsideTrack, TrackType, Track
 from src.train import Train
 from src.traincolor import TrainColor
 from src.utils import setup_logging
@@ -46,9 +46,9 @@ class Station(Cell):
             raise ValueError("Rect is None.")
 
         if self.angle in [0, 180]:
-            self.tracks: List[Track] = [InsideTrack(i, j, self.rect, TrackType.HORI, self.angle)]
+            self.tracks: List[Union[Track, InsideTrack]] = [InsideTrack(i, j, self.rect, TrackType.HORI, self.angle)]
         elif self.angle in [90, 270]:
-            self.tracks: List[Track] = [InsideTrack(i, j, self.rect, TrackType.VERT, self.angle)]
+            self.tracks: List[Union[Track, InsideTrack]] = [InsideTrack(i, j, self.rect, TrackType.VERT, self.angle)]
         self.create_goal_sprites()
 
 
@@ -94,7 +94,7 @@ class DepartureStation(Station):
         logger.debug("Train released.")
         self.last_release_tick = current_tick
         Sound.play_sound_on_any_channel(Sound.pop)
-        return Train(self.i, self.j, self.train_color, self.angle, self.tracks[0], Direction(self.angle))
+        return Train(self.i, self.j, self.train_color, self.tracks[0], Direction(self.angle))
 
 
 class ArrivalStation(Station):

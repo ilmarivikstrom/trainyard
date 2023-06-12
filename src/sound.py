@@ -4,7 +4,7 @@ import pygame as pg
 class Sound:
     pg.mixer.pre_init(frequency=44100, size=-16, channels=3, buffer=512)
     pg.mixer.init()
-    pg.init()
+    pg.init()  # pylint: disable=no-member; # TODO: Add game_loop.py and clean main.py as the entry point, move pg.init() there.
 
     master_volume = 1.0
 

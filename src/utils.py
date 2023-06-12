@@ -22,7 +22,7 @@ def get_background_color_array() -> List[pg.Color]:
     return color_array
 
 
-def rot_center(original_image, angle_degrees: float) -> pg.Surface:
+def rot_center(original_image: pg.Surface, angle_degrees: float) -> pg.Surface:
     """rotate an image while keeping its center and size"""
     orig_rect = original_image.get_rect()
     rot_image = pg.transform.rotate(original_image, angle_degrees)

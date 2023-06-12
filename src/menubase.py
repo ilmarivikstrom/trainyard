@@ -61,12 +61,12 @@ class IndicatorItem:
             self.renderable = self.font.render(f"{self.text:^{len(self.text) + 2 * self.padding_spaces}}", True, self.style.fg_deactive_color, self.style.bg_deactive_color)
 
 
-    def _activate(self):
+    def activate(self):
         self.activated = True
         self.render()
 
 
-    def _deactivate(self):
+    def deactivate(self):
         self.activated = False
         self.render()
 
@@ -82,47 +82,47 @@ class Tooltip:
 class BaseMenu:
     def __init__(self, tooltip: Tooltip, indicator_items: List[IndicatorItem]) -> None:
         self.tooltip: Tooltip = tooltip
-        self.indicator_items: List[IndicatorItem] = indicator_items
+        self._indicator_items: List[IndicatorItem] = indicator_items
 
 
     def get_activated_items(self) -> List[int]:
         activated_items: List[int] = []
-        for i, indicator_item in enumerate(self.indicator_items):
+        for i, indicator_item in enumerate(self._indicator_items):
             if indicator_item.activated:
                 activated_items.append(i)
         return activated_items
 
 
     def set_text(self, text: str, item_index: int) -> None:
-        if item_index > len(self.indicator_items) - 1:
-            raise ValueError(f"Tried to set text for indicator item in index {item_index} when the maximum index is {len(self.indicator_items) - 1}")
-        self.indicator_items[item_index].text = text
-        self.indicator_items[item_index].render()
+        if item_index > len(self._indicator_items) - 1:
+            raise ValueError(f"Tried to set text for indicator item in index {item_index} when the maximum index is {len(self._indicator_items) - 1}")
+        self._indicator_items[item_index].text = text
+        self._indicator_items[item_index].render()
 
 
     def deactivate_all(self) -> None:
-        for indicator_item in self.indicator_items:
-            indicator_item._deactivate()
+        for indicator_item in self._indicator_items:
+            indicator_item.deactivate()
 
 
     def activate_item(self, item_to_activate: int) -> None:
-        if item_to_activate > len(self.indicator_items) - 1 or item_to_activate < 0:
-            logger.warning(f"Trying to activate menu item {item_to_activate} when there are only {len(self.indicator_items)} items available.")
+        if item_to_activate > len(self._indicator_items) - 1 or item_to_activate < 0:
+            logger.warning(f"Trying to activate menu item {item_to_activate} when there are only {len(self._indicator_items)} items available.")
             return
-        for i, indicator_item in enumerate(self.indicator_items):
+        for i, indicator_item in enumerate(self._indicator_items):
             if i == item_to_activate:
-                indicator_item._activate()
+                indicator_item.activate()
             else:
-                indicator_item._deactivate()
+                indicator_item.deactivate()
 
 
     def activate_next_item(self) -> None:
         activated_item = None
-        for i, indicator_item in enumerate(self.indicator_items):
+        for i, indicator_item in enumerate(self._indicator_items):
             if indicator_item.activated:
                 activated_item = i
                 break
-        final_item = len(self.indicator_items) - 1
+        final_item = len(self._indicator_items) - 1
         if activated_item is None or activated_item == final_item:
             next_item = final_item
         else:
@@ -132,7 +132,7 @@ class BaseMenu:
 
     def activate_previous_item(self) -> None:
         activated_item = None
-        for i, indicator_item in enumerate(self.indicator_items):
+        for i, indicator_item in enumerate(self._indicator_items):
             if indicator_item.activated:
                 activated_item = i
                 break
@@ -146,8 +146,9 @@ class BaseMenu:
 
     def draw(self, screen_surface: pg.Surface) -> None:
         screen_surface.blit(self.tooltip.surface, self.tooltip.dest)
-        for indicator_item in self.indicator_items:
+        for indicator_item in self._indicator_items:
             screen_surface.blit(indicator_item.renderable, indicator_item.dest)
+
 
 
 
@@ -202,4 +203,3 @@ class HorizontalMenu(BaseMenu):
             )
 
         super().__init__(self.tooltip, self.indicator_items)
-

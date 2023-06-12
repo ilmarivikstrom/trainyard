@@ -4,19 +4,20 @@ from typing import List, Optional, Tuple
 
 import pygame as pg
 
-from src.sound import Sound
 
-class Spark():
-    def __init__(self, loc: List[int], angle: float, base_speed: float, friction: float, color: Tuple[int, int, int], scale: float=1.0, speed_multiplier: float=1.0):
-        self.loc: List[int] = loc
+class Spark:
+    def __init__(self, loc: Tuple[int, int], angle: float, base_speed: float, friction: float, color: Tuple[int, int, int], scale: float=1.0, speed_multiplier: float=1.0):
+        self.loc_x = loc[0]
+        self.loc_y = loc[1]
         self.angle: float = angle
         self.base_speed: float = base_speed
         self.friction: float = friction
         self.scale: float = scale
         self.color: Tuple[int, int, int] = color
         self.alive: bool = True
-        self.last_collision: List[int] = loc
         self.speed_multiplier: float = speed_multiplier
+
+        self.last_collision: Tuple[int, int] = (self.loc_x, self.loc_y)
 
 
     def calculate_distance_to_move(self, delta_time: float) -> Tuple[float, float]:
@@ -27,62 +28,56 @@ class Spark():
 
 
     def bounce_from_edge(self, allowed_area: pg.Rect, collide_rects: Optional[List[pg.Rect]]) -> None:
-        bounced = False
-        if not allowed_area.collidepoint(self.loc):
-            to_top = abs(self.loc[1] - allowed_area.top)
-            to_left = abs(self.loc[0] - allowed_area.left)
-            to_bottom = abs(self.loc[1] - allowed_area.bottom)
-            to_right = abs(self.loc[0] - allowed_area.right)
+        if not allowed_area.collidepoint(self.loc_x, self.loc_y):
+            to_top = abs(self.loc_y - allowed_area.top)
+            to_left = abs(self.loc_x - allowed_area.left)
+            to_bottom = abs(self.loc_y - allowed_area.bottom)
+            to_right = abs(self.loc_x - allowed_area.right)
             minimum = min(to_top, to_left, to_bottom, to_right)
             if to_top == minimum:
                 self.angle = -2*math.pi - self.angle
-                self.loc[1] = allowed_area.top
+                self.loc_y = allowed_area.top
             elif to_left == minimum:
                 self.angle = math.pi - self.angle
-                self.loc[0] = allowed_area.left
+                self.loc_x = allowed_area.left
             elif to_bottom == minimum:
                 self.angle = -2*math.pi - self.angle
-                self.loc[1] = allowed_area.bottom
+                self.loc_y = allowed_area.bottom
             elif to_right == minimum:
                 self.angle = math.pi - self.angle
-                self.loc[0] = allowed_area.right
+                self.loc_x = allowed_area.right
             self.angle += random.uniform(math.radians(-45), math.radians(45))
-            self.last_collision = self.loc
-            bounced = True
+            self.last_collision = (self.loc_x, self.loc_y)
         else:
             if collide_rects is None:
                 return
             for collide_rect in collide_rects:
-                if collide_rect.collidepoint(self.loc):
-                    to_top = abs(self.loc[1] - collide_rect.top)
-                    to_left = abs(self.loc[0] - collide_rect.left)
-                    to_bottom = abs(self.loc[1] - collide_rect.bottom)
-                    to_right = abs(self.loc[0] - collide_rect.right)
+                if collide_rect.collidepoint((self.loc_x, self.loc_y)):
+                    to_top = abs(self.loc_y - collide_rect.top)
+                    to_left = abs(self.loc_x - collide_rect.left)
+                    to_bottom = abs(self.loc_y - collide_rect.bottom)
+                    to_right = abs(self.loc_x - collide_rect.right)
                     minimum = min(to_top, to_left, to_bottom, to_right)
                     if to_top == minimum:
                         self.angle = -2*math.pi - self.angle
-                        self.loc[1] = collide_rect.top
+                        self.loc_y = collide_rect.top
                     elif to_left == minimum:
                         self.angle = math.pi - self.angle
-                        self.loc[0] = collide_rect.left
+                        self.loc_x = collide_rect.left
                     elif to_bottom == minimum:
                         self.angle = -2*math.pi - self.angle
-                        self.loc[1] = collide_rect.bottom
+                        self.loc_y = collide_rect.bottom
                     elif to_right == minimum:
                         self.angle = math.pi - self.angle
-                        self.loc[0] = collide_rect.right
-            bounced = True
-        if bounced:
-            #Sound.play_sound_on_any_channel(Sound.spark)
-            pass
+                        self.loc_x = collide_rect.right
 
 
 
     def move(self, delta_time: float, allowed_area: pg.Rect, collide_rects: Optional[List[pg.Rect]]):
         self.bounce_from_edge(allowed_area, collide_rects)
         distance = self.calculate_distance_to_move(delta_time)
-        self.loc[0] += distance[0]
-        self.loc[1] += distance[1]
+        self.loc_x += distance[0]
+        self.loc_y += distance[1]
         self.base_speed -= self.friction
         if self.base_speed <= 0:
             self.alive = False
@@ -114,9 +109,9 @@ class Spark():
     def draw(self, screen_surface: pg.Surface):
         if self.alive:
             points = [
-                [self.loc[0] + math.cos(self.angle) * self.base_speed * self.scale, self.loc[1] + math.sin(self.angle) * self.base_speed * self.scale],
-                [self.loc[0] + math.cos(self.angle + math.pi / 2) * self.base_speed * self.scale * 0.3, self.loc[1] + math.sin(self.angle + math.pi / 2) * self.base_speed * self.scale * 0.3],
-                [self.loc[0] - math.cos(self.angle) * self.base_speed * self.scale * 3.5, self.loc[1] - math.sin(self.angle) * self.base_speed * self.scale * 3.5],
-                [self.loc[0] + math.cos(self.angle - math.pi / 2) * self.base_speed * self.scale * 0.3, self.loc[1] - math.sin(self.angle + math.pi / 2) * self.base_speed * self.scale * 0.3],
+                [self.loc_x + math.cos(self.angle) * self.base_speed * self.scale, self.loc_y + math.sin(self.angle) * self.base_speed * self.scale],
+                [self.loc_x + math.cos(self.angle + math.pi / 2) * self.base_speed * self.scale * 0.3, self.loc_y + math.sin(self.angle + math.pi / 2) * self.base_speed * self.scale * 0.3],
+                [self.loc_x - math.cos(self.angle) * self.base_speed * self.scale * 3.5, self.loc_y - math.sin(self.angle) * self.base_speed * self.scale * 3.5],
+                [self.loc_x + math.cos(self.angle - math.pi / 2) * self.base_speed * self.scale * 0.3, self.loc_y - math.sin(self.angle + math.pi / 2) * self.base_speed * self.scale * 0.3],
                 ]
             pg.draw.polygon(screen_surface, self.color, points)

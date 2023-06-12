@@ -17,6 +17,9 @@ class Painter(Cell):
         self.color = color
         self.saveable_attributes = SaveableAttributes(block_type="P", color=self.color, angle=self.angle)
 
+        if self.rect is None:
+            raise ValueError("Rect is None.")
+
         if self.angle in [0, 180]:
             self.tracks: List[Track] = [
                 Track(i, j, self.rect, TrackType.HORI)
