@@ -1,7 +1,7 @@
 from typing import Tuple
 
 import pygame as pg
-from pygame.locals import SRCALPHA  # pylint: disable=no-name-in-module;
+from pygame.locals import SRCALPHA
 
 
 class FieldBorder:

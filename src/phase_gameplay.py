@@ -14,7 +14,7 @@ from pygame.constants import (
     K_UP,
     K_DOWN,
     K_F1,
-)  # pylint: disable=no-name-in-module;
+)
 
 from src.cell import DrawingCell, RockCell
 from src.color_constants import GRAY, RED1, WHITE, TRAIN_GREEN, TRAIN_RED, TRAIN_YELLOW
@@ -26,7 +26,7 @@ from src.menus import BuildPurgeMenu, EditTestMenu, LevelMenu, RunningCrashedCom
 from src.state import Phase, State
 from src.screen import Screen
 from src.sound import Sound
-from src.spark import Spark
+from src.spark import Spark, SparkCloud, FlameSparkStyle, SlowLargeSpark, WideConeCloudShape, NarrowConeCloudShape, CircleCloudShape, WeldingSparkStyle, FastSmallSpark, FastSmallShortLivedSpark
 from src.station import ArrivalStation, CheckmarkSprite, DepartureStation
 from src.track import Track
 from src.train import Train
@@ -39,7 +39,7 @@ logger = setup_logging(log_level=Config.log_level)
 build_purge_menu = BuildPurgeMenu(topleft=(64, 16))
 edit_test_menu = EditTestMenu(topleft=(4 * 64, 16))
 running_crashed_complete_menu = RunningCrashedCompleteMenu(topleft=(9 * 64, 16))
-level_menu = LevelMenu(topleft=(12 * 64, 16), num_levels=10)  # Hardcoded number of levels (for now).
+level_menu = LevelMenu(topleft=(12 * 64, 16), num_levels=6)  # Hardcoded number of levels (for now).
 tick_menu = InfoMenu(topleft=(15 * 64, 16), tooltip_text="TICKS", value="")
 track_menu = InfoMenu(topleft=(17 * 64, 16), tooltip_text="TRACKS", value="")
 train_menu = InfoMenu(topleft=(17 * 64, 64), tooltip_text="TRAINS", value="")
@@ -87,7 +87,7 @@ def execute_logic(state: State, field: Field) -> None:
     update_field_border(state, field)
     update_menu_indicators(state, field)
 
-    update_sparks(field)
+    update_all_sparks(field)
 
 
 def draw_game_objects(field: Field, screen: Screen) -> None:
@@ -102,7 +102,7 @@ def draw_game_objects(field: Field, screen: Screen) -> None:
     draw_field_border(field, screen)  # Field border.
     draw_menus(screen)  # Menus.
 
-    draw_sparks(field, screen)
+    draw_crash_sparks(field, screen)
 
 
 def check_train_splitters(field: Field) -> None:
@@ -139,12 +139,12 @@ def check_train_painters(field: Field) -> None:
                 train.repaint(painter.color)
 
 
-def draw_sparks(field: Field, screen: Screen) -> None:
+def draw_crash_sparks(field: Field, screen: Screen) -> None:
     for spark in field.sparks:
         spark.draw(screen.surface)
 
 
-def update_sparks(field: Field) -> None:
+def update_all_sparks(field: Field) -> None:
     solid_rects: List[pg.Rect] = []
     for item in field.full_grid:
         if item.rect is None:
@@ -158,20 +158,19 @@ def update_sparks(field: Field) -> None:
             field.sparks.pop(i)
 
 
-def generate_sparks(field: Field, pos: Tuple[int, int], angle: float) -> None:
-    spark_colors = [(255, 207, 119), (254, 126, 5), (239, 99, 5), (177, 72, 3), (255, 237, 168)]
-    for _ in range(random.randint(10, 30)):
-        field.sparks.append(
-            Spark(
-                loc=(pos[0] + random.randint(-10, 10), pos[1] + random.randint(10, 10)),
-                angle=math.radians(random.randint(-int(angle) - 70, -int(angle) + 70)),
-                base_speed=random.uniform(1, 2),
-                friction=random.uniform(0.01, 0.03),
-                color=random.sample(spark_colors, 1)[0],
-                scale=5.0,
-                speed_multiplier=1.0,
-            )
-        )
+def generate_crash_sparks(field: Field, pos: Tuple[int, int], angle: float) -> None:
+    spark_cloud = SparkCloud(pos=pos, shape=WideConeCloudShape(angle), pos_deviation=(10, 10), style=FlameSparkStyle(), behavior=SlowLargeSpark(), spark_count=20, spark_count_deviation=10)
+    sparks = spark_cloud.emit_sparks()
+    for spark in sparks:
+        field.sparks.append(spark)
+
+
+def generate_track_insert_sparks(field: Field, pos: Tuple[int, int]) -> None:
+    spark_cloud = SparkCloud(pos=pos, shape=CircleCloudShape(0.0), pos_deviation=(10, 10), style=WeldingSparkStyle(), behavior=FastSmallShortLivedSpark(), spark_count=10, spark_count_deviation=2)
+    sparks = spark_cloud.emit_sparks()
+    for spark in sparks:
+        field.sparks.append(spark)
+
 
 
 def check_for_level_change(field: Field) -> None:
@@ -350,7 +349,7 @@ def delete_crashed_trains(field: Field) -> None:
         if train.crashed:
             field.train_sprites.remove(train)  # type: ignore
             field.trains.remove(train)
-            generate_sparks(field, (train.rect.centerx, train.rect.centery), train.angle)
+            generate_crash_sparks(field, (train.rect.centerx, train.rect.centery), train.angle)
             logger.info(f"Train crashed. Trains left: {len(field.trains)}")
 
 
@@ -465,24 +464,22 @@ def check_for_new_track_placement(state: State, field: Field) -> None:
             UserControl.prev_movement == Direction.DOWN and UserControl.curr_movement == Direction.LEFT
         )
         mouse_moved_rightup = UserControl.prev_movement == Direction.RIGHT and UserControl.curr_movement == Direction.UP
+        did_insert = False
         if mouse_moved_up_twice or mouse_moved_down_twice:
-            field.insert_track_to_position(TrackType.VERT, UserControl.prev_cell)
-            Sound.play_sound_on_any_channel(Sound.track_place)
+            did_insert = field.insert_track_to_position(TrackType.VERT, UserControl.prev_cell)
         elif mouse_moved_right_twice or mouse_moved_left_twice:
-            field.insert_track_to_position(TrackType.HORI, UserControl.prev_cell)
-            Sound.play_sound_on_any_channel(Sound.track_place)
+            did_insert = field.insert_track_to_position(TrackType.HORI, UserControl.prev_cell)
         elif moues_moved_upleft or mouse_moved_rightdown:
-            field.insert_track_to_position(TrackType.BOTTOM_LEFT, UserControl.prev_cell)
-            Sound.play_sound_on_any_channel(Sound.track_place)
+            did_insert = field.insert_track_to_position(TrackType.BOTTOM_LEFT, UserControl.prev_cell)
         elif mouse_moved_upright or mouse_moved_leftdown:
-            field.insert_track_to_position(TrackType.BOTTOM_RIGHT, UserControl.prev_cell)
-            Sound.play_sound_on_any_channel(Sound.track_place)
+            did_insert = field.insert_track_to_position(TrackType.BOTTOM_RIGHT, UserControl.prev_cell)
         elif mouse_moved_downright or mouse_moved_leftup:
-            field.insert_track_to_position(TrackType.TOP_RIGHT, UserControl.prev_cell)
-            Sound.play_sound_on_any_channel(Sound.track_place)
+            did_insert = field.insert_track_to_position(TrackType.TOP_RIGHT, UserControl.prev_cell)
         elif mouse_moved_downleft or mouse_moved_rightup:
-            field.insert_track_to_position(TrackType.TOP_LEFT, UserControl.prev_cell)
+            did_insert = field.insert_track_to_position(TrackType.TOP_LEFT, UserControl.prev_cell)
+        if did_insert:
             Sound.play_sound_on_any_channel(Sound.track_place)
+            generate_track_insert_sparks(field, field.get_drawing_cell_at(round(UserControl.prev_cell.x), round(UserControl.prev_cell.y)).rect.center)
         UserControl.mouse_entered_new_cell = False
 
 

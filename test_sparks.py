@@ -67,3 +67,36 @@ while True:
 
     pg.display.update()
     clock.tick(60)
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # angle_mod = 0.5; self.angle += random.uniform(-angle_mod / self.speed, angle_mod / self.speed)
+        # self.point_towards(math.pi / 2, 0.02)
+        # self.velocity_adjust(0.9, 0, 8, delta_time)
+        # self.angle += 0.1
+
+    # def velocity_adjust(self, friction: float, force: float, terminal_velocity: float, delta_time: float):
+    #     movement = self.calculate_movement(delta_time)
+    #     movement = (min(terminal_velocity, movement[1] + force * delta_time), movement[0] * friction)
+    #     self.angle = math.atan2(movement[1], movement[0])
+
+    # def point_towards(self, angle: float, rate: float) -> None:
+    #     rotate_direction = ((angle - self.angle + math.pi * 3) % (math.pi * 2)) - math.pi
+    #     try:
+    #         rotate_sign = abs(rotate_direction) / rotate_direction
+    #     except ZeroDivisionError:
+    #         rotate_sign = 1
+    #     if abs(rotate_direction) < rate:
+    #         self.angle = angle
+    #     else:
+    #         self.angle += rate * rotate_sign

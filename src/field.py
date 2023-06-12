@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 
 import pygame as pg
 
-from src.cell import DrawingCell, RockCell
+from src.cell import DrawingCell, RockCell, Cell
 from src.color_constants import TRAIN_YELLOW
 from src.config import Config
 from src.fieldborder import FieldBorder
@@ -51,7 +51,7 @@ class Field:
         self.height_px = self.cells_y * Config.cell_size
 
         self.border: FieldBorder = FieldBorder(
-            color=TRAIN_YELLOW, topleft=(64, 128), width=self.width_px, height=self.height_px, thickness=1
+            color=TRAIN_YELLOW, topleft=(54, 118), width=self.width_px, height=self.height_px, thickness=1
         )  # TODO: Field should have topleft coords and this guy should use them as well.
 
         self.sparks: List[Spark] = []
@@ -149,11 +149,11 @@ class Field:
             return None
         return cell
 
-    def insert_track_to_position(self, track_type: TrackType, pos: pg.Vector2) -> None:
+    def insert_track_to_position(self, track_type: TrackType, pos: pg.Vector2) -> bool:
         drawing_cell = self.get_drawing_cell_at(round(pos.x), round(pos.y))
         if drawing_cell is None:
             logger.warning(f"Tried to insert track on a non-existing drawing cell at {pos}")
-            return
+            return False
         if drawing_cell.rect is None:
             raise ValueError("Rect of drawing cell is None")
         track_to_be_added = Track(round(pos.x), round(pos.y), drawing_cell.rect, track_type)
@@ -173,3 +173,4 @@ class Field:
                 drawing_cell.tracks[0].bright = False
                 drawing_cell.tracks[0].image = drawing_cell.tracks[0].images["dark"]
         logger.info(f"Added track to pos {pos}")
+        return True

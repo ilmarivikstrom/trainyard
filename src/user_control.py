@@ -16,7 +16,7 @@ from pygame.locals import (
     K_7,
     K_8,
     K_9,
-)  # pylint: disable=no-name-in-module;
+)
 from pygame.event import Event
 
 from src.config import Config
