@@ -23,3 +23,8 @@ def run(call: Call) -> None:
 @task
 def build(call: Call) -> None:
     call.run("pyinstaller main.py")
+
+
+@task
+def black(call: Call) -> None:
+    call.run("black . --line-length 120")
