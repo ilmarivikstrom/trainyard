@@ -4,5 +4,7 @@
         "**/.git": true,
         "**/.venv": true
     },
-    "editor.rulers": [80]
+    "editor.rulers": [120],
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true
 }

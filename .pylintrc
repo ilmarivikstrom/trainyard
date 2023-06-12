@@ -79,31 +79,31 @@ confidence=
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
 disable=
-        locally-disabled,
-        line-too-long,
+      ;   locally-disabled,
+      ;   line-too-long,
         logging-fstring-interpolation,
-        duplicate-code,
+      ;   duplicate-code,
         missing-module-docstring,
         missing-class-docstring,
         missing-function-docstring,
-        fixme,
-        raise-missing-from,
-        bare-except,
-        consider-using-dict-items, #can be fixed!
-        consider-iterating-dictionary, #can be fixed!
-        use-dict-literal,
-        unused-argument,
-        anomalous-backslash-in-string,
-        import-error,
-        no-name-in-module,
-        global-variable-undefined,
-        too-few-public-methods,
-        too-many-statements,
-        protected-access,
-	  too-many-instance-attributes,
-	  singleton-comparison,
-        broad-exception-caught, # TODO: Fix the broad-exception-caught issue. Also, which version of pylint is running on the build agent? Should lock the version?
-        no-member
+      ;   fixme,
+      ;   raise-missing-from,
+      ;   bare-except,
+      ;   consider-using-dict-items, #can be fixed!
+      ;   consider-iterating-dictionary, #can be fixed!
+      ;   use-dict-literal,
+      ;   unused-argument,
+      ;   anomalous-backslash-in-string,
+      ;   import-error,
+      ;   no-name-in-module,
+      ;   global-variable-undefined,
+      ;   too-few-public-methods,
+      ;   too-many-statements,
+      ;   protected-access,
+	;   too-many-instance-attributes,
+	;   singleton-comparison,
+      ;   broad-exception-caught, # TODO: Fix the broad-exception-caught issue. Also, which version of pylint is running on the build agent? Should lock the version?
+      ;   no-member
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -438,7 +438,7 @@ indent-after-paren=4
 indent-string='    '
 
 # Maximum number of characters on a single line.
-#max-line-length=100
+max-line-length=120
 
 # Maximum number of lines in a module.
 max-module-lines=1000
