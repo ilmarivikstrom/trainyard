@@ -1,24 +1,24 @@
 import csv
 import math
 import random
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import pygame as pg
 import pygame.gfxdraw
 from pygame.locals import QUIT, MOUSEBUTTONDOWN, KEYDOWN, K_p, K_SPACE
 
-from src.cell import EmptyCell
+from src.cell import EmptyCell, RockCell
 from src.color_constants import GRAY, RED1, WHITE, TRAIN_GREEN, TRAIN_RED, TRAIN_YELLOW
 from src.config import Config
 from src.user_control import UserControl
 from src.direction import Direction
 from src.field import Field, TrackType
-from src.menus import BuildPurgeMenu, EditTestMenu, LevelMenu, RunningCrashedCompleteMenu
+from src.menus import BuildPurgeMenu, EditTestMenu, LevelMenu, RunningCrashedCompleteMenu, InfoMenu
 from src.state import Phase, State
 from src.screen import Screen
 from src.sound import Sound
 from src.spark import Spark
-from src.station import CheckmarkSprite
+from src.station import ArrivalStation, CheckmarkSprite, DepartureStation
 from src.track import Track
 from src.train import Train
 from src.traincolor import blend_train_colors
@@ -34,7 +34,9 @@ build_purge_menu = BuildPurgeMenu(topleft=(64, 16))
 edit_test_menu = EditTestMenu(topleft=(4 * 64, 16))
 running_crashed_complete_menu = RunningCrashedCompleteMenu(topleft=(9 * 64, 16))
 level_menu = LevelMenu(topleft=(12 * 64, 16), num_levels=10) # Hardcoded number of levels (for now).
-
+tick_menu = InfoMenu(topleft=(15 * 64, 16), tooltip_text="TICKS", value="")
+track_menu = InfoMenu(topleft=(17 * 64, 16), tooltip_text="TRACKS", value="")
+train_menu = InfoMenu(topleft=(17 * 64, 64), tooltip_text="TRAINS", value="")
 
 
 
@@ -63,8 +65,12 @@ def execute_logic(state: State, field: Field) -> None:
     delete_crashed_trains(field) # if is_released: for trains
     select_tracks_for_trains(field) # if is_released: for trains, for track, for endpoint
     check_train_arrivals(field) # if is_released: for trains, for arrival_stations
+
     check_for_level_completion(state, field) # if is_released
     check_train_merges(field) # if is_released: for trains
+
+    check_train_painters(field)
+    check_train_splitters(field)
 
     check_and_mark_prev_cell(field) # if NOT is_released: for cells (UserControl)
     check_and_delete_field_tracks(state, field) # if NOT is_released: for empty_cells
@@ -88,20 +94,67 @@ def draw_game_objects(field: Field, screen: Screen) -> None:
     field.train_sprites.draw(screen.surface) # Trains.
     field.rock_cells_sprites.draw(screen.surface) # Rock cells.
     draw_stations(field, screen) # Stations.
+    field.painter_cells_sprites.draw(screen.surface)
+    field.splitter_cells_sprites.draw(screen.surface)
     draw_field_border(field, screen) # Field border.
     draw_menus(screen) # Menus.
 
     draw_sparks(field, screen)
 
 
+def check_train_splitters(field: Field) -> None:
+    if field.current_tick == 0 or field.current_tick % 32 != 0:
+        return
+    trains_to_add: List[Train] = []
+    for train in field.trains:
+        for splitter in field.splitter_cells:
+            if train.rect.center == splitter.rect.center:
+                logger.info("At center.")
+                new_train_1 = Train(train.i, train.j, train.color, train.angle - 90, splitter.tracks[1], direction=Direction.UP)
+                new_train_1.rect.x = train.rect.x
+                new_train_1.rect.y = train.rect.y
+                trains_to_add.append(new_train_1)
+                train.selected_track = splitter.tracks[2]
+                train.angle = train.angle + 90
+                train.direction = Direction.DOWN
+
+    for new_train in trains_to_add:
+        field.trains.append(new_train)
+        field.train_sprites.add(new_train)
+            # tracks_endpoints = [track.endpoints for track in splitter.tracks]
+            # for track_endpoints in tracks_endpoints:
+            #     for endpoint in track_endpoints:
+            #         if train.rect.center == endpoint:
+            #             new_train = Train(train.i, train.j, train.color, train.angle, splitter.tracks[0], train.direction)
+            #             new_train.rect.x = train.rect.x # TODO: Need a copy constructor.
+            #             new_train.rect.y = train.rect.y
+            #             field.trains.append(new_train)
+            #             field.train_sprites.add(new_train)
+            #             train.selected_track = splitter.tracks[1]
+            #             return # Make sure the trains don't merge afterwards.
+
+
+def check_train_painters(field: Field) -> None:
+    for train in field.trains:
+        for painter in field.painter_cells:
+            if train.rect.center == painter.rect.center:
+                train.repaint(painter.color)
+
+
+
 def draw_sparks(field: Field, screen: Screen) -> None:
-    for i, spark in sorted(enumerate(field.sparks), reverse=True):
+    for spark in field.sparks:
         spark.draw(screen.surface)
 
 
 def update_sparks(field: Field) -> None:
+    solid_rects: List[pg.Rect] = []
+    for item in field.full_grid:
+        solid_types = Union[DepartureStation, ArrivalStation, RockCell]
+        if isinstance(item, solid_types):
+            solid_rects.append(item.rect)
     for i, spark in sorted(enumerate(field.sparks), reverse=True):
-        spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), None)
+        spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), solid_rects) # Colliderects.
         if not spark.alive:
             field.sparks.pop(i)
 
@@ -114,12 +167,11 @@ def generate_sparks(field: Field, pos: Tuple[int, int], angle: float) -> None:
         (177, 72, 3),
         (255, 237, 168)
     ]
-
-    for _ in range(50):
+    for _ in range(random.randint(10, 30)):
         field.sparks.append(
             Spark(
-                loc=[pos[0] + random.randint(0, 20) - 10, pos[1] + random.randint(0, 20) - 10],
-                angle=math.radians(random.randint(-int(angle) - 30, -int(angle) + 30)),
+                loc=[pos[0] + random.randint(-10, 10), pos[1] + random.randint(10, 10)],
+                angle=math.radians(random.randint(-int(angle) - 70, -int(angle) + 70)),
                 base_speed=random.uniform(1, 2),
                 friction=random.uniform(0.01, 0.03),
                 color=random.sample(spark_colors, 1)[0],
@@ -143,6 +195,9 @@ def draw_menus(screen: Screen) -> None:
     edit_test_menu.draw(screen.surface)
     running_crashed_complete_menu.draw(screen.surface)
     level_menu.draw(screen.surface)
+    tick_menu.draw(screen.surface)
+    track_menu.draw(screen.surface)
+    train_menu.draw(screen.surface)
 
 
 def check_for_exit_command(state: State) -> None:
@@ -189,6 +244,13 @@ def update_menu_indicators(state: State, field: Field) -> None:
     update_edit_test_menu(field)
     update_running_crashed_complete_menu(state, field)
     update_level_menu()
+    update_info_menu(field)
+    update_track_menu(field)
+    update_train_menu(field)
+
+
+def update_train_menu(field: Field) -> None:
+    train_menu.set_text(text=str(len(field.trains)), item_index=0)
 
 
 def update_level_menu() -> None:
@@ -229,6 +291,17 @@ def update_running_crashed_complete_menu(state: State, field: Field) -> None:
     else:
         running_crashed_complete_menu.deactivate_all()
 
+
+def update_info_menu(field: Field) -> None:
+    tick_menu.set_text(text=str(int((field.current_tick - 32) / 64)), item_index=0)
+
+
+def update_track_menu(field: Field) -> None:
+    tracks = 0
+    for item in field.full_grid:
+        if isinstance(item, EmptyCell):
+            tracks += len(item.tracks)
+    track_menu.set_text(text=str(tracks), item_index=0)
 
 
 def check_for_mainmenu_command(state: State) -> None:
@@ -398,38 +471,36 @@ def check_for_pg_gameplay_events() -> None:
 
 
 def select_tracks_for_trains(field: Field) -> None:
-    if field.is_released:
-        for train in field.trains:
-            if train.selected_track is None:
+    if not field.is_released:
+        return
+    for train in field.trains:
+        if train.selected_track is None:
+            train.crash()
+            field.num_crashed += 1
+            continue
+        if train.current_navigation_index == len(train.selected_track.navigation):
+            train.last_flipped_cell = None # Experimental.
+            train.determine_next_cell_coords_and_direction()
+            next_cell_tracks = field.get_grid_cell_at(train.next_cell_coords[0], train.next_cell_coords[1]).tracks
+            if len(next_cell_tracks) == 0:
                 train.crash()
                 field.num_crashed += 1
                 continue
-            if train.current_navigation_index == len(train.selected_track.navigation):
-                train.determine_next_cell_coords_and_direction()
-                next_cell_tracks = field.get_grid_cell_at(train.next_cell_coords[0], train.next_cell_coords[1]).tracks
-                if len(next_cell_tracks) == 0:
-                    logger.info("No tracks. Crash!")
-                    train.crash()
-                    field.num_crashed += 1
-                else:
-                    found_track = False
-                    for track in next_cell_tracks:
-                        for endpoint in track.endpoints:
-                            if train.rect.collidepoint(endpoint):
-                                found_track = True
-                                train.selected_track = track
-                                train.rect.centerx = endpoint[0]
-                                train.rect.centery = endpoint[1]
-                    if not found_track:
-                        train.crash()
-                        field.num_crashed += 1
-                train.current_navigation_index = 0
-                train.direction = train.next_cell_direction
-                train.next_cell_direction = None
-            if train.selected_track is None:
+            found_track = False
+            for track in next_cell_tracks:
+                for endpoint in track.endpoints:
+                    if train.rect.collidepoint(endpoint):
+                        found_track = True
+                        train.selected_track = track
+                        train.rect.centerx = int(endpoint[0])
+                        train.rect.centery = int(endpoint[1])
+            if not found_track:
                 train.crash()
                 field.num_crashed += 1
                 continue
+            train.current_navigation_index = 0
+            train.direction = train.next_cell_direction
+            train.next_cell_direction = Direction.NONE
 
 
 def check_and_mark_prev_cell(field: Field) -> None:
@@ -467,8 +538,6 @@ def check_and_flip_cell_tracks(field: Field) -> None:
         for train in field.trains:
             if train.current_navigation_index % 16 != 0:
                 return
-            #cell_contains_train_and_has_multiple_tracks = (cell.rect and cell.rect.contains(train.rect) and train.last_flipped_cell != cell and len(cell.tracks) == 2)
-            # Experimental:
             cell_contains_train_and_has_multiple_tracks = (cell.rect and cell.rect.contains(train.rect) and train.current_navigation_index >= 23 and train.last_flipped_cell != cell and len(cell.tracks) == 2)
             if cell_contains_train_and_has_multiple_tracks and isinstance(cell, EmptyCell):
                 cell.flip_tracks()

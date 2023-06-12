@@ -4,6 +4,8 @@ from typing import List, Optional, Tuple
 
 import pygame as pg
 
+from src.sound import Sound
+
 class Spark():
     def __init__(self, loc: List[int], angle: float, base_speed: float, friction: float, color: Tuple[int, int, int], scale: float=1.0, speed_multiplier: float=1.0):
         self.loc: List[int] = loc
@@ -25,6 +27,7 @@ class Spark():
 
 
     def bounce_from_edge(self, allowed_area: pg.Rect, collide_rects: Optional[List[pg.Rect]]) -> None:
+        bounced = False
         if not allowed_area.collidepoint(self.loc):
             to_top = abs(self.loc[1] - allowed_area.top)
             to_left = abs(self.loc[0] - allowed_area.left)
@@ -33,21 +36,46 @@ class Spark():
             minimum = min(to_top, to_left, to_bottom, to_right)
             if to_top == minimum:
                 self.angle = -2*math.pi - self.angle
+                self.loc[1] = allowed_area.top
             elif to_left == minimum:
                 self.angle = math.pi - self.angle
+                self.loc[0] = allowed_area.left
             elif to_bottom == minimum:
                 self.angle = -2*math.pi - self.angle
+                self.loc[1] = allowed_area.bottom
             elif to_right == minimum:
                 self.angle = math.pi - self.angle
-            self.angle += random.uniform(math.radians(-10), math.radians(10))
+                self.loc[0] = allowed_area.right
+            self.angle += random.uniform(math.radians(-45), math.radians(45))
             self.last_collision = self.loc
+            bounced = True
         else:
             if collide_rects is None:
                 return
             for collide_rect in collide_rects:
                 if collide_rect.collidepoint(self.loc):
-                    self.angle = 180 + self.angle
-                    break
+                    to_top = abs(self.loc[1] - collide_rect.top)
+                    to_left = abs(self.loc[0] - collide_rect.left)
+                    to_bottom = abs(self.loc[1] - collide_rect.bottom)
+                    to_right = abs(self.loc[0] - collide_rect.right)
+                    minimum = min(to_top, to_left, to_bottom, to_right)
+                    if to_top == minimum:
+                        self.angle = -2*math.pi - self.angle
+                        self.loc[1] = collide_rect.top
+                    elif to_left == minimum:
+                        self.angle = math.pi - self.angle
+                        self.loc[0] = collide_rect.left
+                    elif to_bottom == minimum:
+                        self.angle = -2*math.pi - self.angle
+                        self.loc[1] = collide_rect.bottom
+                    elif to_right == minimum:
+                        self.angle = math.pi - self.angle
+                        self.loc[0] = collide_rect.right
+            bounced = True
+        if bounced:
+            #Sound.play_sound_on_any_channel(Sound.spark)
+            pass
+
 
 
     def move(self, delta_time: float, allowed_area: pg.Rect, collide_rects: Optional[List[pg.Rect]]):

@@ -22,21 +22,24 @@ class Saveable:
         self.num_goals = 0
         if len(saveable_string) == 1: # Case when e.g. "E"
             self.type = saveable_string
+        elif len(saveable_string) in [2, 3]: # Case when e.g. "S0", "P90"
+            self.type = saveable_string[0]
+            self.angle = int(saveable_string[1:])
         else:
             self.type = saveable_string[0]
             self.num_goals = int(saveable_string[1])
             if saveable_string[2] == "r":
-                self.color_goals = TrainColor.RED
+                self.color = TrainColor.RED
             elif saveable_string[2] == "g":
-                self.color_goals = TrainColor.GREEN
+                self.color = TrainColor.GREEN
             elif saveable_string[2] == "b":
-                self.color_goals = TrainColor.BLUE
+                self.color = TrainColor.BLUE
             elif saveable_string[2] == "y":
-                self.color_goals = TrainColor.YELLOW
+                self.color = TrainColor.YELLOW
             elif saveable_string[2] == "o":
-                self.color_goals = TrainColor.ORANGE
+                self.color = TrainColor.ORANGE
             elif saveable_string[2] == "p":
-                self.color_goals = TrainColor.PURPLE
+                self.color = TrainColor.PURPLE
             else:
                 raise ValueError(f"Color is not valid. Expected one of TrainColor but got '{saveable_string[2]}'")
             self.angle = int(saveable_string[3:])

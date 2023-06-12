@@ -127,7 +127,7 @@ class Track(pg.sprite.Sprite):
 
 
 
-class StationTrack(Track):
+class InsideTrack(Track):
     def __init__(self, i: int, j: int, parent_rect: pg.Rect, track_type: TrackType, angle: int):
         super().__init__(i, j, parent_rect, track_type)
         self.angle = angle
@@ -143,4 +143,4 @@ class StationTrack(Track):
         elif self.angle == 270:
             self.endpoints.append(pg.Vector2(self.parent_rect.midbottom))
         else:
-            raise ValueError(f"StationTrack angle is wrong: {self.angle}. Expected from : [0, 90, 180, 270]")
+            raise ValueError(f"InsideTrack angle is wrong: {self.angle}. Expected from : [0, 90, 180, 270]")

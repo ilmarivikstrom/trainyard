@@ -8,7 +8,7 @@ from src.direction import Direction
 from src.graphics import Graphics
 from src.saveable import SaveableAttributes
 from src.sound import Sound
-from src.track import StationTrack, Track, TrackType
+from src.track import InsideTrack, Track, TrackType
 from src.train import Train
 from src.traincolor import TrainColor
 from src.utils import setup_logging
@@ -34,8 +34,8 @@ class Station(Cell):
         super().__init__(i, j, image, angle, True)
         self.number_of_trains_left = number_of_trains_left
         self.train_color = train_color
-        self.block_short_char = block_short_char
         self.original_number_of_trains = number_of_trains_left
+        self.block_short_char = block_short_char
         self.goals: List[StationGoalSprite] = []
         self.goal_sprites = pg.sprite.Group() # type: ignore
         self.checkmark: Optional[CheckmarkSprite] = None
@@ -46,9 +46,9 @@ class Station(Cell):
             raise ValueError("Rect is None.")
 
         if self.angle in [0, 180]:
-            self.tracks: List[Track] = [StationTrack(i, j, self.rect, TrackType.HORI, self.angle)]
+            self.tracks: List[Track] = [InsideTrack(i, j, self.rect, TrackType.HORI, self.angle)]
         elif self.angle in [90, 270]:
-            self.tracks: List[Track] = [StationTrack(i, j, self.rect, TrackType.VERT, self.angle)]
+            self.tracks: List[Track] = [InsideTrack(i, j, self.rect, TrackType.VERT, self.angle)]
         self.create_goal_sprites()
 
 

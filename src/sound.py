@@ -28,6 +28,9 @@ class Sound:
     success = pg.mixer.Sound("assets/sounds/achievement.wav")
     success.set_volume(0.1 * master_volume)
 
+    spark = pg.mixer.Sound("assets/sounds/pop1.ogg")
+    spark.set_volume(0.2 * master_volume)
+
 
     @staticmethod
     def play_sound_on_channel(sound: pg.mixer.Sound, channel: int) -> None:
