@@ -95,7 +95,7 @@ disable=
       ;   unused-argument,
       ;   anomalous-backslash-in-string,
       ;   import-error,
-      ;   no-name-in-module,
+        no-name-in-module,
       ;   global-variable-undefined,
       ;   too-few-public-methods,
       ;   too-many-statements,
