@@ -14,7 +14,6 @@ from src.utils import setup_logging
 logger = setup_logging(log_level=Config.log_level)
 
 
-
 def initial_pygame_setup():
     pg.display.set_caption("trainyard")
     Graphics.load_resources()
@@ -44,7 +43,6 @@ def main() -> None:
         state.global_status.current_tick += 1
         pg.display.update()
         clock.tick(Config.FPS)
-
 
 
 if __name__ == "__main__":

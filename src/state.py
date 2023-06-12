@@ -8,6 +8,7 @@ from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
 
+
 class Phase(Enum):
     MAIN_MENU = 0
     GAMEPLAY = 1
@@ -38,7 +39,6 @@ class State:
         self.gameplay: GameplayStatus = GameplayStatus()
         self.mainmenu: MainMenuStatus = MainMenuStatus()
         self.game_phase: Phase = Phase.GAMEPLAY
-
 
     def reset_gameplay_status(self) -> None:
         self.gameplay.current_level_passed = False

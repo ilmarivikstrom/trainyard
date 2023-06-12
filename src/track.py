@@ -14,9 +14,74 @@ NAVIGATION_RIGHT = [(1, 0)] * 64
 NAVIGATION_LEFT = [(-navigation[0], -navigation[1]) for navigation in NAVIGATION_RIGHT]
 
 # Exactly 48 ticks long ellipse arc.
-#NAVIGATION_RIGHTDOWN = [(1,0), (1,0), (1,0), (1,0), (1,0), (1,0), (1,0), (1,0), (1,1), (1,0), (1,0), (1,0), (1,0), (1,1), (1,0), (1,0), (1,1), (1,0), (1,1), (1,0), (1,1), (1,0), (1,1), (1,1), (1,1), (1,1), (0,1), (1,1), (0,1), (1,1), (0,1), (1,1), (0,1), (0,1), (1,1), (0,1), (0,1), (0,1), (0,1), (1,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1)]
+# NAVIGATION_RIGHTDOWN = [(1,0), (1,0), (1,0), (1,0), (1,0), (1,0), (1,0), (1,0), (1,1), (1,0), (1,0), (1,0), (1,0), (1,1), (1,0), (1,0), (1,1), (1,0), (1,1), (1,0), (1,1), (1,0), (1,1), (1,1), (1,1), (1,1), (0,1), (1,1), (0,1), (1,1), (0,1), (1,1), (0,1), (0,1), (1,1), (0,1), (0,1), (0,1), (0,1), (1,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1), (0,1)]
 # Exactly 64 ticks long ellipse arc.
-NAVIGATION_RIGHTDOWN = [(1, 0), (0, 0), (1, 0), (1, 0), (1, 0), (0, 0), (1, 0), (1, 0), (1, 0), (0, 0), (1, 0), (1, 1), (1, 0), (0, 0), (1, 0), (1, 0), (1, 0), (0, 0), (1, 1), (1, 0), (1, 0), (0, 0), (1, 1), (1, 0), (1, 1), (0, 0), (1, 0), (1, 1), (1, 0), (0, 0), (1, 1), (1, 1), (1, 1), (0, 0), (1, 1), (0, 1), (1, 1), (0, 0), (0, 1), (1, 1), (0, 1), (0, 0), (1, 1), (0, 1), (0, 1), (0, 0), (1, 1), (0, 1), (0, 1), (0, 0), (0, 1), (0, 1), (1, 1), (0, 0), (0, 1), (0, 1), (0, 1), (0, 0), (0, 1), (0, 1), (0, 1), (0, 0), (0, 1), (0, 1)]
+NAVIGATION_RIGHTDOWN = [
+    (1, 0),
+    (0, 0),
+    (1, 0),
+    (1, 0),
+    (1, 0),
+    (0, 0),
+    (1, 0),
+    (1, 0),
+    (1, 0),
+    (0, 0),
+    (1, 0),
+    (1, 1),
+    (1, 0),
+    (0, 0),
+    (1, 0),
+    (1, 0),
+    (1, 0),
+    (0, 0),
+    (1, 1),
+    (1, 0),
+    (1, 0),
+    (0, 0),
+    (1, 1),
+    (1, 0),
+    (1, 1),
+    (0, 0),
+    (1, 0),
+    (1, 1),
+    (1, 0),
+    (0, 0),
+    (1, 1),
+    (1, 1),
+    (1, 1),
+    (0, 0),
+    (1, 1),
+    (0, 1),
+    (1, 1),
+    (0, 0),
+    (0, 1),
+    (1, 1),
+    (0, 1),
+    (0, 0),
+    (1, 1),
+    (0, 1),
+    (0, 1),
+    (0, 0),
+    (1, 1),
+    (0, 1),
+    (0, 1),
+    (0, 0),
+    (0, 1),
+    (0, 1),
+    (1, 1),
+    (0, 0),
+    (0, 1),
+    (0, 1),
+    (0, 1),
+    (0, 0),
+    (0, 1),
+    (0, 1),
+    (0, 1),
+    (0, 0),
+    (0, 1),
+    (0, 1),
+]
 NAVIGATION_UPLEFT = [(-navigation[0], -navigation[1]) for navigation in NAVIGATION_RIGHTDOWN][::-1]
 
 NAVIGATION_RIGHTUP = [(navigation[0], -navigation[1]) for navigation in NAVIGATION_RIGHTDOWN]
@@ -37,21 +102,23 @@ class TrackType(Enum):
     BOTTOM_LEFT = 4
     BOTTOM_RIGHT = 5
 
+
 tracktype_to_direction = {
     TrackType.VERT: [Direction.UP, Direction.DOWN],
     TrackType.HORI: [Direction.RIGHT, Direction.LEFT],
     TrackType.TOP_RIGHT: [Direction.RIGHT, Direction.UP],
     TrackType.TOP_LEFT: [Direction.UP, Direction.LEFT],
     TrackType.BOTTOM_LEFT: [Direction.LEFT, Direction.DOWN],
-    TrackType.BOTTOM_RIGHT: [Direction.RIGHT, Direction.DOWN]
+    TrackType.BOTTOM_RIGHT: [Direction.RIGHT, Direction.DOWN],
 }
 
 angle_to_direction = {
     0: [Direction.RIGHT, Direction.LEFT],
     90: [Direction.UP, Direction.DOWN],
     180: [Direction.RIGHT, Direction.LEFT],
-    270: [Direction.UP, Direction.DOWN]
+    270: [Direction.UP, Direction.DOWN],
 }
+
 
 class Track(pg.sprite.Sprite):
     def __init__(self, i: int, j: int, cell_rect: pg.Rect, track_type: TrackType):
@@ -117,14 +184,12 @@ class Track(pg.sprite.Sprite):
         self.rect.x = self.cell_rect.x
         self.rect.y = self.cell_rect.y
 
-
     def toggle_bright(self) -> None:
         self.bright = not self.bright
         if self.bright:
             self.image = self.images["bright"]
         else:
             self.image = self.images["dark"]
-
 
 
 class InsideTrack(Track):

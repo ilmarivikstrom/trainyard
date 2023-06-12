@@ -1,11 +1,13 @@
 from typing import Tuple
 
 import pygame as pg
-from pygame.locals import SRCALPHA # pylint: disable=no-name-in-module;
+from pygame.locals import SRCALPHA  # pylint: disable=no-name-in-module;
 
 
 class FieldBorder:
-    def __init__(self, color: Tuple[int, int, int], topleft: Tuple[int, int], width: int, height: int, thickness: int) -> None:
+    def __init__(
+        self, color: Tuple[int, int, int], topleft: Tuple[int, int], width: int, height: int, thickness: int
+    ) -> None:
         self.color: Tuple[int, int, int] = color
         self.topleft: Tuple[int, int] = topleft
         self.width: int = width

@@ -15,6 +15,7 @@ from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
 
+
 class StationGoalSprite(pg.sprite.Sprite):
     def __init__(self, color: str, place: int, parent_rect: pg.Rect):
         super().__init__()
@@ -30,17 +31,31 @@ class CheckmarkSprite(pg.sprite.Sprite):
 
 
 class Station(Cell):
-    def __init__(self, i: int, j: int, image: pg.Surface, angle: int, number_of_trains_left: int, train_color: TrainColor, block_short_char: str):
+    def __init__(
+        self,
+        i: int,
+        j: int,
+        image: pg.Surface,
+        angle: int,
+        number_of_trains_left: int,
+        train_color: TrainColor,
+        block_short_char: str,
+    ):
         super().__init__(i, j, image, angle, True)
         self.number_of_trains_left = number_of_trains_left
         self.train_color = train_color
         self.original_number_of_trains = number_of_trains_left
         self.block_short_char = block_short_char
         self.goals: List[StationGoalSprite] = []
-        self.goal_sprites = pg.sprite.Group() # type: ignore
+        self.goal_sprites = pg.sprite.Group()  # type: ignore
         self.checkmark: Optional[CheckmarkSprite] = None
         self.last_release_tick: Optional[int] = None
-        self.saveable_attributes = SaveableAttributes(block_type=self.block_short_char, color=self.train_color, number=self.number_of_trains_left, angle=self.angle)
+        self.saveable_attributes = SaveableAttributes(
+            block_type=self.block_short_char,
+            color=self.train_color,
+            number=self.number_of_trains_left,
+            angle=self.angle,
+        )
 
         if self.rect is None:
             raise ValueError("Rect is None.")
@@ -50,7 +65,6 @@ class Station(Cell):
         elif self.angle in [90, 270]:
             self.tracks: List[Union[Track, InsideTrack]] = [InsideTrack(i, j, self.rect, TrackType.VERT, self.angle)]
         self.create_goal_sprites()
-
 
     def create_goal_sprites(self) -> None:
         if self.train_color == TrainColor.BLUE:
@@ -68,13 +82,14 @@ class Station(Cell):
         else:
             raise ValueError(f"Missing goal sprite string for color {self.train_color}")
         if self.rect:
-            self.goals = [StationGoalSprite(goal_sprite_color, i+1, self.rect) for i in range(self.number_of_trains_left)]
-            self.goal_sprites.add(self.goals) # type: ignore
-
+            self.goals = [
+                StationGoalSprite(goal_sprite_color, i + 1, self.rect) for i in range(self.number_of_trains_left)
+            ]
+            self.goal_sprites.add(self.goals)  # type: ignore
 
     def reset(self) -> None:
         self.number_of_trains_left = self.original_number_of_trains
-        self.goal_sprites.empty() # type: ignore
+        self.goal_sprites.empty()  # type: ignore
         self.create_goal_sprites()
         self.last_release_tick = None
         self.checkmark = None
@@ -82,11 +97,20 @@ class Station(Cell):
 
 class DepartureStation(Station):
     def __init__(self, i: int, j: int, angle: int, number_of_trains_left: int, train_color: TrainColor):
-        super().__init__(i=i, j=j, image=Graphics.img_surfaces["departure"], angle=angle, number_of_trains_left=number_of_trains_left, train_color=train_color, block_short_char="D")
-
+        super().__init__(
+            i=i,
+            j=j,
+            image=Graphics.img_surfaces["departure"],
+            angle=angle,
+            number_of_trains_left=number_of_trains_left,
+            train_color=train_color,
+            block_short_char="D",
+        )
 
     def tick(self, current_tick: int) -> Optional[Train]:
-        station_needs_to_release = (self.number_of_trains_left > 0 and (self.last_release_tick is None or current_tick - self.last_release_tick == 64))
+        station_needs_to_release = self.number_of_trains_left > 0 and (
+            self.last_release_tick is None or current_tick - self.last_release_tick == 64
+        )
         if not station_needs_to_release:
             return
         self.number_of_trains_left -= 1
@@ -99,4 +123,12 @@ class DepartureStation(Station):
 
 class ArrivalStation(Station):
     def __init__(self, i: int, j: int, angle: int, number_of_trains_left: int, train_color: TrainColor):
-        super().__init__(i=i, j=j, image=Graphics.img_surfaces["arrival"], angle=angle, number_of_trains_left=number_of_trains_left, train_color=train_color, block_short_char="A")
+        super().__init__(
+            i=i,
+            j=j,
+            image=Graphics.img_surfaces["arrival"],
+            angle=angle,
+            number_of_trains_left=number_of_trains_left,
+            train_color=train_color,
+            block_short_char="A",
+        )

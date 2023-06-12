@@ -1,5 +1,5 @@
 import pygame as pg
-from pygame.locals import QUIT, KEYDOWN # pylint: disable=no-name-in-module;
+from pygame.locals import QUIT, KEYDOWN  # pylint: disable=no-name-in-module;
 
 from src.color_constants import GRAY10
 from src.config import Config

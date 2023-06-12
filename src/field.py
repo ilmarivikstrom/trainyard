@@ -20,7 +20,7 @@ logger = setup_logging(log_level=Config.log_level)
 
 
 class Field:
-    def __init__(self, level: int=0):
+    def __init__(self, level: int = 0):
         self.level = level
         self.cells_x = Config.cells_x
         self.cells_y = Config.cells_y
@@ -50,10 +50,11 @@ class Field:
         self.width_px = self.cells_x * Config.cell_size
         self.height_px = self.cells_y * Config.cell_size
 
-        self.border: FieldBorder = FieldBorder(color=TRAIN_YELLOW, topleft=(64, 128), width=self.width_px, height=self.height_px, thickness=1) # TODO: Field should have topleft coords and this guy should use them as well.
+        self.border: FieldBorder = FieldBorder(
+            color=TRAIN_YELLOW, topleft=(64, 128), width=self.width_px, height=self.height_px, thickness=1
+        )  # TODO: Field should have topleft coords and this guy should use them as well.
 
         self.sparks: List[Spark] = []
-
 
     def initialize_grid(self) -> None:
         with open(f"levels/level_{self.level}.csv", newline="", encoding="utf-8") as level_file:
@@ -94,12 +95,10 @@ class Field:
         self.painter_cells = [cell for cell in self.full_grid if isinstance(cell, Painter)]
         self.splitter_cells = [cell for cell in self.full_grid if isinstance(cell, Splitter)]
 
-
     def load_level(self, level: int) -> None:
         self.level = level
         self.clear()
         self.initialize_grid()
-
 
     def clear(self) -> None:
         self.full_grid.clear()
@@ -122,13 +121,11 @@ class Field:
         self.is_released: bool = False
         self.current_tick: int = 0
 
-
     def set_current_tick(self) -> None:
         if self.is_released:
             self.current_tick += 1
         else:
             self.current_tick = 0
-
 
     def reset(self) -> None:
         for departure_station in self.departure_stations:
@@ -140,14 +137,11 @@ class Field:
         self.num_crashed = 0
         self.is_released = False
 
-
     def get_grid_cell_list_index(self, i: int = 0, j: int = 0) -> int:
         return int(j) * self.cells_y + int(i)
 
-
     def get_grid_cell_at(self, i: int, j: int) -> Union[DrawingCell, RockCell, Station, Painter, Splitter]:
         return self.full_grid[self.get_grid_cell_list_index(i, j)]
-
 
     def get_drawing_cell_at(self, i: int, j: int) -> Optional[DrawingCell]:
         cell = self.full_grid[self.get_grid_cell_list_index(i, j)]
@@ -155,12 +149,7 @@ class Field:
             return None
         return cell
 
-
-    def insert_track_to_position(
-            self,
-            track_type: TrackType,
-            pos: pg.Vector2
-    ) -> None:
+    def insert_track_to_position(self, track_type: TrackType, pos: pg.Vector2) -> None:
         drawing_cell = self.get_drawing_cell_at(round(pos.x), round(pos.y))
         if drawing_cell is None:
             logger.warning(f"Tried to insert track on a non-existing drawing cell at {pos}")
@@ -176,7 +165,11 @@ class Field:
             drawing_cell.tracks = drawing_cell.tracks[-2:]
         if len(drawing_cell.tracks) > 1:
             track_types = [track.track_type for track in drawing_cell.tracks]
-            if not ((TrackType.BOTTOM_LEFT in track_types and TrackType.TOP_RIGHT in track_types) or (TrackType.TOP_LEFT in track_types and TrackType.BOTTOM_RIGHT in track_types) or (TrackType.VERT in track_types and TrackType.HORI in track_types)):
+            if not (
+                (TrackType.BOTTOM_LEFT in track_types and TrackType.TOP_RIGHT in track_types)
+                or (TrackType.TOP_LEFT in track_types and TrackType.BOTTOM_RIGHT in track_types)
+                or (TrackType.VERT in track_types and TrackType.HORI in track_types)
+            ):
                 drawing_cell.tracks[0].bright = False
                 drawing_cell.tracks[0].image = drawing_cell.tracks[0].images["dark"]
         logger.info(f"Added track to pos {pos}")

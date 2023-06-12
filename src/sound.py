@@ -31,40 +31,33 @@ class Sound:
     spark = pg.mixer.Sound("assets/sounds/pop1.ogg")
     spark.set_volume(0.2 * master_volume)
 
-
     @staticmethod
     def play_sound_on_channel(sound: pg.mixer.Sound, channel: int) -> None:
         pg.mixer.Channel(channel).play(sound)
 
-
     @staticmethod
     def play_sound_on_any_channel(sound: pg.mixer.Sound) -> None:
         pg.mixer.find_channel(force=True).play(sound)
-
 
     @staticmethod
     def init_music() -> None:
         pg.mixer.music.load("assets/sounds/Loop.ogg")
         pg.mixer.music.set_volume(0.02 * Sound.master_volume)
 
-
     @staticmethod
     def play_music() -> None:
         pg.mixer.music.play(-1)
         Sound.music_playing = True
-
 
     @staticmethod
     def stop_music() -> None:
         pg.mixer.music.stop()
         Sound.music_playing = False
 
-
     @staticmethod
     def fadeout_music(ms: int) -> None:
         pg.mixer.music.fadeout(ms)
         Sound.music_playing = False
-
 
     @staticmethod
     def toggle_music(ms: int) -> None:

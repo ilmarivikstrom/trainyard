@@ -21,10 +21,6 @@ class Painter(Cell):
             raise ValueError("Rect is None.")
 
         if self.angle in [0, 180]:
-            self.tracks: List[Track] = [
-                Track(i, j, self.rect, TrackType.HORI)
-            ]
+            self.tracks: List[Track] = [Track(i, j, self.rect, TrackType.HORI)]
         elif self.angle in [90, 270]:
-            self.tracks: List[Track] = [
-                Track(i, j, self.rect, TrackType.VERT)
-            ]
+            self.tracks: List[Track] = [Track(i, j, self.rect, TrackType.VERT)]

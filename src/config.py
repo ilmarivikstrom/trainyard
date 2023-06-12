@@ -1,5 +1,6 @@
 from typing import List
 
+
 class Config:
     screen_width: int = 1280
     screen_height: int = 720

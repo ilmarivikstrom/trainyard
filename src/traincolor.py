@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Union
 
+
 class TrainColor(Enum):
     RED = "train_red"
     BLUE = "train_blue"

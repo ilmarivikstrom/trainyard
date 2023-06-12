@@ -18,7 +18,7 @@ class Direction(Enum):
     RIGHTDOWN = 315
 
 
-def turn(old_dir: Direction, left: bool=False, right: bool=False) -> Direction:
+def turn(old_dir: Direction, left: bool = False, right: bool = False) -> Direction:
     if (not left and not right) or (left and right):
         logger.error(f"Values for left and right were {left} and {right}. Returning Direction.NONE")
         return Direction.NONE

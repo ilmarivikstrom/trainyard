@@ -2,13 +2,13 @@ import cProfile
 import pstats
 import time
 
+
 class Profiler:
     def __init__(self):
         self.is_running = False
         self.profile = cProfile.Profile(builtins=False)
         self.start_time = 0
         self.end_time = 0
-
 
     def discontinue_profiling(self):
         if not self.is_running:
@@ -24,12 +24,11 @@ class Profiler:
         stats.print_stats(35)
         self.is_running = False
 
-
     def continue_profiling(self):
         if self.is_running:
             return
         print("INFO\tstarted profiling...")
         self.start_time = time.time()
-        self.profile.clear() # type: ignore
+        self.profile.clear()  # type: ignore
         self.profile.enable()
         self.is_running = True

@@ -1,6 +1,22 @@
 from typing import List, Optional, Tuple
 import pygame as pg
-from pygame.locals import MOUSEBUTTONDOWN, K_ESCAPE, K_q, K_RETURN, K_LSHIFT, K_s, K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9 # pylint: disable=no-name-in-module;
+from pygame.locals import (
+    MOUSEBUTTONDOWN,
+    K_ESCAPE,
+    K_q,
+    K_RETURN,
+    K_LSHIFT,
+    K_s,
+    K_1,
+    K_2,
+    K_3,
+    K_4,
+    K_5,
+    K_6,
+    K_7,
+    K_8,
+    K_9,
+)  # pylint: disable=no-name-in-module;
 from pygame.event import Event
 
 from src.config import Config
@@ -34,7 +50,6 @@ class UserControl:
     prev_movement: Direction = Direction.NONE
 
     events: List[Event] = []
-
 
     @staticmethod
     def update_user_events() -> None:
