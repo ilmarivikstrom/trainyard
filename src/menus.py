@@ -10,7 +10,7 @@ logger = setup_logging(log_level=Config.log_level)
 
 class BuildPurgeMenu(VerticalMenu):
     def __init__(self, topleft: Tuple[int, int]) -> None:
-        title = "SHIFT"
+        title = "ACTION (SHIFT)"
         menu_items: List[IndicatorItem] = [
             IndicatorItem(text="BUILD", padding_spaces=2, style=YellowStyle(), dest=topleft, font=Font.small),
             IndicatorItem(text="PURGE", padding_spaces=2, style=RedStyle(), dest=topleft, font=Font.small),
@@ -20,7 +20,7 @@ class BuildPurgeMenu(VerticalMenu):
 
 class EditTestMenu(HorizontalMenu):
     def __init__(self, topleft: Tuple[int, int]) -> None:
-        title = "SPACE"
+        title = "MODE (SPACE)"
         menu_items: List[IndicatorItem] = [
             IndicatorItem(text="EDIT", padding_spaces=3, style=WhiteStyle(), dest=topleft, font=Font.small),
             IndicatorItem(text="TEST", padding_spaces=3, style=WhiteStyle(), dest=topleft, font=Font.small),
@@ -41,7 +41,7 @@ class RunningCrashedCompleteMenu(VerticalMenu):
 
 class LevelMenu(VerticalMenu):
     def __init__(self, topleft: Tuple[int, int], num_levels: int) -> None:
-        title = "LEVEL SELECT"
+        title = "LEVEL (UP/DOWN)"
         menu_items: List[IndicatorItem] = [
             IndicatorItem(text=f"Level {i}", style=YellowStyle(), padding_spaces=2, dest=topleft, font=Font.small)
             for i in range(num_levels)

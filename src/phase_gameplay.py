@@ -34,13 +34,15 @@ from src.utils import setup_logging
 logger = setup_logging(log_level=Config.log_level)
 
 
-build_purge_menu = BuildPurgeMenu(topleft=(64, 16))
-edit_test_menu = EditTestMenu(topleft=(4 * 64, 16))
-running_crashed_complete_menu = RunningCrashedCompleteMenu(topleft=(9 * 64, 16))
-level_menu = LevelMenu(topleft=(12 * 64, 16), num_levels=6)  # Hardcoded number of levels (for now).
-tick_menu = InfoMenu(topleft=(15 * 64, 16), tooltip_text="TICKS", value="")
-track_menu = InfoMenu(topleft=(17 * 64, 16), tooltip_text="TRACKS", value="")
-train_menu = InfoMenu(topleft=(17 * 64, 64), tooltip_text="TRAINS", value="")
+build_purge_menu = BuildPurgeMenu(topleft=(1 * 64, 16))
+edit_test_menu = EditTestMenu(topleft=(5 * 64, 16))
+running_crashed_complete_menu = RunningCrashedCompleteMenu(topleft=(10 * 64, 16))
+level_menu = LevelMenu(topleft=(13 * 64, 16), num_levels=6)  # Hardcoded number of levels (for now).
+track_menu = InfoMenu(topleft=(1 * 64, 10 * 64 + 16), tooltip_text="TRACKS", value="")
+tick_menu = InfoMenu(topleft=(3 * 64, 10 * 64 + 16), tooltip_text="TICKS", value="")
+train_menu = InfoMenu(topleft=(5 * 64, 10 * 64 + 16), tooltip_text="TRAINS", value="")
+crash_menu = InfoMenu(topleft=(7 * 64, 10 * 64 + 16), tooltip_text="CRASHES", value="")
+music_menu = InfoMenu(topleft=(10 * 64, 9 * 64 + 16), tooltip_text="MUSIC (P)", value="")
 
 
 def gameplay_phase(state: State, screen: Screen, field: Field) -> None:
@@ -63,8 +65,8 @@ def execute_logic(state: State, field: Field) -> None:
     check_for_music_toggle_command()
     tick_departures(field)  # if is_released: for departure_stations
     check_train_departure_station_crashes(field)  # if is_released: for trains, for departure_stations
-    delete_crashed_trains(field)  # if is_released: for trains
     select_tracks_for_trains(field)  # if is_released: for trains, for track, for endpoint
+    delete_crashed_trains(field)  # if is_released: for trains
     check_train_arrivals(field)  # if is_released: for trains, for arrival_stations
 
     check_for_level_completion(state, field)  # if is_released
@@ -215,6 +217,8 @@ def draw_menus(screen: Screen) -> None:
     tick_menu.draw(screen.surface)
     track_menu.draw(screen.surface)
     train_menu.draw(screen.surface)
+    crash_menu.draw(screen.surface)
+    music_menu.draw(screen.surface)
 
 
 def check_for_exit_command(state: State) -> None:
@@ -238,6 +242,7 @@ def check_for_music_toggle_command() -> None:
     for event in UserControl.events:
         if event.type == KEYDOWN and event.key == K_p:
             Sound.toggle_music(ms=500)
+            Config.play_music = not Config.play_music
             return
 
 
@@ -264,10 +269,23 @@ def update_menu_indicators(state: State, field: Field) -> None:
     update_info_menu(field)
     update_track_menu(field)
     update_train_menu(field)
+    update_crash_menu(field)
+    update_music_menu(field)
 
 
 def update_train_menu(field: Field) -> None:
     train_menu.set_text(text=str(len(field.grid.trains.items)), item_index=0)
+
+
+def update_crash_menu(field: Field) -> None:
+    crash_menu.set_text(text=str(field.num_crashed), item_index=0)
+
+
+def update_music_menu(field: Field) -> None:
+    play_music_text = "OFF"
+    if Config.play_music:
+        play_music_text = "ON"
+    music_menu.set_text(text=play_music_text, item_index=0)
 
 
 def update_level_menu() -> None:
@@ -368,12 +386,15 @@ def check_train_merges(field: Field) -> None:
 def delete_crashed_trains(field: Field) -> None:
     if not field.is_released:
         return
+    trains_to_remove: List[Train] = []
     for train in field.grid.trains.items:
         if train.crashed:
-            field.grid.trains.sprites.remove(train)
-            field.grid.trains.items.remove(train)
-            generate_crash_sparks(field, (train.rect.centerx, train.rect.centery), train.angle)
-            logger.info(f"Train crashed. Trains left: {len(field.grid.trains.items)}")
+            trains_to_remove.append(train)
+    for train in trains_to_remove:
+        field.grid.trains.sprites.remove(train)
+        field.grid.trains.items.remove(train)
+        generate_crash_sparks(field, (train.rect.centerx, train.rect.centery), train.angle)
+        logger.info(f"Train crashed. Trains left: {len(field.grid.trains.items)}")
 
 
 def check_and_save_field(field: Field, file_name: str = "level_tmp.csv") -> None:

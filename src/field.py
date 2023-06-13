@@ -83,7 +83,7 @@ class Field:
         self.height_px = self.cells_y * Config.cell_size
 
         self.border: FieldBorder = FieldBorder(
-            color=TRAIN_YELLOW, topleft=(54, 118), width=self.width_px, height=self.height_px, thickness=1
+            color=TRAIN_YELLOW, topleft=(64, 128), width=self.width_px, height=self.height_px, thickness=1
         )  # TODO: Field should have topleft coords and this guy should use them as well.
 
         self.sparks: List[Spark] = []
