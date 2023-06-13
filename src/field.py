@@ -1,5 +1,5 @@
 import csv
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import pygame as pg
 
@@ -7,6 +7,15 @@ from src.cell import DrawingCell, RockCell, Cell
 from src.color_constants import TRAIN_YELLOW
 from src.config import Config
 from src.fieldborder import FieldBorder
+from src.item_holders import (
+    ArrivalHolder,
+    DepartureHolder,
+    DrawingCellHolder,
+    PainterHolder,
+    RockHolder,
+    SplitterHolder,
+    TrainHolder
+)
 from src.painter import Painter
 from src.saveable import Saveable
 from src.spark import Spark
@@ -19,29 +28,52 @@ from src.utils import setup_logging
 logger = setup_logging(log_level=Config.log_level)
 
 
+class Grid:
+    def __init__(self):
+        self.rocks = RockHolder()
+        self.drawing_cells: DrawingCellHolder = DrawingCellHolder()
+        self.arrivals: ArrivalHolder = ArrivalHolder()
+        self.departures: DepartureHolder = DepartureHolder()
+        self.painters: PainterHolder = PainterHolder()
+        self.splitters: SplitterHolder = SplitterHolder()
+        self.trains: TrainHolder = TrainHolder()
+
+        #from collections import OrderedDict
+        #self.all_items: OrderedDict[Tuple[int, int], Union[RockCell, DrawingCell, ArrivalStation, DepartureStation, Painter, Splitter, Train]] = {}
+
+        self.all_items: List[Union[RockCell, DrawingCell, ArrivalStation, DepartureStation, Painter, Splitter, Train]] = []
+
+    def add(self, item: Cell) -> None:
+        if isinstance(item, ArrivalStation):
+            self.arrivals.add_one(item)
+            self.all_items.append(item)
+        elif isinstance(item, DepartureStation):
+            self.departures.add_one(item)
+            self.all_items.append(item)
+        elif isinstance(item, RockCell):
+            self.rocks.add_one(item)
+            self.all_items.append(item)
+        elif isinstance(item, DrawingCell):
+            self.drawing_cells.add_one(item)
+            self.all_items.append(item)
+        elif isinstance(item, Painter):
+            self.painters.add_one(item)
+            self.all_items.append(item)
+        elif isinstance(item, Splitter):
+            self.splitters.add_one(item)
+            self.all_items.append(item)
+        else:
+            raise ValueError(f"Did not find a holder for item of type {type(item)}")
+
+
 class Field:
     def __init__(self, level: int = 0):
         self.level = level
         self.cells_x = Config.cells_x
         self.cells_y = Config.cells_y
-        self.full_grid: List[Union[DrawingCell, RockCell, Station, Painter, Splitter]] = []
-        self.drawing_cells: List[DrawingCell] = []
-        self.rock_cells: List[RockCell] = []
-        self.departure_stations: List[DepartureStation] = []
-        self.arrival_stations: List[ArrivalStation] = []
-        self.drawing_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
-        self.rock_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
-        self.departure_stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
-        self.arrival_stations_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        self.grid: List[Union[DrawingCell, RockCell, Station, Painter, Splitter]] = []
 
-        self.painter_cells: List[Painter] = []
-        self.painter_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
-
-        self.splitter_cells: List[Splitter] = []
-        self.splitter_cells_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
-
-        self.trains: List[Train] = []
-        self.train_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        self.grid: Grid = Grid()
 
         self.num_crashed: int = 0
         self.is_released: bool = False
@@ -64,36 +96,24 @@ class Field:
                     saveable = Saveable(item)
                     if saveable.type == "A":
                         arrival_station = ArrivalStation(i, j, saveable.angle, saveable.num_goals, saveable.color)
-                        self.full_grid.append(arrival_station)
-                        self.arrival_stations_sprites.add(arrival_station)
+                        self.grid.add(arrival_station)
                     elif saveable.type == "D":
                         departure_station = DepartureStation(i, j, saveable.angle, saveable.num_goals, saveable.color)
-                        self.full_grid.append(departure_station)
-                        self.departure_stations_sprites.add(departure_station)
+                        self.grid.add(departure_station)
                     elif saveable.type == "E":
                         drawing_cell = DrawingCell(i, j)
-                        self.full_grid.append(drawing_cell)
-                        self.drawing_cells_sprites.add(drawing_cell)
+                        self.grid.add(drawing_cell)
                     elif saveable.type == "R":
                         rock_cell = RockCell(i, j)
-                        self.full_grid.append(rock_cell)
-                        self.rock_cells_sprites.add(rock_cell)
+                        self.grid.add(rock_cell)
                     elif saveable.type == "P":
                         painter_cell = Painter(i, j, saveable.angle, saveable.color)
-                        self.full_grid.append(painter_cell)
-                        self.painter_cells_sprites.add(painter_cell)
+                        self.grid.add(painter_cell)
                     elif saveable.type == "S":
                         splitter_cell = Splitter(i, j, saveable.angle)
-                        self.full_grid.append(splitter_cell)
-                        self.splitter_cells_sprites.add(splitter_cell)
+                        self.grid.add(splitter_cell)
                     else:
                         raise ValueError(f"Saveable type was unexpected: '{saveable.type}")
-        self.drawing_cells = [cell for cell in self.full_grid if isinstance(cell, DrawingCell)]
-        self.rock_cells = [cell for cell in self.full_grid if isinstance(cell, RockCell)]
-        self.departure_stations = [cell for cell in self.full_grid if isinstance(cell, DepartureStation)]
-        self.arrival_stations = [cell for cell in self.full_grid if isinstance(cell, ArrivalStation)]
-        self.painter_cells = [cell for cell in self.full_grid if isinstance(cell, Painter)]
-        self.splitter_cells = [cell for cell in self.full_grid if isinstance(cell, Splitter)]
 
     def load_level(self, level: int) -> None:
         self.level = level
@@ -101,21 +121,16 @@ class Field:
         self.initialize_grid()
 
     def clear(self) -> None:
-        self.full_grid.clear()
-        self.drawing_cells.clear()
-        self.rock_cells.clear()
-        self.departure_stations.clear()
-        self.arrival_stations.clear()
-        self.drawing_cells_sprites.empty()
-        self.rock_cells_sprites.empty()
-        self.departure_stations_sprites.empty()
-        self.arrival_stations_sprites.empty()
-        self.trains.clear()
-        self.train_sprites.empty()
-        self.splitter_cells.clear()
-        self.splitter_cells_sprites.empty()
-        self.painter_cells.clear()
-        self.painter_cells_sprites.empty()
+        self.grid.all_items.clear()
+
+        self.grid.drawing_cells.remove_all()
+        self.grid.rocks.remove_all()
+        self.grid.arrivals.remove_all()
+        self.grid.departures.remove_all()
+
+        self.grid.trains.remove_all()
+        self.grid.painters.remove_all()
+        self.grid.splitters.remove_all()
 
         self.num_crashed: int = 0
         self.is_released: bool = False
@@ -128,12 +143,11 @@ class Field:
             self.current_tick = 0
 
     def reset(self) -> None:
-        for departure_station in self.departure_stations:
+        for departure_station in self.grid.departures.items:
             departure_station.reset()
-        for arrival_station in self.arrival_stations:
+        for arrival_station in self.grid.arrivals.items:
             arrival_station.reset()
-        self.trains.clear()
-        self.train_sprites.empty()
+        self.grid.trains.remove_all()
         self.num_crashed = 0
         self.is_released = False
 
@@ -141,10 +155,10 @@ class Field:
         return int(j) * self.cells_y + int(i)
 
     def get_grid_cell_at(self, i: int, j: int) -> Union[DrawingCell, RockCell, Station, Painter, Splitter]:
-        return self.full_grid[self.get_grid_cell_list_index(i, j)]
+        return self.grid.all_items[self.get_grid_cell_list_index(i, j)]
 
     def get_drawing_cell_at(self, i: int, j: int) -> Optional[DrawingCell]:
-        cell = self.full_grid[self.get_grid_cell_list_index(i, j)]
+        cell = self.grid.all_items[self.get_grid_cell_list_index(i, j)]
         if not isinstance(cell, DrawingCell):
             return None
         return cell

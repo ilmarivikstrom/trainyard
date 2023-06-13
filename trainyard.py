@@ -27,7 +27,7 @@ def main() -> None:
     field.initialize_grid()
     clock = pg.time.Clock()
 
-    Sound.init_music()
+    Sound.init_music(song_name="Song 9")
 
     if Config.play_music:
         Sound.play_music()

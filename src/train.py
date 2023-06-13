@@ -108,12 +108,14 @@ class Train(pg.sprite.Sprite):
         self.last_flipped_cell = None
 
     def repaint(self, train_color: TrainColor) -> None:
+        if self.color == TrainColor.BROWN:
+            return
         self.color = train_color
         self.image = Graphics.img_surfaces[self.color.value]
         self.original_image = self.image
 
     def move(self) -> None:
-        self.image = rot_center(self.original_image, self.angle)  # type: ignore
+        self.image = rot_center(self.original_image, self.angle)
 
         num_navigation_indices = 64
 

@@ -1,6 +1,4 @@
 import csv
-import math
-import random
 from typing import List, Tuple, Union
 
 import pygame as pg
@@ -16,7 +14,7 @@ from pygame.constants import (
     K_F1,
 )
 
-from src.cell import DrawingCell, RockCell
+from src.cell import DrawingCell, RockCell, Cell
 from src.color_constants import GRAY, RED1, WHITE, TRAIN_GREEN, TRAIN_RED, TRAIN_YELLOW
 from src.config import Config
 from src.user_control import UserControl
@@ -92,13 +90,14 @@ def execute_logic(state: State, field: Field) -> None:
 
 def draw_game_objects(field: Field, screen: Screen) -> None:
     draw_background_basecolor(screen)  # Background
-    field.drawing_cells_sprites.draw(screen.surface)  # Empty cells (base).
+    field.grid.drawing_cells.sprites.draw(screen.surface)  # Empty cells (base).
     draw_drawing_cells_tracks(screen, field)  # Tracks (on empty cells).
-    field.train_sprites.draw(screen.surface)  # Trains.
-    field.rock_cells_sprites.draw(screen.surface)  # Rock cells.
+    field.grid.trains.sprites.draw(screen.surface)  # Trains.
+    field.grid.rocks.sprites.draw(screen.surface)
+
     draw_stations(field, screen)  # Stations.
-    field.painter_cells_sprites.draw(screen.surface)
-    field.splitter_cells_sprites.draw(screen.surface)
+    field.grid.painters.sprites.draw(screen.surface)
+    field.grid.splitters.sprites.draw(screen.surface)
     draw_field_border(field, screen)  # Field border.
     draw_menus(screen)  # Menus.
 
@@ -109,8 +108,8 @@ def check_train_splitters(field: Field) -> None:
     if field.current_tick == 0 or field.current_tick % 32 != 0:
         return
     trains_to_add: List[Train] = []
-    for train in field.trains:
-        for splitter in field.splitter_cells:
+    for train in field.grid.trains.items:
+        for splitter in field.grid.splitters.items:
             if splitter.rect is None:
                 raise ValueError("Rect is None.")
             if train.rect.center == splitter.rect.center:
@@ -124,15 +123,16 @@ def check_train_splitters(field: Field) -> None:
                 train.selected_track = splitter.tracks[2]
                 train.direction = turn(train.direction, right=True)
                 train.angle = train.direction.value
+                Sound.play_sound_on_any_channel(Sound.pop)
 
     for new_train in trains_to_add:
-        field.trains.append(new_train)
-        field.train_sprites.add(new_train)
+        field.grid.trains.items.append(new_train)
+        field.grid.trains.sprites.add(new_train)
 
 
 def check_train_painters(field: Field) -> None:
-    for train in field.trains:
-        for painter in field.painter_cells:
+    for train in field.grid.trains.items:
+        for painter in field.grid.painters.items:
             if painter.rect is None:
                 raise ValueError("Rect is None.")
             if train.rect.center == painter.rect.center:
@@ -144,18 +144,41 @@ def draw_crash_sparks(field: Field, screen: Screen) -> None:
         spark.draw(screen.surface)
 
 
+def get_solid_cells(field: Field) -> List[Cell]:
+    solid_cells = []
+    solid_cells.extend(field.grid.arrivals.items)
+    solid_cells.extend(field.grid.departures.items)
+    solid_cells.extend(field.grid.painters.items)
+    solid_cells.extend(field.grid.rocks.items)
+    solid_cells.extend(field.grid.splitters.items)
+    return solid_cells
+
+
 def update_all_sparks(field: Field) -> None:
-    solid_rects: List[pg.Rect] = []
-    for item in field.full_grid:
+    # solid_rects: List[pg.Rect] = []
+    # for item in field.full_grid:
+    #     if item.rect is None:
+    #         raise ValueError("Rect is None.")
+    #     solid_types = Union[DepartureStation, ArrivalStation, RockCell]
+    #     if isinstance(item, solid_types):
+    #         solid_rects.append(item.rect)
+    # for i, spark in sorted(enumerate(field.sparks), reverse=True):
+    #     spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), solid_rects)
+    #     if not spark.alive:
+    #         field.sparks.pop(i)
+    solid_items = get_solid_cells(field)
+    rects: List[pg.Rect] = []
+    for item in solid_items:
         if item.rect is None:
             raise ValueError("Rect is None.")
         solid_types = Union[DepartureStation, ArrivalStation, RockCell]
         if isinstance(item, solid_types):
-            solid_rects.append(item.rect)
+            rects.append(item.rect)
     for i, spark in sorted(enumerate(field.sparks), reverse=True):
-        spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), solid_rects)
+        spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), rects)
         if not spark.alive:
             field.sparks.pop(i)
+
 
 
 def generate_crash_sparks(field: Field, pos: Tuple[int, int], angle: float) -> None:
@@ -205,7 +228,7 @@ def check_for_exit_command(state: State) -> None:
 def check_for_track_flip_command(field: Field) -> None:
     for event in UserControl.events:
         if event.type == MOUSEBUTTONDOWN and event.button == 3:
-            for drawing_cell in field.drawing_cells:
+            for drawing_cell in field.grid.drawing_cells.items:
                 if drawing_cell.mouse_on and not field.is_released and len(drawing_cell.tracks) > 1:
                     drawing_cell.flip_tracks()
             return
@@ -244,7 +267,7 @@ def update_menu_indicators(state: State, field: Field) -> None:
 
 
 def update_train_menu(field: Field) -> None:
-    train_menu.set_text(text=str(len(field.trains)), item_index=0)
+    train_menu.set_text(text=str(len(field.grid.trains.items)), item_index=0)
 
 
 def update_level_menu() -> None:
@@ -292,7 +315,7 @@ def update_info_menu(field: Field) -> None:
 
 def update_track_menu(field: Field) -> None:
     tracks = 0
-    for item in field.full_grid:
+    for item in field.grid.all_items:
         if isinstance(item, DrawingCell):
             tracks += len(item.tracks)
     track_menu.set_text(text=str(tracks), item_index=0)
@@ -313,13 +336,13 @@ def check_and_toggle_profiling(state: State) -> None:
 
 
 def determine_arrival_station_checkmarks(field: Field) -> None:
-    for arrival_station in field.arrival_stations:
+    for arrival_station in field.grid.arrivals.items:
         if arrival_station.number_of_trains_left == 0 and arrival_station.rect is not None:
             arrival_station.checkmark = CheckmarkSprite(arrival_station.rect)
 
 
 def arrivals_pending(field: Field) -> bool:
-    for arrival_station in field.arrival_stations:
+    for arrival_station in field.grid.arrivals.items:
         if arrival_station.number_of_trains_left > 0:
             return True
     return False
@@ -328,8 +351,8 @@ def arrivals_pending(field: Field) -> bool:
 def check_train_merges(field: Field) -> None:
     if not field.is_released:
         return
-    for train_1 in field.trains:
-        other_trains = field.trains.copy()
+    for train_1 in field.grid.trains.items:
+        other_trains = field.grid.trains.items.copy()
         other_trains.remove(train_1)
         other_trains_pos = [(x.rect.centerx, x.rect.centery, 1, 1) for x in other_trains]
         collided_train_index = pg.Rect((train_1.rect.centerx, train_1.rect.centery, 2, 2)).collidelist(other_trains_pos)
@@ -345,12 +368,12 @@ def check_train_merges(field: Field) -> None:
 def delete_crashed_trains(field: Field) -> None:
     if not field.is_released:
         return
-    for train in field.trains:
+    for train in field.grid.trains.items:
         if train.crashed:
-            field.train_sprites.remove(train)  # type: ignore
-            field.trains.remove(train)
+            field.grid.trains.sprites.remove(train)
+            field.grid.trains.items.remove(train)
             generate_crash_sparks(field, (train.rect.centerx, train.rect.centery), train.angle)
-            logger.info(f"Train crashed. Trains left: {len(field.trains)}")
+            logger.info(f"Train crashed. Trains left: {len(field.grid.trains.items)}")
 
 
 def check_and_save_field(field: Field, file_name: str = "level_tmp.csv") -> None:
@@ -360,7 +383,7 @@ def check_and_save_field(field: Field, file_name: str = "level_tmp.csv") -> None
             with open(file_path, newline="", mode="w", encoding="utf-8") as level_file:
                 level_writer = csv.writer(level_file, delimiter="-")
                 row: List[str] = []
-                for i, cell in enumerate(field.full_grid):
+                for i, cell in enumerate(field.grid.all_items):
                     row.append(cell.saveable_attributes.serialize())
                     if (i + 1) % 8 == 0:
                         level_writer.writerow(row)
@@ -369,7 +392,7 @@ def check_and_save_field(field: Field, file_name: str = "level_tmp.csv") -> None
 
 
 def check_and_set_delete_mode(state: State) -> None:
-    if UserControl.pressed_keys[UserControl.DELETE_MODE]:
+    if UserControl.pressed_keys[UserControl.DELETE_MODE_1] or UserControl.pressed_keys[UserControl.DELETE_MODE_2]:
         state.gameplay.in_delete_mode = True
     else:
         state.gameplay.in_delete_mode = False
@@ -381,15 +404,15 @@ def reset_to_beginning(state: State, field: Field) -> None:
 
 
 def tick_trains(field: Field) -> None:
-    for train in field.trains:
+    for train in field.grid.trains.items:
         train.tick(field.is_released)
 
 
 def check_train_arrivals(field: Field) -> None:
     if not field.is_released:
         return
-    for train in field.trains:
-        for arrival_station in field.arrival_stations:
+    for train in field.grid.trains.items:
+        for arrival_station in field.grid.arrivals.items:
             if arrival_station.rect is None:
                 raise ValueError(f"The rect of {arrival_station} is None.")
             if not train.rect.collidepoint(arrival_station.rect.center):
@@ -399,8 +422,7 @@ def check_train_arrivals(field: Field) -> None:
                 and arrival_station.goals
                 and arrival_station.number_of_trains_left > 0
             ):
-                field.trains.remove(train)
-                field.train_sprites.remove(train)  # type: ignore
+                field.grid.trains.remove_one(train)
                 arrival_station.number_of_trains_left -= 1
                 arrival_station.goals.pop().kill()
                 Sound.play_sound_on_any_channel(Sound.pop)
@@ -414,7 +436,7 @@ def check_train_arrivals(field: Field) -> None:
 def tick_departures(field: Field) -> None:
     if not field.is_released:
         return
-    for departure_station in field.departure_stations:
+    for departure_station in field.grid.departures.items:
         res = departure_station.tick(field.current_tick)
         if res is not None:
             add_new_train(field, res)
@@ -425,7 +447,7 @@ def check_for_level_completion(state: State, field: Field) -> None:
         not state.gameplay.current_level_passed
         and not arrivals_pending(field)
         and field.num_crashed == 0
-        and len(field.trains) == 0
+        and len(field.grid.trains.items) == 0
         and field.is_released
     ):
         Sound.success.play()
@@ -490,7 +512,7 @@ def check_for_pg_gameplay_events() -> None:
 def select_tracks_for_trains(field: Field) -> None:
     if not field.is_released:
         return
-    for train in field.trains:
+    for train in field.grid.trains.items:
         if train.selected_track is None:
             train.crash()
             field.num_crashed += 1
@@ -523,7 +545,7 @@ def select_tracks_for_trains(field: Field) -> None:
 def check_and_mark_prev_cell(field: Field) -> None:
     if field.is_released:
         return
-    for cell in field.full_grid:
+    for cell in field.grid.all_items: # TODO: Check all cells.
         if cell.check_mouse_collision():
             UserControl.mouse_entered_new_cell = True
 
@@ -531,15 +553,15 @@ def check_and_mark_prev_cell(field: Field) -> None:
 def check_and_delete_field_tracks(state: State, field: Field) -> None:
     if field.is_released:
         return
-    for drawing_cell in field.drawing_cells:
+    for drawing_cell in field.grid.drawing_cells.items:
         if drawing_cell.rect is None:
             raise ValueError("The cell's rect is None. Exiting.")
         check_and_delete_drawing_cell_tracks(state, drawing_cell)
 
 
 def add_new_train(field: Field, train: Train) -> None:
-    field.trains.append(train)
-    field.train_sprites.add(train)  # type: ignore
+    field.grid.trains.items.append(train)
+    field.grid.trains.sprites.add(train)  # type: ignore
 
 
 def check_and_delete_drawing_cell_tracks(state: State, drawing_cell: DrawingCell) -> None:
@@ -553,8 +575,8 @@ def check_and_delete_drawing_cell_tracks(state: State, drawing_cell: DrawingCell
 def check_and_flip_cell_tracks(field: Field) -> None:
     if not field.is_released:
         return
-    for cell in field.full_grid:
-        for train in field.trains:
+    for cell in field.grid.all_items:
+        for train in field.grid.trains.items:
             if train.current_navigation_index % 16 != 0:
                 return
             cell_contains_train_and_has_multiple_tracks = (
@@ -579,9 +601,9 @@ def paint_trains(train_1: Train, train_2: Train) -> None:
 def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
     upcoming_train_color = blend_train_colors(train_1.color, train_2.color)
     train_1.repaint(upcoming_train_color)
-    field.trains.remove(train_2)
+    field.grid.trains.items.remove(train_2)
     train_2.kill()
-    logger.info(f"Removed a train! Trains remaining: {len(field.trains)} or {len(field.train_sprites)}")  # type: ignore
+    logger.info(f"Removed a train! Trains remaining: {len(field.grid.trains.items)} or {len(field.grid.trains.sprites)}")  # type: ignore
     Sound.play_sound_on_any_channel(Sound.merge)
 
 
@@ -591,29 +613,29 @@ def draw_background_basecolor(screen: Screen) -> None:
 
 
 def draw_station_goals(screen: Screen, field: Field) -> None:
-    for arrival_station in field.arrival_stations:
+    for arrival_station in field.grid.arrivals.items:
         arrival_station.goal_sprites.draw(screen.surface)  # type: ignore
-    for departure_station in field.departure_stations:
+    for departure_station in field.grid.departures.items:
         departure_station.goal_sprites.draw(screen.surface)  # type: ignore
 
 
 def draw_checkmarks(screen: Screen, field: Field) -> None:
-    for arrival_station in field.arrival_stations:
+    for arrival_station in field.grid.arrivals.items:
         if arrival_station.checkmark is None or arrival_station.checkmark.image is None or arrival_station.rect is None:
             continue
         screen.surface.blit(source=arrival_station.checkmark.image, dest=arrival_station.rect.topleft)
 
 
 def draw_drawing_cells_tracks(screen: Screen, field: Field) -> None:
-    for drawing_cell in field.drawing_cells:
+    for drawing_cell in field.grid.drawing_cells.items:
         if drawing_cell.rect is None:
             raise ValueError("The cell's rect is None. Exiting.")
         draw_drawing_cell_tracks(screen, drawing_cell)
 
 
 def draw_stations(field: Field, screen: Screen) -> None:
-    field.departure_stations_sprites.draw(screen.surface)
-    field.arrival_stations_sprites.draw(screen.surface)
+    field.grid.departures.sprites.draw(screen.surface)
+    field.grid.arrivals.sprites.draw(screen.surface)
     draw_station_goals(screen, field)
     draw_checkmarks(screen, field)
 
@@ -668,8 +690,8 @@ def tick_field(field: Field) -> None:
 def check_train_departure_station_crashes(field: Field) -> None:
     if not field.is_released:
         return
-    for train in field.trains:
-        for departure_station in field.departure_stations:
+    for train in field.grid.trains.items:
+        for departure_station in field.grid.departures.items:
             if departure_station.rect is None:
                 raise ValueError("Rect is None.")
             if departure_station.rect.collidepoint(train.rect.center) and train.angle != departure_station.angle:

@@ -6,6 +6,7 @@ from pygame.locals import (
     K_q,
     K_RETURN,
     K_LSHIFT,
+    K_RSHIFT,
     K_s,
     K_1,
     K_2,
@@ -31,7 +32,8 @@ class UserControl:
     EXIT = K_q
     GAMEPLAY = K_RETURN
     MOUSE_DOWN = MOUSEBUTTONDOWN
-    DELETE_MODE = K_LSHIFT
+    DELETE_MODE_1 = K_LSHIFT
+    DELETE_MODE_2 = K_RSHIFT
     SAVE_GAME = K_s
 
     mouse_pos = pg.Vector2(-1, -1)
