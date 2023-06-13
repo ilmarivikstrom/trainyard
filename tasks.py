@@ -20,7 +20,7 @@ def run(call: Call) -> None:
 
 @task
 def build(call: Call) -> None:
-    #call.run("pyinstaller trainyard.py --onefile --noconsole --add-data assets\\;dist\\assets\ --add-data levels\\;dist\levels\\")
+    # call.run("pyinstaller trainyard.py --onefile --noconsole --add-data assets\\;dist\\assets\ --add-data levels\\;dist\levels\\")
     call.run("pyinstaller trainyard.py --onefile --noconsole")
     call.run(r"if not exist dist\assets mkdir dist\assets")
     call.run(r"if not exist dist\levels mkdir dist\levels")

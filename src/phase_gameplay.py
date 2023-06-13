@@ -24,7 +24,18 @@ from src.menus import BuildPurgeMenu, EditTestMenu, LevelMenu, RunningCrashedCom
 from src.state import Phase, State
 from src.screen import Screen
 from src.sound import Sound
-from src.spark import Spark, SparkCloud, FlameSparkStyle, SlowLargeSpark, WideConeCloudShape, NarrowConeCloudShape, CircleCloudShape, WeldingSparkStyle, FastSmallSpark, FastSmallShortLivedSpark
+from src.spark import (
+    Spark,
+    SparkCloud,
+    FlameSparkStyle,
+    SlowLargeSpark,
+    WideConeCloudShape,
+    NarrowConeCloudShape,
+    CircleCloudShape,
+    WeldingSparkStyle,
+    FastSmallSpark,
+    FastSmallShortLivedSpark,
+)
 from src.station import ArrivalStation, CheckmarkSprite, DepartureStation
 from src.track import Track
 from src.train import Train
@@ -182,20 +193,34 @@ def update_all_sparks(field: Field) -> None:
             field.sparks.pop(i)
 
 
-
 def generate_crash_sparks(field: Field, pos: Tuple[int, int], angle: float) -> None:
-    spark_cloud = SparkCloud(pos=pos, shape=WideConeCloudShape(angle), pos_deviation=(10, 10), style=FlameSparkStyle(), behavior=SlowLargeSpark(), spark_count=20, spark_count_deviation=10)
+    spark_cloud = SparkCloud(
+        pos=pos,
+        shape=WideConeCloudShape(angle),
+        pos_deviation=(10, 10),
+        style=FlameSparkStyle(),
+        behavior=SlowLargeSpark(),
+        spark_count=20,
+        spark_count_deviation=10,
+    )
     sparks = spark_cloud.emit_sparks()
     for spark in sparks:
         field.sparks.append(spark)
 
 
 def generate_track_insert_sparks(field: Field, pos: Tuple[int, int]) -> None:
-    spark_cloud = SparkCloud(pos=pos, shape=CircleCloudShape(0.0), pos_deviation=(10, 10), style=WeldingSparkStyle(), behavior=FastSmallShortLivedSpark(), spark_count=10, spark_count_deviation=2)
+    spark_cloud = SparkCloud(
+        pos=pos,
+        shape=CircleCloudShape(0.0),
+        pos_deviation=(10, 10),
+        style=WeldingSparkStyle(),
+        behavior=FastSmallShortLivedSpark(),
+        spark_count=10,
+        spark_count_deviation=2,
+    )
     sparks = spark_cloud.emit_sparks()
     for spark in sparks:
         field.sparks.append(spark)
-
 
 
 def check_for_level_change(field: Field) -> None:
@@ -522,7 +547,10 @@ def check_for_new_track_placement(state: State, field: Field) -> None:
             did_insert = field.insert_track_to_position(TrackType.TOP_LEFT, UserControl.prev_cell)
         if did_insert:
             Sound.play_sound_on_any_channel(Sound.track_place)
-            generate_track_insert_sparks(field, field.get_drawing_cell_at(round(UserControl.prev_cell.x), round(UserControl.prev_cell.y)).rect.center)
+            generate_track_insert_sparks(
+                field,
+                field.get_drawing_cell_at(round(UserControl.prev_cell.x), round(UserControl.prev_cell.y)).rect.center,
+            )
         UserControl.mouse_entered_new_cell = False
 
 
@@ -566,7 +594,7 @@ def select_tracks_for_trains(field: Field) -> None:
 def check_and_mark_prev_cell(field: Field) -> None:
     if field.is_released:
         return
-    for cell in field.grid.all_items: # TODO: Check all cells.
+    for cell in field.grid.all_items:  # TODO: Check all cells.
         if cell.check_mouse_collision():
             UserControl.mouse_entered_new_cell = True
 

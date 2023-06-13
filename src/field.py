@@ -1,5 +1,5 @@
 import csv
-from typing import Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 import pygame as pg
 
@@ -14,7 +14,7 @@ from src.item_holders import (
     PainterHolder,
     RockHolder,
     SplitterHolder,
-    TrainHolder
+    TrainHolder,
 )
 from src.painter import Painter
 from src.saveable import Saveable
@@ -38,10 +38,12 @@ class Grid:
         self.splitters: SplitterHolder = SplitterHolder()
         self.trains: TrainHolder = TrainHolder()
 
-        #from collections import OrderedDict
-        #self.all_items: OrderedDict[Tuple[int, int], Union[RockCell, DrawingCell, ArrivalStation, DepartureStation, Painter, Splitter, Train]] = {}
+        # from collections import OrderedDict
+        # self.all_items: OrderedDict[Tuple[int, int], Union[RockCell, DrawingCell, ArrivalStation, DepartureStation, Painter, Splitter, Train]] = {}
 
-        self.all_items: List[Union[RockCell, DrawingCell, ArrivalStation, DepartureStation, Painter, Splitter, Train]] = []
+        self.all_items: List[
+            Union[RockCell, DrawingCell, ArrivalStation, DepartureStation, Painter, Splitter, Train]
+        ] = []
 
     def add(self, item: Cell) -> None:
         if isinstance(item, ArrivalStation):

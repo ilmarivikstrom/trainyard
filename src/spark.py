@@ -5,7 +5,6 @@ from typing import List, Optional, Tuple
 import pygame as pg
 
 
-
 class Spark:
     def __init__(
         self,
@@ -111,32 +110,31 @@ class Spark:
             pg.draw.polygon(screen_surface, self.color, points)
 
 
-
 class SparkStyle:
     def __init__(self, colors: List[Tuple[int, int, int]]) -> None:
         self.colors: List[Tuple[int, int, int]] = colors
 
 
-
 class FlameSparkStyle(SparkStyle):
     def __init__(self) -> None:
-        super().__init__(
-            colors = [
-                (255, 207, 119), (254, 126, 5), (239, 99, 5), (177, 72, 3), (255, 237, 168)
-            ]
-        )
+        super().__init__(colors=[(255, 207, 119), (254, 126, 5), (239, 99, 5), (177, 72, 3), (255, 237, 168)])
+
 
 class WeldingSparkStyle(SparkStyle):
     def __init__(self) -> None:
-        super().__init__(
-            colors = [
-                (255, 255, 255), (126, 205, 210), (252, 192, 46), (201, 230, 234), (236, 197, 104)
-            ]
-        )
+        super().__init__(colors=[(255, 255, 255), (126, 205, 210), (252, 192, 46), (201, 230, 234), (236, 197, 104)])
 
 
 class SparkBehavior:
-    def __init__(self, speed: float, speed_deviation: float, friction: float, friction_deviation: float, scale: float, speed_multiplier: float) -> None:
+    def __init__(
+        self,
+        speed: float,
+        speed_deviation: float,
+        friction: float,
+        friction_deviation: float,
+        scale: float,
+        speed_multiplier: float,
+    ) -> None:
         self.speed_min: float = speed - speed_deviation
         self.speed_max: float = speed + speed_deviation
         self.friction_min: float = friction - friction_deviation
@@ -148,38 +146,27 @@ class SparkBehavior:
 class SlowLargeSpark(SparkBehavior):
     def __init__(self) -> None:
         super().__init__(
-            speed = 2.5,
-            speed_deviation = 0.5,
-            friction = 0.02,
-            friction_deviation= 0.01,
-            scale = 5.0,
-            speed_multiplier = 0.5,
+            speed=2.5,
+            speed_deviation=0.5,
+            friction=0.02,
+            friction_deviation=0.01,
+            scale=5.0,
+            speed_multiplier=0.5,
         )
 
 
 class FastSmallSpark(SparkBehavior):
     def __init__(self) -> None:
         super().__init__(
-            speed = 0.5,
-            speed_deviation = 0.25,
-            friction = 0.01,
-            friction_deviation = 0.005,
-            scale = 5.0,
-            speed_multiplier=5.0
+            speed=0.5, speed_deviation=0.25, friction=0.01, friction_deviation=0.005, scale=5.0, speed_multiplier=5.0
         )
 
 
 class FastSmallShortLivedSpark(SparkBehavior):
     def __init__(self) -> None:
         super().__init__(
-            speed = 0.75,
-            speed_deviation = 0.25,
-            friction = 0.04,
-            friction_deviation = 0.005,
-            scale = 5.0,
-            speed_multiplier=5.0
+            speed=0.75, speed_deviation=0.25, friction=0.04, friction_deviation=0.005, scale=5.0, speed_multiplier=5.0
         )
-
 
 
 class CloudShape:
@@ -190,30 +177,30 @@ class CloudShape:
 
 class CircleCloudShape(CloudShape):
     def __init__(self, angle) -> None:
-        super().__init__(
-            angle = angle,
-            angle_deviation = 180
-        )
+        super().__init__(angle=angle, angle_deviation=180)
 
 
 class WideConeCloudShape(CloudShape):
     def __init__(self, angle: float) -> None:
-        super().__init__(
-            angle = angle,
-            angle_deviation = 70
-        )
+        super().__init__(angle=angle, angle_deviation=70)
 
 
 class NarrowConeCloudShape(CloudShape):
     def __init__(self, angle: float) -> None:
-        super().__init__(
-            angle = angle,
-            angle_deviation = 20
-        )
+        super().__init__(angle=angle, angle_deviation=20)
 
 
 class SparkCloud:
-    def __init__(self, pos: Tuple[int, int], shape: CloudShape, pos_deviation: Tuple[int, int] = (0, 0), style: SparkStyle = FlameSparkStyle(), behavior: SparkBehavior = SlowLargeSpark(), spark_count: int = 10, spark_count_deviation: int = 0) -> None:
+    def __init__(
+        self,
+        pos: Tuple[int, int],
+        shape: CloudShape,
+        pos_deviation: Tuple[int, int] = (0, 0),
+        style: SparkStyle = FlameSparkStyle(),
+        behavior: SparkBehavior = SlowLargeSpark(),
+        spark_count: int = 10,
+        spark_count_deviation: int = 0,
+    ) -> None:
         self.pos: Tuple[int, int] = pos
         self.pos_deviation: Tuple[int, int] = pos_deviation
         self.shape: CloudShape = shape
@@ -224,11 +211,16 @@ class SparkCloud:
 
     def emit_sparks(self) -> List[Spark]:
         spark_list: List[Spark] = []
-        sparks_to_create = self.spark_count + random.randint(-int(self.spark_count_deviation / 2), int(self.spark_count_deviation / 2))
+        sparks_to_create = self.spark_count + random.randint(
+            -int(self.spark_count_deviation / 2), int(self.spark_count_deviation / 2)
+        )
         for _ in range(sparks_to_create):
             spark_list.append(
                 Spark(
-                    loc=(self.pos[0] + random.randint(-self.pos_deviation[0], self.pos_deviation[0]), self.pos[1] + random.randint(-self.pos_deviation[1], self.pos_deviation[1])),
+                    loc=(
+                        self.pos[0] + random.randint(-self.pos_deviation[0], self.pos_deviation[0]),
+                        self.pos[1] + random.randint(-self.pos_deviation[1], self.pos_deviation[1]),
+                    ),
                     angle=math.radians(random.uniform(self.shape.angle_min, self.shape.angle_max)),
                     base_speed=random.uniform(self.behavior.speed_min, self.behavior.speed_max),
                     friction=random.uniform(self.behavior.friction_min, self.behavior.friction_max),
