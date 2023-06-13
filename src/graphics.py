@@ -9,8 +9,6 @@ class Graphics:
     def load_resources() -> None:
         Graphics.img_surfaces = {
             "shift_key": pg.image.load("assets/sprites/shift.png").convert_alpha(),
-            "day_cycle": pg.image.load("assets/sprites/scrolling_day_cycle.png").convert_alpha(),
-            "gradient": pg.image.load("assets/sprites/gradient.png").convert_alpha(),
             "checkmark": pg.image.load("assets/sprites/checkmark.png").convert_alpha(),
             "train_red": pg.image.load("assets/sprites/train_red.png").convert_alpha(),
             "train_blue": pg.image.load("assets/sprites/train_blue.png").convert_alpha(),

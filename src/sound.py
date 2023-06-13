@@ -1,3 +1,5 @@
+from typing import Dict
+
 import pygame as pg
 
 
@@ -6,6 +8,19 @@ class Sound:
     pg.mixer.init()
     pg.init()  # pylint: disable=no-member; # TODO: Add game_loop.py and clean main.py as the entry point, move pg.init() there.
 
+    base_path = "assets/sounds/"
+    song_paths: Dict[str, str] = {
+        "Song 1": base_path + "Loop.ogg",
+        "Song 2": base_path + "Ludum-Dare-28-Track-7.ogg",
+        "Song 3": base_path + "Ludum-Dare-30-Track-6.ogg",
+        "Song 4": base_path + "Ludum-Dare-32-Track-3.ogg",
+        "Song 5": base_path + "Ludum-Dare-32-Track-5.ogg",
+        "Song 6": base_path + "Ludum-Dare-38-Track-2.ogg",
+        "Song 7": base_path + "Ludum-Dare-38-Track-7.ogg",
+        "Song 8": base_path + "Ludum-Dare-38-Track-8.ogg",
+        "Song 9": base_path + "Ludum-Dare-38-Track-10.ogg",
+    }
+
     master_volume = 1.0
 
     music_playing = False
@@ -13,7 +28,7 @@ class Sound:
     crash = pg.mixer.Sound("assets/sounds/Modern9.ogg")
     crash.set_volume(0.1 * master_volume)
 
-    merge = pg.mixer.Sound("assets/sounds/merge.wav")
+    merge = pg.mixer.Sound("assets/sounds/merge.ogg")
     merge.set_volume(0.03 * master_volume)
 
     pop = pg.mixer.Sound("assets/sounds/pop.ogg")
@@ -25,7 +40,7 @@ class Sound:
     track_place = pg.mixer.Sound("assets/sounds/Minimalist13_short.ogg")
     track_place.set_volume(0.1 * master_volume)
 
-    success = pg.mixer.Sound("assets/sounds/achievement.wav")
+    success = pg.mixer.Sound("assets/sounds/achievement.ogg")
     success.set_volume(0.1 * master_volume)
 
     spark = pg.mixer.Sound("assets/sounds/pop1.ogg")
@@ -40,8 +55,8 @@ class Sound:
         pg.mixer.find_channel(force=True).play(sound)
 
     @staticmethod
-    def init_music() -> None:
-        pg.mixer.music.load("assets/sounds/Loop.ogg")
+    def init_music(song_name: str) -> None:
+        pg.mixer.music.load(Sound.song_paths[song_name])
         pg.mixer.music.set_volume(0.02 * Sound.master_volume)
 
     @staticmethod
