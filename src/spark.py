@@ -18,15 +18,15 @@ class Spark:
     ):
         self.loc_x = loc[0]
         self.loc_y = loc[1]
-        self.angle: float = angle
-        self.base_speed: float = base_speed
-        self.friction: float = friction
-        self.scale: float = scale
-        self.color: Tuple[int, int, int] = color
-        self.alive: bool = True
-        self.speed_multiplier: float = speed_multiplier
+        self.angle = angle
+        self.base_speed = base_speed
+        self.friction = friction
+        self.scale = scale
+        self.color = color
+        self.alive = True
+        self.speed_multiplier = speed_multiplier
 
-        self.last_collision: Tuple[int, int] = (self.loc_x, self.loc_y)
+        self.last_collision = (self.loc_x, self.loc_y)
 
     def calculate_distance_to_move(self, delta_time: float) -> Tuple[float, float]:
         return (
@@ -78,7 +78,7 @@ class Spark:
                         self.angle = math.pi - self.angle
                         self.loc_x = collide_rect.right
 
-    def move(self, delta_time: float, allowed_area: pg.Rect, collide_rects: Optional[List[pg.Rect]]):
+    def move(self, delta_time: float, allowed_area: pg.Rect, collide_rects: Optional[List[pg.Rect]]) -> None:
         self.bounce_from_edge(allowed_area, collide_rects)
         distance = self.calculate_distance_to_move(delta_time)
         self.loc_x += distance[0]
@@ -135,12 +135,12 @@ class SparkBehavior:
         scale: float,
         speed_multiplier: float,
     ) -> None:
-        self.speed_min: float = speed - speed_deviation
-        self.speed_max: float = speed + speed_deviation
-        self.friction_min: float = friction - friction_deviation
-        self.friction_max: float = friction + friction_deviation
-        self.scale: float = scale
-        self.speed_multiplier: float = speed_multiplier
+        self.speed_min = speed - speed_deviation
+        self.speed_max = speed + speed_deviation
+        self.friction_min = friction - friction_deviation
+        self.friction_max = friction + friction_deviation
+        self.scale = scale
+        self.speed_multiplier = speed_multiplier
 
 
 class SlowLargeSpark(SparkBehavior):
@@ -176,7 +176,7 @@ class CloudShape:
 
 
 class CircleCloudShape(CloudShape):
-    def __init__(self, angle) -> None:
+    def __init__(self, angle: float) -> None:
         super().__init__(angle=angle, angle_deviation=180)
 
 
@@ -201,13 +201,13 @@ class SparkCloud:
         spark_count: int = 10,
         spark_count_deviation: int = 0,
     ) -> None:
-        self.pos: Tuple[int, int] = pos
-        self.pos_deviation: Tuple[int, int] = pos_deviation
-        self.shape: CloudShape = shape
-        self.style: SparkStyle = style
-        self.spark_count: int = spark_count
-        self.spark_count_deviation: int = spark_count_deviation
-        self.behavior: SparkBehavior = behavior
+        self.pos = pos
+        self.pos_deviation = pos_deviation
+        self.shape = shape
+        self.style = style
+        self.spark_count = spark_count
+        self.spark_count_deviation = spark_count_deviation
+        self.behavior = behavior
 
     def emit_sparks(self) -> List[Spark]:
         spark_list: List[Spark] = []

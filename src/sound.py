@@ -57,7 +57,7 @@ class Sound:
     @staticmethod
     def init_music(song_name: str) -> None:
         pg.mixer.music.load(Sound.song_paths[song_name])
-        pg.mixer.music.set_volume(0.02 * Sound.master_volume)
+        pg.mixer.music.set_volume(1.0 * Sound.master_volume)
 
     @staticmethod
     def play_music() -> None:
