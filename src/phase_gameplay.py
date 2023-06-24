@@ -56,6 +56,7 @@ track_menu = InfoMenu(topleft=(1 * 64, 10 * 64 + 16), tooltip_text="TRACKS", val
 tick_menu = InfoMenu(topleft=(3 * 64, 10 * 64 + 16), tooltip_text="TICKS", value="")
 train_menu = InfoMenu(topleft=(5 * 64, 10 * 64 + 16), tooltip_text="TRAINS", value="")
 crash_menu = InfoMenu(topleft=(7 * 64, 10 * 64 + 16), tooltip_text="CRASHES", value="")
+spark_menu = InfoMenu(topleft=(9 * 64, 10 * 64 + 16), tooltip_text="SPARKS", value="")
 music_menu = InfoMenu(topleft=(10 * 64, 9 * 64 + 16), tooltip_text="MUSIC (P)", value="")
 
 
@@ -229,6 +230,7 @@ def draw_menus(screen: Screen) -> None:
     track_menu.draw(screen.surface)
     train_menu.draw(screen.surface)
     crash_menu.draw(screen.surface)
+    spark_menu.draw(screen.surface)
     music_menu.draw(screen.surface)
 
 
@@ -281,11 +283,16 @@ def update_menu_indicators(state: State, field: Field) -> None:
     update_track_menu(field)
     update_train_menu(field)
     update_crash_menu(field)
+    update_spark_menu(field)
     update_music_menu()
 
 
 def update_train_menu(field: Field) -> None:
     train_menu.set_text(text=str(len(field.grid.trains.items)), item_index=0)
+
+
+def update_spark_menu(field: Field) -> None:
+    spark_menu.set_text(text=str(len(field.sparks)), item_index=0)
 
 
 def update_crash_menu(field: Field) -> None:
