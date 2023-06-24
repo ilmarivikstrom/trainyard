@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 import pygame as pg
-from pygame.locals import (
+from pygame import (
     MOUSEBUTTONDOWN,
     K_ESCAPE,
     K_q,
@@ -21,11 +21,11 @@ from pygame.locals import (
 from pygame.event import Event
 
 from src.config import Config
+from src.coordinate import Coordinate
 from src.direction import Direction
 from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
-
 
 class UserControl:
     MAIN_MENU = K_ESCAPE
@@ -36,10 +36,10 @@ class UserControl:
     DELETE_MODE_2 = K_RSHIFT
     SAVE_GAME = K_s
 
-    mouse_pos = pg.Vector2(-1, -1)
+    mouse_pos = Coordinate(-1, -1)
     mouse_pressed: Tuple[bool, bool, bool] = (False, False, False)
-    curr_cell: pg.Vector2 = pg.Vector2(-1, -1)
-    prev_cell: Optional[pg.Vector2] = None
+    curr_cell: Coordinate = Coordinate(-1, -1)
+    prev_cell: Optional[Coordinate] = None
 
     mouse_entered_new_cell: bool = False
 
@@ -59,7 +59,7 @@ class UserControl:
         for event in pg.event.get():
             UserControl.events.append(event)
 
-        UserControl.mouse_pos = pg.mouse.get_pos()
+        UserControl.mouse_pos = Coordinate.from_tuple(pg.mouse.get_pos())
         UserControl.pressed_keys = pg.key.get_pressed()
         UserControl.mouse_pressed = pg.mouse.get_pressed()
 
@@ -81,7 +81,3 @@ class UserControl:
             Config.FPS = Config.FPS_list[5]
         elif UserControl.pressed_keys[K_7]:
             Config.FPS = Config.FPS_list[6]
-        elif UserControl.pressed_keys[K_8]:
-            Config.FPS = Config.FPS_list[7]
-        elif UserControl.pressed_keys[K_9]:
-            Config.FPS = Config.FPS_list[8]

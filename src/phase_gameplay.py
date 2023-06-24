@@ -20,7 +20,10 @@ from src.config import Config
 from src.user_control import UserControl
 from src.direction import Direction, turn
 from src.field import Field, TrackType
+from src.graphics import Graphics
 from src.menus import BuildPurgeMenu, EditTestMenu, LevelMenu, RunningCrashedCompleteMenu, InfoMenu
+from src.painter import Painter
+from src.splitter import Splitter
 from src.state import Phase, State
 from src.screen import Screen
 from src.sound import Sound
@@ -128,7 +131,7 @@ def check_train_splitters(field: Field) -> None:
             if train.rect.center == splitter.rect.center:
                 logger.info("At center.")
                 new_train_1 = Train(
-                    train.i, train.j, train.color, splitter.tracks[1], direction=turn(train.direction, left=True)
+                    train.loc, train.color, splitter.tracks[1], direction=turn(train.direction, left=True)
                 )
                 new_train_1.rect.x = train.rect.x
                 new_train_1.rect.y = train.rect.y
@@ -157,8 +160,8 @@ def draw_crash_sparks(field: Field, screen: Screen) -> None:
         spark.draw(screen.surface)
 
 
-def get_solid_cells(field: Field) -> List[Cell]:
-    solid_cells = []
+def get_solid_cells(field: Field) -> List[Union[ArrivalStation, DepartureStation, Painter, RockCell, Splitter]]: # TODO: Store solid cells in some structure instead of getting them every loop.
+    solid_cells: List[Union[ArrivalStation, DepartureStation, Painter, RockCell, Splitter]] = []
     solid_cells.extend(field.grid.arrivals.items)
     solid_cells.extend(field.grid.departures.items)
     solid_cells.extend(field.grid.painters.items)
@@ -168,27 +171,10 @@ def get_solid_cells(field: Field) -> List[Cell]:
 
 
 def update_all_sparks(field: Field) -> None:
-    # solid_rects: List[pg.Rect] = []
-    # for item in field.full_grid:
-    #     if item.rect is None:
-    #         raise ValueError("Rect is None.")
-    #     solid_types = Union[DepartureStation, ArrivalStation, RockCell]
-    #     if isinstance(item, solid_types):
-    #         solid_rects.append(item.rect)
-    # for i, spark in sorted(enumerate(field.sparks), reverse=True):
-    #     spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), solid_rects)
-    #     if not spark.alive:
-    #         field.sparks.pop(i)
     solid_items = get_solid_cells(field)
-    rects: List[pg.Rect] = []
-    for item in solid_items:
-        if item.rect is None:
-            raise ValueError("Rect is None.")
-        solid_types = Union[DepartureStation, ArrivalStation, RockCell]
-        if isinstance(item, solid_types):
-            rects.append(item.rect)
+    solid_rects: List[pg.Rect] = [solid_item.rect for solid_item in solid_items if solid_item.rect is not None]
     for i, spark in sorted(enumerate(field.sparks), reverse=True):
-        spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), rects)
+        spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), solid_rects)
         if not spark.alive:
             field.sparks.pop(i)
 
@@ -295,7 +281,7 @@ def update_menu_indicators(state: State, field: Field) -> None:
     update_track_menu(field)
     update_train_menu(field)
     update_crash_menu(field)
-    update_music_menu(field)
+    update_music_menu()
 
 
 def update_train_menu(field: Field) -> None:
@@ -306,7 +292,7 @@ def update_crash_menu(field: Field) -> None:
     crash_menu.set_text(text=str(field.num_crashed), item_index=0)
 
 
-def update_music_menu(field: Field) -> None:
+def update_music_menu() -> None:
     play_music_text = "OFF"
     if Config.play_music:
         play_music_text = "ON"
@@ -547,10 +533,12 @@ def check_for_new_track_placement(state: State, field: Field) -> None:
             did_insert = field.insert_track_to_position(TrackType.TOP_LEFT, UserControl.prev_cell)
         if did_insert:
             Sound.play_sound_on_any_channel(Sound.track_place)
-            generate_track_insert_sparks(
-                field,
-                field.get_drawing_cell_at(round(UserControl.prev_cell.x), round(UserControl.prev_cell.y)).rect.center,
-            )
+            drawing_cell = field.get_drawing_cell_at_pos(UserControl.prev_cell)
+            if drawing_cell is not None and drawing_cell.rect is not None:
+                generate_track_insert_sparks(
+                    field,
+                    drawing_cell.rect.center,
+                )
         UserControl.mouse_entered_new_cell = False
 
 
@@ -577,11 +565,10 @@ def select_tracks_for_trains(field: Field) -> None:
             found_track = False
             for track in next_cell_tracks:
                 for endpoint in track.endpoints:
-                    if train.rect.collidepoint(endpoint):
+                    if train.rect.collidepoint(endpoint.as_tuple_int()):
                         found_track = True
                         train.selected_track = track
-                        train.rect.centerx = int(endpoint[0])
-                        train.rect.centery = int(endpoint[1])
+                        train.rect.center = endpoint.as_tuple_int()
             if not found_track:
                 train.crash()
                 field.num_crashed += 1
@@ -657,8 +644,9 @@ def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
 
 
 def draw_background_basecolor(screen: Screen) -> None:
-    tick_index = 300
-    screen.surface.fill(screen.background_color_array[tick_index])
+    #tick_index = 300
+    #screen.surface.fill(screen.background_color_array[tick_index])
+    screen.surface.blit(Graphics.img_surfaces["bg"], dest=(0, 0))
 
 
 def draw_station_goals(screen: Screen, field: Field) -> None:

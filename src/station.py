@@ -4,6 +4,7 @@ import pygame as pg
 
 from src.cell import Cell
 from src.config import Config
+from src.coordinate import Coordinate
 from src.direction import Direction
 from src.graphics import Graphics
 from src.saveable import SaveableAttributes
@@ -33,15 +34,14 @@ class CheckmarkSprite(pg.sprite.Sprite):
 class Station(Cell):
     def __init__(
         self,
-        i: int,
-        j: int,
+        coords: Coordinate,
         image: pg.Surface,
         angle: int,
         number_of_trains_left: int,
         train_color: TrainColor,
         block_short_char: str,
     ):
-        super().__init__(i, j, image, angle, True)
+        super().__init__(coords, image, angle, True)
         self.number_of_trains_left = number_of_trains_left
         self.train_color = train_color
         self.original_number_of_trains = number_of_trains_left
@@ -61,9 +61,9 @@ class Station(Cell):
             raise ValueError("Rect is None.")
 
         if self.angle in [0, 180]:
-            self.tracks: List[Union[Track, InsideTrack]] = [InsideTrack(i, j, self.rect, TrackType.HORI, self.angle)]
+            self.tracks: List[Union[Track, InsideTrack]] = [InsideTrack(self.pos, self.rect, TrackType.HORI, self.angle)]
         elif self.angle in [90, 270]:
-            self.tracks: List[Union[Track, InsideTrack]] = [InsideTrack(i, j, self.rect, TrackType.VERT, self.angle)]
+            self.tracks: List[Union[Track, InsideTrack]] = [InsideTrack(self.pos, self.rect, TrackType.VERT, self.angle)]
         self.create_goal_sprites()
 
     def create_goal_sprites(self) -> None:
@@ -96,10 +96,9 @@ class Station(Cell):
 
 
 class DepartureStation(Station):
-    def __init__(self, i: int, j: int, angle: int, number_of_trains_left: int, train_color: TrainColor):
+    def __init__(self, coords: Coordinate, angle: int, number_of_trains_left: int, train_color: TrainColor):
         super().__init__(
-            i=i,
-            j=j,
+            coords=coords,
             image=Graphics.img_surfaces["departure"],
             angle=angle,
             number_of_trains_left=number_of_trains_left,
@@ -118,14 +117,13 @@ class DepartureStation(Station):
         logger.debug("Train released.")
         self.last_release_tick = current_tick
         Sound.play_sound_on_any_channel(Sound.pop)
-        return Train(self.i, self.j, self.train_color, self.tracks[0], Direction(self.angle))
+        return Train(self.pos, self.train_color, self.tracks[0], Direction(self.angle))
 
 
 class ArrivalStation(Station):
-    def __init__(self, i: int, j: int, angle: int, number_of_trains_left: int, train_color: TrainColor):
+    def __init__(self, coords: Coordinate, angle: int, number_of_trains_left: int, train_color: TrainColor):
         super().__init__(
-            i=i,
-            j=j,
+            coords=coords,
             image=Graphics.img_surfaces["arrival"],
             angle=angle,
             number_of_trains_left=number_of_trains_left,

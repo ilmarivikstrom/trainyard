@@ -2,6 +2,7 @@ from typing import List
 import pygame as pg
 
 from src.config import Config
+from src.coordinate import Coordinate
 from src.user_control import UserControl
 from src.direction import Direction
 from src.graphics import Graphics
@@ -14,15 +15,14 @@ logger = setup_logging(log_level=Config.log_level)
 
 
 class Cell(pg.sprite.Sprite):
-    def __init__(self, i: int, j: int, image: pg.Surface, angle: int, blocks_placement: bool):
+    def __init__(self, pos: Coordinate, image: pg.Surface, angle: int, blocks_placement: bool) -> None:
         super().__init__()
-        self.i = i
-        self.j = j
+        self.pos = pos
         self.angle = angle
         self.image = pg.transform.rotate(image, angle)
         self.rect = self.image.get_rect()
-        self.rect.x = i * Config.cell_size + Config.padding_x
-        self.rect.y = j * Config.cell_size + Config.padding_y
+        self.rect.x = self.pos.x * Config.cell_size + Config.padding_x
+        self.rect.y = self.pos.y * Config.cell_size + Config.padding_y
         self.mouse_on = False
         self.tracks: List[Track] = []
         self.blocks_placement = blocks_placement
@@ -31,7 +31,7 @@ class Cell(pg.sprite.Sprite):
         mouse_entered_this_cell = False
         if self.rect is None:
             return False
-        if self.rect.collidepoint(UserControl.mouse_pos):
+        if self.rect.collidepoint(UserControl.mouse_pos.as_tuple_float()):
             if not self.mouse_on:
                 self.handle_mouse_cell_enter()
                 mouse_entered_this_cell = True
@@ -41,11 +41,9 @@ class Cell(pg.sprite.Sprite):
         return mouse_entered_this_cell
 
     def handle_mouse_cell_enter(self) -> None:
-        logger.info(f"Mouse entered cell: {self.i, self.j}")
-        if UserControl.curr_cell is None:
-            raise ValueError("Current cell is None.")
+        logger.info(f"Mouse entered cell: {self.pos}")
         UserControl.prev_cell = UserControl.curr_cell.copy()
-        UserControl.curr_cell = pg.Vector2(self.i, self.j)
+        UserControl.curr_cell = Coordinate(self.pos.x, self.pos.y)
         UserControl.prev_movement = UserControl.curr_movement
         if (UserControl.curr_cell.x - UserControl.prev_cell.x == 1) and (
             UserControl.curr_cell.y == UserControl.prev_cell.y
@@ -71,11 +69,11 @@ class Cell(pg.sprite.Sprite):
 
 
 class DrawingCell(Cell):
-    def __init__(self, i: int, j: int):
-        super().__init__(i, j, Graphics.img_surfaces["bg_tile"], 0, False)
+    def __init__(self, coords: Coordinate) -> None:
+        super().__init__(coords, Graphics.img_surfaces["bg_tile"], 0, False)
         self.saveable_attributes = SaveableAttributes(block_type="E")
 
-    def flip_tracks(self):
+    def flip_tracks(self) -> None:
         if len(self.tracks) < 2:
             return
         track_types = [track.track_type for track in self.tracks]
@@ -92,6 +90,6 @@ class DrawingCell(Cell):
 
 
 class RockCell(Cell):
-    def __init__(self, i: int, j: int):
-        super().__init__(i, j, Graphics.img_surfaces["rock"], 0, True)
+    def __init__(self, coords: Coordinate) -> None:
+        super().__init__(coords, Graphics.img_surfaces["rock"], 0, True)
         self.saveable_attributes = SaveableAttributes(block_type="R")

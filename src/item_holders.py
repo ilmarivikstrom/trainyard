@@ -14,15 +14,15 @@ class GridItemHolderBase:
         self.items: List[Cell] = []
         self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
-    def add_one(self, item) -> None:
+    def add_one(self, item: Cell) -> None:
         self.items.append(item)
         self.sprites.add(item)
 
-    def add_many(self, items) -> None:
+    def add_many(self, items: List[Cell]) -> None:
         for item in items:
             self.add_one(item)
 
-    def remove_one(self, item) -> None:
+    def remove_one(self, item: Cell) -> None:
         self.items.remove(item)
         self.sprites.remove(item)
 

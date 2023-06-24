@@ -17,6 +17,7 @@ class Graphics:
             "train_green": pg.image.load("assets/sprites/train_green.png").convert_alpha(),
             "train_purple": pg.image.load("assets/sprites/train_purple.png").convert_alpha(),
             "train_brown": pg.image.load("assets/sprites/train_brown.png").convert_alpha(),
+            "bg": pg.image.load("assets/sprites/bg.png").convert_alpha(),
             "bg_tile": pg.image.load("assets/sprites/bg_tile.png").convert_alpha(),
             "rock": pg.image.load("assets/sprites/rock.png").convert_alpha(),
             "track_s_bright": pg.image.load("assets/sprites/track_s_bright.png").convert_alpha(),

@@ -5,6 +5,7 @@ import pygame as pg
 
 from src.cell import Cell, DrawingCell
 from src.config import Config
+from src.coordinate import Coordinate
 from src.direction import Direction
 from src.graphics import Graphics
 from src.sound import Sound
@@ -14,10 +15,9 @@ from src.utils import rot_center
 
 
 class Train(pg.sprite.Sprite):
-    def __init__(self, i: int, j: int, color: TrainColor, selected_track: Track, direction: Direction):
+    def __init__(self, coords: Coordinate, color: TrainColor, selected_track: Track, direction: Direction):
         super().__init__()
-        self.i: int = i
-        self.j: int = j
+        self.loc = coords
         self.color: TrainColor = color
         self.direction: Direction = direction
 
@@ -26,9 +26,9 @@ class Train(pg.sprite.Sprite):
         self.rect: pg.Rect = self.image.get_rect()  # type: ignore
 
         self.rect.x = int(
-            i * Config.cell_size - 0.5 * Config.cell_size + Config.padding_x + 48
+            self.loc.x * Config.cell_size - 0.5 * Config.cell_size + Config.padding_x + 48
         )  # TODO: Get the location from somewhere else please.
-        self.rect.y = j * Config.cell_size + Config.padding_y + 16  # TODO: Get the location from somewhere else please.
+        self.rect.y = self.loc.y * Config.cell_size + Config.padding_y + 16  # TODO: Get the location from somewhere else please.
 
         self.original_direction: Direction = direction
         self.angle: float = self.direction.value
@@ -51,49 +51,49 @@ class Train(pg.sprite.Sprite):
             raise ValueError("Selected track is None.")
         if self.direction == Direction.UP:
             if self.selected_track.track_type == TrackType.VERT:
-                self.next_cell_coords = (self.selected_track.i, self.selected_track.j - 1)
+                self.next_cell_coords = (self.selected_track.pos.x, self.selected_track.pos.y - 1)
                 self.next_cell_direction = Direction.UP
             elif self.selected_track.track_type == TrackType.BOTTOM_LEFT:
-                self.next_cell_coords = (self.selected_track.i - 1, self.selected_track.j)
+                self.next_cell_coords = (self.selected_track.pos.x - 1, self.selected_track.pos.y)
                 self.next_cell_direction = Direction.LEFT
             elif self.selected_track.track_type == TrackType.BOTTOM_RIGHT:
-                self.next_cell_coords = (self.selected_track.i + 1, self.selected_track.j)
+                self.next_cell_coords = (self.selected_track.pos.x + 1, self.selected_track.pos.y)
                 self.next_cell_direction = Direction.RIGHT
             else:
                 raise ValueError("Bad tracktype and/or direction.")
         elif self.direction == Direction.DOWN:
             if self.selected_track.track_type == TrackType.VERT:
-                self.next_cell_coords = (self.selected_track.i, self.selected_track.j + 1)
+                self.next_cell_coords = (self.selected_track.pos.x, self.selected_track.pos.y + 1)
                 self.next_cell_direction = Direction.DOWN
             elif self.selected_track.track_type == TrackType.TOP_LEFT:
-                self.next_cell_coords = (self.selected_track.i - 1, self.selected_track.j)
+                self.next_cell_coords = (self.selected_track.pos.x - 1, self.selected_track.pos.y)
                 self.next_cell_direction = Direction.LEFT
             elif self.selected_track.track_type == TrackType.TOP_RIGHT:
-                self.next_cell_coords = (self.selected_track.i + 1, self.selected_track.j)
+                self.next_cell_coords = (self.selected_track.pos.x + 1, self.selected_track.pos.y)
                 self.next_cell_direction = Direction.RIGHT
             else:
                 raise ValueError("Bad tracktype and/or direction.")
         elif self.direction == Direction.RIGHT:
             if self.selected_track.track_type == TrackType.HORI:
-                self.next_cell_coords = (self.selected_track.i + 1, self.selected_track.j)
+                self.next_cell_coords = (self.selected_track.pos.x + 1, self.selected_track.pos.y)
                 self.next_cell_direction = Direction.RIGHT
             elif self.selected_track.track_type == TrackType.TOP_LEFT:
-                self.next_cell_coords = (self.selected_track.i, self.selected_track.j - 1)
+                self.next_cell_coords = (self.selected_track.pos.x, self.selected_track.pos.y - 1)
                 self.next_cell_direction = Direction.UP
             elif self.selected_track.track_type == TrackType.BOTTOM_LEFT:
-                self.next_cell_coords = (self.selected_track.i, self.selected_track.j + 1)
+                self.next_cell_coords = (self.selected_track.pos.x, self.selected_track.pos.y + 1)
                 self.next_cell_direction = Direction.DOWN
             else:
                 raise ValueError("Bad tracktype and/or direction.")
         elif self.direction == Direction.LEFT:
             if self.selected_track.track_type == TrackType.HORI:
-                self.next_cell_coords = (self.selected_track.i - 1, self.selected_track.j)
+                self.next_cell_coords = (self.selected_track.pos.x - 1, self.selected_track.pos.y)
                 self.next_cell_direction = Direction.LEFT
             elif self.selected_track.track_type == TrackType.TOP_RIGHT:
-                self.next_cell_coords = (self.selected_track.i, self.selected_track.j - 1)
+                self.next_cell_coords = (self.selected_track.pos.x, self.selected_track.pos.y - 1)
                 self.next_cell_direction = Direction.UP
             elif self.selected_track.track_type == TrackType.BOTTOM_RIGHT:
-                self.next_cell_coords = (self.selected_track.i, self.selected_track.j + 1)
+                self.next_cell_coords = (self.selected_track.pos.x, self.selected_track.pos.y + 1)
                 self.next_cell_direction = Direction.DOWN
             else:
                 raise ValueError("Bad tracktype and/or direction.")

@@ -1,11 +1,10 @@
 import csv
 from typing import List, Optional, Union
 
-import pygame as pg
-
 from src.cell import DrawingCell, RockCell, Cell
 from src.color_constants import TRAIN_YELLOW
 from src.config import Config
+from src.coordinate import Coordinate
 from src.fieldborder import FieldBorder
 from src.item_holders import (
     ArrivalHolder,
@@ -38,11 +37,8 @@ class Grid:
         self.splitters: SplitterHolder = SplitterHolder()
         self.trains: TrainHolder = TrainHolder()
 
-        # from collections import OrderedDict
-        # self.all_items: OrderedDict[Tuple[int, int], Union[RockCell, DrawingCell, ArrivalStation, DepartureStation, Painter, Splitter, Train]] = {}
-
         self.all_items: List[
-            Union[RockCell, DrawingCell, ArrivalStation, DepartureStation, Painter, Splitter, Train]
+            Union[RockCell, DrawingCell, ArrivalStation, DepartureStation, Painter, Splitter]
         ] = []
 
     def add(self, item: Cell) -> None:
@@ -73,7 +69,6 @@ class Field:
         self.level = level
         self.cells_x = Config.cells_x
         self.cells_y = Config.cells_y
-        self.grid: List[Union[DrawingCell, RockCell, Station, Painter, Splitter]] = []
 
         self.grid: Grid = Grid()
 
@@ -95,24 +90,25 @@ class Field:
             level_reader = csv.reader(level_file, delimiter=";")
             for j, row in enumerate(level_reader):
                 for i, item in enumerate(row[0].split("-")):
+                    coords = Coordinate(i, j)
                     saveable = Saveable(item)
                     if saveable.type == "A":
-                        arrival_station = ArrivalStation(i, j, saveable.angle, saveable.num_goals, saveable.color)
+                        arrival_station = ArrivalStation(coords, saveable.angle, saveable.num_goals, saveable.color)
                         self.grid.add(arrival_station)
                     elif saveable.type == "D":
-                        departure_station = DepartureStation(i, j, saveable.angle, saveable.num_goals, saveable.color)
+                        departure_station = DepartureStation(coords, saveable.angle, saveable.num_goals, saveable.color)
                         self.grid.add(departure_station)
                     elif saveable.type == "E":
-                        drawing_cell = DrawingCell(i, j)
+                        drawing_cell = DrawingCell(coords)
                         self.grid.add(drawing_cell)
                     elif saveable.type == "R":
-                        rock_cell = RockCell(i, j)
+                        rock_cell = RockCell(coords)
                         self.grid.add(rock_cell)
                     elif saveable.type == "P":
-                        painter_cell = Painter(i, j, saveable.angle, saveable.color)
+                        painter_cell = Painter(coords, saveable.angle, saveable.color)
                         self.grid.add(painter_cell)
                     elif saveable.type == "S":
-                        splitter_cell = Splitter(i, j, saveable.angle)
+                        splitter_cell = Splitter(coords, saveable.angle)
                         self.grid.add(splitter_cell)
                     else:
                         raise ValueError(f"Saveable type was unexpected: '{saveable.type}")
@@ -156,23 +152,26 @@ class Field:
     def get_grid_cell_list_index(self, i: int = 0, j: int = 0) -> int:
         return int(j) * self.cells_y + int(i)
 
-    def get_grid_cell_at(self, i: int, j: int) -> Union[DrawingCell, RockCell, Station, Painter, Splitter]:
+    def get_grid_cell_at(self, i: int, j: int) -> Union[DrawingCell, RockCell, ArrivalStation, DepartureStation, Train, Station, Painter, Splitter]:
         return self.grid.all_items[self.get_grid_cell_list_index(i, j)]
 
-    def get_drawing_cell_at(self, i: int, j: int) -> Optional[DrawingCell]:
+    def _get_drawing_cell_at_indices(self, i: int, j: int) -> Optional[DrawingCell]:
         cell = self.grid.all_items[self.get_grid_cell_list_index(i, j)]
         if not isinstance(cell, DrawingCell):
             return None
         return cell
 
-    def insert_track_to_position(self, track_type: TrackType, pos: pg.Vector2) -> bool:
-        drawing_cell = self.get_drawing_cell_at(round(pos.x), round(pos.y))
+    def get_drawing_cell_at_pos(self, pos: Coordinate) -> Optional[DrawingCell]:
+        return self._get_drawing_cell_at_indices(pos.x, pos.y)
+
+    def insert_track_to_position(self, track_type: TrackType, pos: Coordinate) -> bool:
+        drawing_cell = self.get_drawing_cell_at_pos(pos)
         if drawing_cell is None:
             logger.warning(f"Tried to insert track on a non-existing drawing cell at {pos}")
             return False
         if drawing_cell.rect is None:
             raise ValueError("Rect of drawing cell is None")
-        track_to_be_added = Track(round(pos.x), round(pos.y), drawing_cell.rect, track_type)
+        track_to_be_added = Track(pos, drawing_cell.rect, track_type)
         if track_type in [existing_track.track_type for existing_track in drawing_cell.tracks]:
             drawing_cell.tracks.clear()
             drawing_cell.tracks.append(track_to_be_added)
