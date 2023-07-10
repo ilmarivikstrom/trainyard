@@ -28,7 +28,9 @@ class Train(pg.sprite.Sprite):
         self.rect.x = int(
             self.loc.x * Config.cell_size - 0.5 * Config.cell_size + Config.padding_x + 48
         )  # TODO: Get the location from somewhere else please.
-        self.rect.y = self.loc.y * Config.cell_size + Config.padding_y + 16  # TODO: Get the location from somewhere else please.
+        self.rect.y = (
+            self.loc.y * Config.cell_size + Config.padding_y + 16
+        )  # TODO: Get the location from somewhere else please.
 
         self.original_direction: Direction = direction
         self.angle: float = self.direction.value

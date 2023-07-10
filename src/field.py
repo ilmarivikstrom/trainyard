@@ -37,9 +37,7 @@ class Grid:
         self.splitters: SplitterHolder = SplitterHolder()
         self.trains: TrainHolder = TrainHolder()
 
-        self.all_items: List[
-            Union[RockCell, DrawingCell, ArrivalStation, DepartureStation, Painter, Splitter]
-        ] = []
+        self.all_items: List[Union[RockCell, DrawingCell, ArrivalStation, DepartureStation, Painter, Splitter]] = []
 
     def add(self, item: Cell) -> None:
         if isinstance(item, ArrivalStation):
@@ -152,7 +150,9 @@ class Field:
     def get_grid_cell_list_index(self, i: int = 0, j: int = 0) -> int:
         return int(j) * self.cells_y + int(i)
 
-    def get_grid_cell_at(self, i: int, j: int) -> Union[DrawingCell, RockCell, ArrivalStation, DepartureStation, Train, Station, Painter, Splitter]:
+    def get_grid_cell_at(
+        self, i: int, j: int
+    ) -> Union[DrawingCell, RockCell, ArrivalStation, DepartureStation, Train, Station, Painter, Splitter]:
         return self.grid.all_items[self.get_grid_cell_list_index(i, j)]
 
     def _get_drawing_cell_at_indices(self, i: int, j: int) -> Optional[DrawingCell]:

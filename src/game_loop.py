@@ -25,7 +25,6 @@ class GameLoop:
 
         Sound.init_music(song_name="Song 9")
 
-
     def loop(self) -> None:
         if Config.play_music:
             Sound.play_music()

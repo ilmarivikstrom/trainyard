@@ -136,42 +136,60 @@ class Track(pg.sprite.Sprite):
         self.navigation_reversed: List[Tuple[int, int]] = []
 
         if self.track_type == TrackType.VERT:
-            self.endpoints = [Coordinate.from_tuple(self.cell_rect.midtop), Coordinate.from_tuple(self.cell_rect.midbottom)]
+            self.endpoints = [
+                Coordinate.from_tuple(self.cell_rect.midtop),
+                Coordinate.from_tuple(self.cell_rect.midbottom),
+            ]
             self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_s_bright"], Direction.UP.value)
             self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_s_dark"], Direction.UP.value)
             self.image = self.images["bright"]
             self.navigation = NAVIGATION_DOWN
             self.navigation_reversed = NAVIGATION_UP
         elif self.track_type == TrackType.HORI:
-            self.endpoints = [Coordinate.from_tuple(self.cell_rect.midleft), Coordinate.from_tuple(self.cell_rect.midright)]
+            self.endpoints = [
+                Coordinate.from_tuple(self.cell_rect.midleft),
+                Coordinate.from_tuple(self.cell_rect.midright),
+            ]
             self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_s_bright"], Direction.RIGHT.value)
             self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_s_dark"], Direction.RIGHT.value)
             self.image = self.images["bright"]
             self.navigation = NAVIGATION_RIGHT
             self.navigation_reversed = NAVIGATION_LEFT
         elif self.track_type == TrackType.TOP_RIGHT:
-            self.endpoints = [Coordinate.from_tuple(self.cell_rect.midtop), Coordinate.from_tuple(self.cell_rect.midright)]
+            self.endpoints = [
+                Coordinate.from_tuple(self.cell_rect.midtop),
+                Coordinate.from_tuple(self.cell_rect.midright),
+            ]
             self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_c_bright"], 90)
             self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_c_dark"], 90)
             self.image = self.images["bright"]
             self.navigation = NAVIGATION_DOWNRIGHT
             self.navigation_reversed = NAVIGATION_LEFTUP
         elif self.track_type == TrackType.TOP_LEFT:
-            self.endpoints = [Coordinate.from_tuple(self.cell_rect.midtop), Coordinate.from_tuple(self.cell_rect.midleft)]
+            self.endpoints = [
+                Coordinate.from_tuple(self.cell_rect.midtop),
+                Coordinate.from_tuple(self.cell_rect.midleft),
+            ]
             self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_c_bright"], 180)
             self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_c_dark"], 180)
             self.image = self.images["bright"]
             self.navigation = NAVIGATION_RIGHTUP
             self.navigation_reversed = NAVIGATION_DOWNLEFT
         elif self.track_type == TrackType.BOTTOM_LEFT:
-            self.endpoints = [Coordinate.from_tuple(self.cell_rect.midleft), Coordinate.from_tuple(self.cell_rect.midbottom)]
+            self.endpoints = [
+                Coordinate.from_tuple(self.cell_rect.midleft),
+                Coordinate.from_tuple(self.cell_rect.midbottom),
+            ]
             self.images["bright"] = pg.transform.rotate(Graphics.img_surfaces["track_c_bright"], 270)
             self.images["dark"] = pg.transform.rotate(Graphics.img_surfaces["track_c_dark"], 270)
             self.image = self.images["bright"]
             self.navigation = NAVIGATION_RIGHTDOWN
             self.navigation_reversed = NAVIGATION_UPLEFT
         elif self.track_type == TrackType.BOTTOM_RIGHT:
-            self.endpoints = [Coordinate.from_tuple(self.cell_rect.midbottom), Coordinate.from_tuple(self.cell_rect.midright)]
+            self.endpoints = [
+                Coordinate.from_tuple(self.cell_rect.midbottom),
+                Coordinate.from_tuple(self.cell_rect.midright),
+            ]
             self.images["bright"] = Graphics.img_surfaces["track_c_bright"]
             self.images["dark"] = Graphics.img_surfaces["track_c_dark"]
             self.image = self.images["bright"]

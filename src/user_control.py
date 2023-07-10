@@ -27,6 +27,7 @@ from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
 
+
 class UserControl:
     MAIN_MENU = K_ESCAPE
     EXIT = K_q

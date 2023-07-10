@@ -161,7 +161,11 @@ def draw_crash_sparks(field: Field, screen: Screen) -> None:
         spark.draw(screen.surface)
 
 
-def get_solid_cells(field: Field) -> List[Union[ArrivalStation, DepartureStation, Painter, RockCell, Splitter]]: # TODO: Store solid cells in some structure instead of getting them every loop.
+def get_solid_cells(
+    field: Field,
+) -> List[
+    Union[ArrivalStation, DepartureStation, Painter, RockCell, Splitter]
+]:  # TODO: Store solid cells in some structure instead of getting them every loop.
     solid_cells: List[Union[ArrivalStation, DepartureStation, Painter, RockCell, Splitter]] = []
     solid_cells.extend(field.grid.arrivals.items)
     solid_cells.extend(field.grid.departures.items)
@@ -651,8 +655,8 @@ def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
 
 
 def draw_background_basecolor(screen: Screen) -> None:
-    #tick_index = 300
-    #screen.surface.fill(screen.background_color_array[tick_index])
+    # tick_index = 300
+    # screen.surface.fill(screen.background_color_array[tick_index])
     screen.surface.blit(Graphics.img_surfaces["bg"], dest=(0, 0))
 
 

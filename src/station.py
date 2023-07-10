@@ -61,9 +61,13 @@ class Station(Cell):
             raise ValueError("Rect is None.")
 
         if self.angle in [0, 180]:
-            self.tracks: List[Union[Track, InsideTrack]] = [InsideTrack(self.pos, self.rect, TrackType.HORI, self.angle)]
+            self.tracks: List[Union[Track, InsideTrack]] = [
+                InsideTrack(self.pos, self.rect, TrackType.HORI, self.angle)
+            ]
         elif self.angle in [90, 270]:
-            self.tracks: List[Union[Track, InsideTrack]] = [InsideTrack(self.pos, self.rect, TrackType.VERT, self.angle)]
+            self.tracks: List[Union[Track, InsideTrack]] = [
+                InsideTrack(self.pos, self.rect, TrackType.VERT, self.angle)
+            ]
         self.create_goal_sprites()
 
     def create_goal_sprites(self) -> None:
