@@ -4,6 +4,7 @@ from invoke.tasks import task, Call
 
 @task
 def clean(call: Call) -> None:
+    print(call)
     dirs_to_delete = ["src/__pycache__", "build/", "dist/"]
     for dir_to_delete in dirs_to_delete:
         try:

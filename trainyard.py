@@ -6,7 +6,6 @@ from src.graphics import Graphics
 from src.phase_exit import exit_phase
 from src.phase_gameplay import gameplay_phase
 
-# from src.phase_mainmenu import mainmenu_phase
 from src.screen import Screen
 from src.sound import Sound
 from src.state import Phase, State
@@ -35,7 +34,6 @@ def main() -> None:
 
     while True:
         if state.game_phase == Phase.MAIN_MENU:
-            # mainmenu_phase(state, screen)
             gameplay_phase(state, screen, field)
         elif state.game_phase == Phase.EXIT:
             exit_phase()

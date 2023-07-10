@@ -8,9 +8,10 @@ class Coordinate:
     def __str__(self) -> str:
         return f"({self.x}, {self.y})"
 
-    def __eq__(self, other: "Coordinate") -> bool: # TODO
-        if self.x == other.x and self.y == other.y:
-            return True
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Coordinate):
+            if self.x == other.x and self.y == other.y:
+                return True
         return False
 
     def copy(self) -> "Coordinate":

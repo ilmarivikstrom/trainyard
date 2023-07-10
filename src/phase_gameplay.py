@@ -418,7 +418,7 @@ def delete_crashed_trains(field: Field) -> None:
 def check_and_save_field(field: Field, file_name: str = "level_tmp.csv") -> None:
     for event in UserControl.events:
         if event.type == KEYDOWN and event.key == UserControl.SAVE_GAME:
-            file_path = f"levels/{file_name}"
+            file_path = f"assets/levels/{file_name}"
             with open(file_path, newline="", mode="w", encoding="utf-8") as level_file:
                 level_writer = csv.writer(level_file, delimiter="-")
                 row: List[str] = []

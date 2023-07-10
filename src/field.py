@@ -86,7 +86,7 @@ class Field:
         self.sparks: List[Spark] = []
 
     def initialize_grid(self) -> None:
-        with open(f"levels/level_{self.level}.csv", newline="", encoding="utf-8") as level_file:
+        with open(f"assets/levels/level_{self.level}.csv", newline="", encoding="utf-8") as level_file:
             level_reader = csv.reader(level_file, delimiter=";")
             for j, row in enumerate(level_reader):
                 for i, item in enumerate(row[0].split("-")):
