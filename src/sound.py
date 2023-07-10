@@ -6,7 +6,6 @@ import pygame as pg
 class Sound:
     pg.mixer.pre_init(frequency=44100, size=-16, channels=3, buffer=512)
     pg.mixer.init()
-    pg.init()  # pylint: disable=no-member; # TODO: Add game_loop.py and clean main.py as the entry point, move pg.init() there.
 
     base_path = "assets/sounds/"
     song_paths: Dict[str, str] = {
@@ -46,6 +45,8 @@ class Sound:
     spark = pg.mixer.Sound("assets/sounds/pop1.ogg")
     spark.set_volume(0.2 * master_volume)
 
+    current_song_name = ""
+
     @staticmethod
     def play_sound_on_channel(sound: pg.mixer.Sound, channel: int) -> None:
         pg.mixer.Channel(channel).play(sound)
@@ -58,6 +59,8 @@ class Sound:
     def init_music(song_name: str) -> None:
         pg.mixer.music.load(Sound.song_paths[song_name])
         pg.mixer.music.set_volume(0.03 * Sound.master_volume)
+        Sound.current_song_name = song_name
+
 
     @staticmethod
     def play_music() -> None:

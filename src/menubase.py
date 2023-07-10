@@ -3,6 +3,7 @@ from typing import List, Tuple
 import pygame as pg
 
 from src.color_constants import GRAY5, WHITE, TRAIN_GREEN, TRAIN_YELLOW, TRAIN_RED, WHITESMOKE, GRAY50
+from src.coordinate import Coordinate
 from src.config import Config
 from src.font import Font
 from src.utils import setup_logging
@@ -92,7 +93,8 @@ class Tooltip:
 
 
 class BaseMenu:
-    def __init__(self, tooltip: Tooltip, indicator_items: List[IndicatorItem]) -> None:
+    def __init__(self, topleft: Tuple[int, int], tooltip: Tooltip, indicator_items: List[IndicatorItem]) -> None:
+        self.topleft = topleft
         self.tooltip: Tooltip = tooltip
         self._indicator_items: List[IndicatorItem] = indicator_items
 
@@ -159,6 +161,18 @@ class BaseMenu:
             screen_surface.blit(indicator_item.renderable, indicator_item.dest)
 
 
+    def mouse_on(self, mouse_pos: Coordinate) -> bool:
+        # TODO: Fix the following ugly hack, where the absolute position of tooltip and indicator items are calculated on the fly.
+        if self.tooltip.surface.get_rect().move(self.topleft).collidepoint(mouse_pos.as_tuple_float()):
+            logger.info("Collides with tooltip.")
+            return True
+        for i, indicator_item in enumerate(self._indicator_items):
+            if indicator_item.renderable.get_rect().move(indicator_item.dest).collidepoint(mouse_pos.as_tuple_float()):
+                logger.info(f"Collides with indicator item: {i}")
+                return True
+        return False
+
+
 class VerticalMenu(BaseMenu):
     def __init__(self, topleft: Tuple[int, int], title: str, menu_items: List[IndicatorItem]) -> None:
         self.topleft: Tuple[int, int] = topleft
@@ -170,6 +184,7 @@ class VerticalMenu(BaseMenu):
 
         self.indicator_items: List[IndicatorItem] = []
 
+        # TODO: Why on earth am I creating a List[IndicatorItem] again??
         for i, menu_item in enumerate(menu_items):
             self.indicator_items.append(
                 IndicatorItem(
@@ -181,7 +196,7 @@ class VerticalMenu(BaseMenu):
                 )
             )
 
-        super().__init__(self.tooltip, self.indicator_items)
+        super().__init__(self.topleft, self.tooltip, self.indicator_items)
 
 
 class HorizontalMenu(BaseMenu):
@@ -196,6 +211,7 @@ class HorizontalMenu(BaseMenu):
 
         self.indicator_items: List[IndicatorItem] = []
 
+        # TODO: Why on earth am I creating a List[IndicatorItem] again??
         for i, menu_item in enumerate(menu_items):
             self.indicator_items.append(
                 IndicatorItem(
@@ -207,4 +223,4 @@ class HorizontalMenu(BaseMenu):
                 )
             )
 
-        super().__init__(self.tooltip, self.indicator_items)
+        super().__init__(self.topleft, self.tooltip, self.indicator_items)

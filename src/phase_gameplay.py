@@ -7,6 +7,8 @@ from pygame.constants import (
     QUIT,
     MOUSEBUTTONDOWN,
     KEYDOWN,
+    K_m,
+    K_n,
     K_p,
     K_SPACE,
     K_UP,
@@ -14,7 +16,7 @@ from pygame.constants import (
     K_F1,
 )
 
-from src.cell import DrawingCell, RockCell, Cell
+from src.cell import DrawingCell, RockCell
 from src.color_constants import GRAY, RED1, WHITE, TRAIN_GREEN, TRAIN_RED, TRAIN_YELLOW
 from src.config import Config
 from src.user_control import UserControl
@@ -28,15 +30,12 @@ from src.state import Phase, State
 from src.screen import Screen
 from src.sound import Sound
 from src.spark import (
-    Spark,
     SparkCloud,
     FlameSparkStyle,
     SlowLargeSpark,
     WideConeCloudShape,
-    NarrowConeCloudShape,
     CircleCloudShape,
     WeldingSparkStyle,
-    FastSmallSpark,
     FastSmallShortLivedSpark,
 )
 from src.station import ArrivalStation, CheckmarkSprite, DepartureStation
@@ -74,6 +73,8 @@ def execute_logic(state: State, field: Field) -> None:
     check_and_toggle_profiling(state)
     check_and_toggle_train_release(field)
     check_and_reset_gameplay(state, field)
+
+    check_for_next_music_command()
 
     check_and_flip_cell_tracks(field)  # if is_released: for cells, for trains
     check_for_track_flip_command(field)
@@ -246,6 +247,17 @@ def check_for_exit_command(state: State) -> None:
             return
 
 
+def check_for_next_music_command() -> None:
+    for event in UserControl.events:
+        if event.type == KEYDOWN:
+            if event.key == K_n:
+                Sound.init_music(song_name="Song 1")
+                Sound.play_music()
+            elif event.key == K_m:
+                Sound.init_music(song_name="Song 9")
+                Sound.play_music()
+
+
 def check_for_track_flip_command(field: Field) -> None:
     for event in UserControl.events:
         if event.type == MOUSEBUTTONDOWN and event.button == 3:
@@ -305,7 +317,7 @@ def update_crash_menu(field: Field) -> None:
 
 def update_music_menu() -> None:
     play_music_text = "OFF"
-    if Config.play_music:
+    if Sound.music_playing:
         play_music_text = "ON"
     music_menu.set_text(text=play_music_text, item_index=0)
 
@@ -347,6 +359,7 @@ def update_running_crashed_complete_menu(state: State, field: Field) -> None:
         running_crashed_complete_menu.activate_item(0)
     else:
         running_crashed_complete_menu.deactivate_all()
+    running_crashed_complete_menu.mouse_on(UserControl.mouse_pos)
 
 
 def update_info_menu(field: Field) -> None:
