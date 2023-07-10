@@ -16,13 +16,13 @@ def clean(call: Call) -> None:
 
 @task
 def run(call: Call) -> None:
-    call.run("python trainyard.py")
+    call.run("python main.py")
 
 
 @task
 def build(call: Call) -> None:
-    # call.run("pyinstaller trainyard.py --onefile --noconsole --add-data assets\\;dist\\assets\ --add-data levels\\;dist\levels\\")
-    call.run("pyinstaller trainyard.py --onefile --noconsole")
+    # call.run("pyinstaller main.py --onefile --noconsole --add-data assets\\;dist\\assets\ --add-data levels\\;dist\levels\\")
+    call.run("pyinstaller main.py --onefile --noconsole")
     call.run(r"if not exist dist\assets mkdir dist\assets")
     call.run(r"if not exist dist\levels mkdir dist\levels")
     call.run(r"xcopy assets dist\assets /E /H /C /I")
