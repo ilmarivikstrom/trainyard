@@ -29,9 +29,10 @@ class Spark:
         self.last_collision = (self.loc_x, self.loc_y)
 
     def calculate_distance_to_move(self, delta_time: float) -> Tuple[float, float]:
+        common_factor = self.speed_multiplier * self.base_speed * delta_time
         return (
-            math.cos(self.angle) * self.speed_multiplier * self.base_speed * delta_time,
-            math.sin(self.angle) * self.speed_multiplier * self.base_speed * delta_time,
+            math.cos(self.angle) * common_factor,
+            math.sin(self.angle) * common_factor,
         )
 
     def bounce_from_edge(self, allowed_area: pg.Rect, collide_rects: Optional[List[pg.Rect]]) -> None:

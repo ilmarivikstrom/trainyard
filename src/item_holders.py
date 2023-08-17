@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Type, Union
 
 import pygame as pg
 
@@ -10,8 +10,8 @@ from src.train import Train
 
 
 class GridItemHolderBase:
-    def __init__(self) -> None:
-        self.items: List[Cell] = []
+    def __init__(self, item_type: Type[Union[Cell, Train]]) -> None:
+        self.items: List[item_type] = []
         self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
     def add_one(self, item: Cell) -> None:
@@ -33,48 +33,34 @@ class GridItemHolderBase:
 
 class DrawingCellHolder(GridItemHolderBase):
     def __init__(self) -> None:
-        super().__init__()
-        self.items: List[DrawingCell] = []
-        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        super().__init__(DrawingCell)
 
 
 class RockHolder(GridItemHolderBase):
     def __init__(self) -> None:
-        super().__init__()
-        self.items: List[RockCell] = []
-        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        super().__init__(RockCell)
 
 
 class ArrivalHolder(GridItemHolderBase):
     def __init__(self) -> None:
-        super().__init__()
-        self.items: List[ArrivalStation] = []
-        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        super().__init__(ArrivalStation)
 
 
 class DepartureHolder(GridItemHolderBase):
     def __init__(self) -> None:
-        super().__init__()
-        self.items: List[DepartureStation] = []
-        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        super().__init__(DepartureStation)
 
 
 class PainterHolder(GridItemHolderBase):
     def __init__(self) -> None:
-        super().__init__()
-        self.items: List[Painter] = []
-        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        super().__init__(Painter)
 
 
 class SplitterHolder(GridItemHolderBase):
     def __init__(self) -> None:
-        super().__init__()
-        self.items: List[Splitter] = []
-        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        super().__init__(Splitter)
 
 
 class TrainHolder(GridItemHolderBase):
     def __init__(self) -> None:
-        super().__init__()
-        self.items: List[Train] = []
-        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+        super().__init__(Train)

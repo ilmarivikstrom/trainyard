@@ -26,4 +26,5 @@ class Coordinate:
 
     @classmethod
     def from_tuple(cls, source_tuple: Tuple[int, int]) -> "Coordinate":
-        return cls(source_tuple[0], source_tuple[1])
+        x, y = source_tuple
+        return cls(x, y)
