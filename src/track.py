@@ -1,7 +1,8 @@
+"""Track."""
+
 from __future__ import annotations
 
 from enum import Enum
-from typing import Dict, List, Tuple
 
 import pygame as pg
 
@@ -138,19 +139,22 @@ angle_to_direction = {
 
 class Track(pg.sprite.Sprite):
     def __init__(
-        self, coords: Coordinate, cell_rect: pg.Rect | pg.FRect, track_type: TrackType
-    ):
+        self,
+        coords: Coordinate,
+        cell_rect: pg.Rect,
+        track_type: TrackType,
+    ) -> None:
         super().__init__()
         self.pos = coords
         self.cell_rect = cell_rect
         self.track_type = track_type
-        self.directions: List[Direction] = tracktype_to_direction[track_type]
+        self.directions: list[Direction] = tracktype_to_direction[track_type]
         self.bright = True
         self.endpoints = [Coordinate(0, 0), Coordinate(0, 0)]
-        self.images: Dict[str, pg.Surface] = {}
+        self.images: dict[str, pg.Surface] = {}
 
-        self.navigation: List[Tuple[int, int]] = []
-        self.navigation_reversed: List[Tuple[int, int]] = []
+        self.navigation: list[tuple[int, int]] = []
+        self.navigation_reversed: list[tuple[int, int]] = []
 
         if self.track_type == TrackType.VERT:
             self.endpoints = [
@@ -158,10 +162,12 @@ class Track(pg.sprite.Sprite):
                 Coordinate.from_tuple(self.cell_rect.midbottom),
             ]
             self.images["bright"] = pg.transform.rotate(
-                Graphics.img_surfaces["track_s_bright"], Direction.UP.value
+                Graphics.img_surfaces["track_s_bright"],
+                Direction.UP.value,
             )
             self.images["dark"] = pg.transform.rotate(
-                Graphics.img_surfaces["track_s_dark"], Direction.UP.value
+                Graphics.img_surfaces["track_s_dark"],
+                Direction.UP.value,
             )
             self.image = self.images["bright"]
             self.navigation = NAVIGATION_DOWN
@@ -172,10 +178,12 @@ class Track(pg.sprite.Sprite):
                 Coordinate.from_tuple(self.cell_rect.midright),
             ]
             self.images["bright"] = pg.transform.rotate(
-                Graphics.img_surfaces["track_s_bright"], Direction.RIGHT.value
+                Graphics.img_surfaces["track_s_bright"],
+                Direction.RIGHT.value,
             )
             self.images["dark"] = pg.transform.rotate(
-                Graphics.img_surfaces["track_s_dark"], Direction.RIGHT.value
+                Graphics.img_surfaces["track_s_dark"],
+                Direction.RIGHT.value,
             )
             self.image = self.images["bright"]
             self.navigation = NAVIGATION_RIGHT
@@ -186,10 +194,12 @@ class Track(pg.sprite.Sprite):
                 Coordinate.from_tuple(self.cell_rect.midright),
             ]
             self.images["bright"] = pg.transform.rotate(
-                Graphics.img_surfaces["track_c_bright"], 90
+                Graphics.img_surfaces["track_c_bright"],
+                90,
             )
             self.images["dark"] = pg.transform.rotate(
-                Graphics.img_surfaces["track_c_dark"], 90
+                Graphics.img_surfaces["track_c_dark"],
+                90,
             )
             self.image = self.images["bright"]
             self.navigation = NAVIGATION_DOWNRIGHT
@@ -200,10 +210,12 @@ class Track(pg.sprite.Sprite):
                 Coordinate.from_tuple(self.cell_rect.midleft),
             ]
             self.images["bright"] = pg.transform.rotate(
-                Graphics.img_surfaces["track_c_bright"], 180
+                Graphics.img_surfaces["track_c_bright"],
+                180,
             )
             self.images["dark"] = pg.transform.rotate(
-                Graphics.img_surfaces["track_c_dark"], 180
+                Graphics.img_surfaces["track_c_dark"],
+                180,
             )
             self.image = self.images["bright"]
             self.navigation = NAVIGATION_RIGHTUP
@@ -214,10 +226,12 @@ class Track(pg.sprite.Sprite):
                 Coordinate.from_tuple(self.cell_rect.midbottom),
             ]
             self.images["bright"] = pg.transform.rotate(
-                Graphics.img_surfaces["track_c_bright"], 270
+                Graphics.img_surfaces["track_c_bright"],
+                270,
             )
             self.images["dark"] = pg.transform.rotate(
-                Graphics.img_surfaces["track_c_dark"], 270
+                Graphics.img_surfaces["track_c_dark"],
+                270,
             )
             self.image = self.images["bright"]
             self.navigation = NAVIGATION_RIGHTDOWN
@@ -233,7 +247,8 @@ class Track(pg.sprite.Sprite):
             self.navigation = NAVIGATION_UPRIGHT
             self.navigation_reversed = NAVIGATION_LEFTDOWN
         else:
-            raise ValueError("Track type not recognized.")
+            msg = "Track type not recognized."
+            raise ValueError(msg)
 
         self.rect = self.image.get_rect()
         self.rect.x = self.cell_rect.x
@@ -251,10 +266,10 @@ class InsideTrack(Track):
     def __init__(
         self,
         coords: Coordinate,
-        parent_rect: pg.Rect | pg.FRect,
+        parent_rect: pg.Rect,
         track_type: TrackType,
         angle: int,
-    ):
+    ) -> None:
         super().__init__(coords, parent_rect, track_type)
         self.angle = angle
         self.parent_rect = parent_rect
@@ -269,6 +284,7 @@ class InsideTrack(Track):
         elif self.angle == 270:
             self.endpoints.append(Coordinate.from_tuple(self.parent_rect.midbottom))
         else:
+            msg = f"InsideTrack angle is wrong: {self.angle}. Expected from : [0, 90, 180, 270]"
             raise ValueError(
-                f"InsideTrack angle is wrong: {self.angle}. Expected from : [0, 90, 180, 270]"
+                msg,
             )

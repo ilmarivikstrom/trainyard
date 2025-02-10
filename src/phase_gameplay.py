@@ -207,8 +207,10 @@ def get_solid_cells(
 
 def update_all_sparks(field: Field) -> None:
     solid_items = get_solid_cells(field)
-    solid_rects: list[pg.Rect | pg.FRect] = [
-        solid_item.rect for solid_item in solid_items if solid_item.rect is not None
+    solid_rects: list[pg.Rect] = [
+        solid_item.rect
+        for solid_item in solid_items
+        if solid_item.rect is not None and isinstance(solid_item.rect, pg.Rect)
     ]
     for i, spark in sorted(enumerate(field.sparks), reverse=True):
         spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), solid_rects)

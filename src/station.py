@@ -24,7 +24,7 @@ logger = setup_logging(log_level=Config.log_level)
 
 
 class StationGoalSprite(pg.sprite.Sprite):
-    def __init__(self, color: str, place: int, parent_rect: pg.Rect | pg.FRect) -> None:
+    def __init__(self, color: str, place: int, parent_rect: pg.Rect) -> None:
         super().__init__()
         self.image = Graphics.img_surfaces[f"{color}_goal_{place}"]
         self.rect = parent_rect
