@@ -1,3 +1,5 @@
+"""Splitter."""
+
 from src.cell import Cell
 from src.config import Config
 from src.coordinate import Coordinate
@@ -18,10 +20,42 @@ class Splitter(Cell):
             raise ValueError("Rect is None.")
 
         if self.angle in [0, 180]:
-            self.tracks.append(InsideTrack(self.pos, self.rect, TrackType.HORI, self.angle))
-            self.tracks.append(InsideTrack(self.pos, self.rect, TrackType.VERT, (self.angle - 90) % 360))
-            self.tracks.append(InsideTrack(self.pos, self.rect, TrackType.VERT, (self.angle + 90) % 360))
+            self.tracks.append(
+                InsideTrack(self.pos, self.rect, TrackType.HORI, self.angle),
+            )
+            self.tracks.append(
+                InsideTrack(
+                    self.pos,
+                    self.rect,
+                    TrackType.VERT,
+                    (self.angle - 90) % 360,
+                ),
+            )
+            self.tracks.append(
+                InsideTrack(
+                    self.pos,
+                    self.rect,
+                    TrackType.VERT,
+                    (self.angle + 90) % 360,
+                ),
+            )
         elif self.angle in [90, 270]:
-            self.tracks.append(InsideTrack(self.pos, self.rect, TrackType.VERT, self.angle))
-            self.tracks.append(InsideTrack(self.pos, self.rect, TrackType.HORI, (self.angle - 90) % 360))
-            self.tracks.append(InsideTrack(self.pos, self.rect, TrackType.HORI, (self.angle + 90) % 360))
+            self.tracks.append(
+                InsideTrack(self.pos, self.rect, TrackType.VERT, self.angle),
+            )
+            self.tracks.append(
+                InsideTrack(
+                    self.pos,
+                    self.rect,
+                    TrackType.HORI,
+                    (self.angle - 90) % 360,
+                ),
+            )
+            self.tracks.append(
+                InsideTrack(
+                    self.pos,
+                    self.rect,
+                    TrackType.HORI,
+                    (self.angle + 90) % 360,
+                ),
+            )

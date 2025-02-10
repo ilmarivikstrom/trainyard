@@ -1,4 +1,6 @@
-from typing import Union
+"""Saveable."""
+
+from __future__ import annotations
 
 from src.traincolor import TrainColor, color_as_short_string
 
@@ -9,10 +11,10 @@ class SaveableAttributes:
     def __init__(
         self,
         block_type: str = "",
-        number: Union[int, str] = "",
-        color: Union[TrainColor, str] = "",
-        angle: Union[int, str] = "",
-    ):
+        number: int | str = "",
+        color: TrainColor | str = "",
+        angle: int | str = "",
+    ) -> None:
         self.block_type = block_type
         self.color = color_as_short_string(color)
         self.number = number
@@ -23,7 +25,7 @@ class SaveableAttributes:
 
 
 class Saveable:
-    def __init__(self, saveable_string: str):
+    def __init__(self, saveable_string: str) -> None:
         self.type = None
         self.num_goals = 0
         self.type = saveable_string[0]

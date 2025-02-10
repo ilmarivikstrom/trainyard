@@ -1,11 +1,13 @@
+"""Phase: Main menu."""
+
 import pygame as pg
-from pygame.locals import QUIT, KEYDOWN
+from pygame.locals import KEYDOWN, QUIT
 
 from src.color_constants import GRAY10
 from src.config import Config
-from src.user_control import UserControl
 from src.screen import Screen
 from src.state import Phase, State
+from src.user_control import UserControl
 from src.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)

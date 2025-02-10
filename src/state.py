@@ -1,6 +1,7 @@
+"""State."""
+
 from dataclasses import dataclass
 from enum import Enum
-from typing import Tuple
 
 from src.config import Config
 from src.profiling import Profiler
@@ -24,7 +25,7 @@ class GlobalStatus:
 class GameplayStatus:
     in_delete_mode: bool = False
     current_level_passed = False
-    background_location: Tuple[float, float] = (0.0, 0.0)
+    background_location: tuple[float, float] = (0.0, 0.0)
 
 
 @dataclass
@@ -33,7 +34,7 @@ class MainMenuStatus:
 
 
 class State:
-    def __init__(self):
+    def __init__(self) -> None:
         self.profiler: Profiler = Profiler()
         self.global_status: GlobalStatus = GlobalStatus()
         self.gameplay: GameplayStatus = GameplayStatus()

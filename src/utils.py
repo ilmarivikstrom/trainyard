@@ -1,5 +1,6 @@
+"""Utils."""
+
 import logging
-from typing import List
 
 import pygame as pg
 
@@ -10,23 +11,29 @@ def setup_logging(log_level: str = "INFO") -> logging.Logger:
     return logging.getLogger()
 
 
-def get_background_color_array() -> List[pg.Color]:
-    color_array: List[pg.Color] = []
-    with open("assets/sprites/day_night_array.csv", mode="r", encoding="utf-8") as array_file:
+def get_background_color_array() -> list[pg.Color]:
+    color_array: list[pg.Color] = []
+    with open(
+        "assets/sprites/day_night_array.csv", mode="r", encoding="utf-8"
+    ) as array_file:
         for line in array_file.readlines():
             line_stripped = line.strip()
             tuple_items = line_stripped.split(",")
-            color_tuple = (int(tuple_items[0]), int(tuple_items[1]), int(tuple_items[2]), int(tuple_items[3]))
+            color_tuple = (
+                int(tuple_items[0]),
+                int(tuple_items[1]),
+                int(tuple_items[2]),
+                int(tuple_items[3]),
+            )
             color = pg.Color(color_tuple)
             color_array.append(color)
     return color_array
 
 
 def rot_center(original_image: pg.Surface, angle_degrees: float) -> pg.Surface:
-    """rotate an image while keeping its center and size"""
+    """Rotate an image while keeping its center and size."""
     orig_rect = original_image.get_rect()
     rot_image = pg.transform.rotate(original_image, angle_degrees)
     rot_rect = orig_rect.copy()
     rot_rect.center = rot_image.get_rect().center
-    rot_image = rot_image.subsurface(rot_rect).copy()
-    return rot_image
+    return rot_image.subsurface(rot_rect).copy()

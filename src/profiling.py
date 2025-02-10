@@ -1,3 +1,5 @@
+"""Profiling."""
+
 import cProfile
 import os
 import pstats
@@ -7,7 +9,7 @@ import psutil
 
 
 class Profiler:
-    def __init__(self):
+    def __init__(self) -> None:
         self.is_running = False
         self.profile = cProfile.Profile(builtins=False)
         self.start_time = 0
@@ -16,7 +18,7 @@ class Profiler:
         self._pid = os.getpid()
         self.process = psutil.Process(self._pid)
 
-    def discontinue_profiling(self):
+    def discontinue_profiling(self) -> None:
         if not self.is_running:
             return
         print("INFO\tstopped profiling!")
@@ -33,7 +35,7 @@ class Profiler:
         stats.print_stats(35)
         self.is_running = False
 
-    def continue_profiling(self):
+    def continue_profiling(self) -> None:
         if self.is_running:
             self.ticks += 1
             return

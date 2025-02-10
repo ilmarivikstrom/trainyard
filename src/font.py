@@ -1,3 +1,5 @@
+"""Font."""
+
 import pygame as pg
 
 

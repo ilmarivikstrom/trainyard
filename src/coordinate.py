@@ -1,4 +1,4 @@
-from typing import Tuple
+"""Coordinate."""
 
 
 class Coordinate:
@@ -7,24 +7,25 @@ class Coordinate:
         self.y = y
 
     def __str__(self) -> str:
+        """Show string representation in (x, y) format."""
         return f"({self.x}, {self.y})"
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, Coordinate):
-            if self.x == other.x and self.y == other.y:
-                return True
-        return False
+        """Check if two coordinates are equal."""
+        return bool(
+            isinstance(other, Coordinate) and self.x == other.x and self.y == other.y,
+        )
 
     def copy(self) -> "Coordinate":
         return Coordinate(self.x, self.y)
 
-    def as_tuple_float(self) -> Tuple[float, float]:
+    def as_tuple_float(self) -> tuple[float, float]:
         return (float(self.x), float(self.y))
 
-    def as_tuple_int(self) -> Tuple[int, int]:
+    def as_tuple_int(self) -> tuple[int, int]:
         return (self.x, self.y)
 
     @classmethod
-    def from_tuple(cls, source_tuple: Tuple[int, int]) -> "Coordinate":
+    def from_tuple(cls, source_tuple: tuple[int, int]) -> "Coordinate":
         x, y = source_tuple
         return cls(x, y)

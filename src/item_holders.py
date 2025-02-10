@@ -1,4 +1,7 @@
-from typing import List, Type, Union
+"""Item holders."""
+
+from __future__ import annotations
+from typing import Type
 
 import pygame as pg
 
@@ -10,15 +13,15 @@ from src.train import Train
 
 
 class GridItemHolderBase:
-    def __init__(self, item_type: Type[Union[Cell, Train]]) -> None:
-        self.items: List[item_type] = []
+    def __init__(self, item_type: Type[Cell | Train]) -> None:
+        self.items: list[item_type] = []
         self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
     def add_one(self, item: Cell) -> None:
         self.items.append(item)
         self.sprites.add(item)
 
-    def add_many(self, items: List[Cell]) -> None:
+    def add_many(self, items: list[Cell]) -> None:
         for item in items:
             self.add_one(item)
 

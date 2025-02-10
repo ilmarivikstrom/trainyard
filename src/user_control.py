@@ -1,13 +1,11 @@
-from typing import List, Optional, Tuple
+"""User control."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pygame as pg
 from pygame import (
-    MOUSEBUTTONDOWN,
-    K_ESCAPE,
-    K_q,
-    K_RETURN,
-    K_LSHIFT,
-    K_RSHIFT,
-    K_s,
     K_1,
     K_2,
     K_3,
@@ -15,15 +13,22 @@ from pygame import (
     K_5,
     K_6,
     K_7,
-    K_8,
-    K_9,
+    K_ESCAPE,
+    K_LSHIFT,
+    K_RETURN,
+    K_RSHIFT,
+    MOUSEBUTTONDOWN,
+    K_q,
+    K_s,
 )
-from pygame.event import Event
 
 from src.config import Config
 from src.coordinate import Coordinate
 from src.direction import Direction
 from src.utils import setup_logging
+
+if TYPE_CHECKING:
+    from pygame.event import Event
 
 logger = setup_logging(log_level=Config.log_level)
 
@@ -38,9 +43,9 @@ class UserControl:
     SAVE_GAME = K_s
 
     mouse_pos = Coordinate(-1, -1)
-    mouse_pressed: Tuple[bool, bool, bool] = (False, False, False)
+    mouse_pressed: tuple[bool, bool, bool] = (False, False, False)
     curr_cell: Coordinate = Coordinate(-1, -1)
-    prev_cell: Optional[Coordinate] = None
+    prev_cell: Coordinate | None = None
 
     mouse_entered_new_cell: bool = False
 
@@ -52,7 +57,7 @@ class UserControl:
     curr_movement: Direction = Direction.NONE
     prev_movement: Direction = Direction.NONE
 
-    events: List[Event] = []
+    events: list[Event] = []
 
     @staticmethod
     def update_user_events() -> None:

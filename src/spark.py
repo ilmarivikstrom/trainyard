@@ -1,6 +1,9 @@
+"""Spark."""
+
+from __future__ import annotations
+
 import math
 import random
-from typing import List, Optional, Tuple
 
 import pygame as pg
 
@@ -8,11 +11,11 @@ import pygame as pg
 class Spark:
     def __init__(
         self,
-        loc: Tuple[int, int],
+        loc: tuple[int, int],
         angle: float,
         base_speed: float,
         friction: float,
-        color: Tuple[int, int, int],
+        color: tuple[int, int, int],
         scale: float = 1.0,
         speed_multiplier: float = 1.0,
     ):
@@ -28,14 +31,16 @@ class Spark:
 
         self.last_collision = (self.loc_x, self.loc_y)
 
-    def calculate_distance_to_move(self, delta_time: float) -> Tuple[float, float]:
+    def calculate_distance_to_move(self, delta_time: float) -> tuple[float, float]:
         common_factor = self.speed_multiplier * self.base_speed * delta_time
         return (
             math.cos(self.angle) * common_factor,
             math.sin(self.angle) * common_factor,
         )
 
-    def bounce_from_edge(self, allowed_area: pg.Rect, collide_rects: Optional[List[pg.Rect]]) -> None:
+    def bounce_from_edge(
+        self, allowed_area: pg.Rect, collide_rects: list[pg.Rect] | None
+    ) -> None:
         if not allowed_area.collidepoint(self.loc_x, self.loc_y):
             to_top = abs(self.loc_y - allowed_area.top)
             to_left = abs(self.loc_x - allowed_area.left)
@@ -79,7 +84,12 @@ class Spark:
                         self.angle = math.pi - self.angle
                         self.loc_x = collide_rect.right
 
-    def move(self, delta_time: float, allowed_area: pg.Rect, collide_rects: Optional[List[pg.Rect]]) -> None:
+    def move(
+        self,
+        delta_time: float,
+        allowed_area: pg.Rect,
+        collide_rects: list[pg.Rect] | None,
+    ) -> None:
         self.bounce_from_edge(allowed_area, collide_rects)
         distance = self.calculate_distance_to_move(delta_time)
         self.loc_x += distance[0]
@@ -88,7 +98,7 @@ class Spark:
         if self.base_speed <= 0:
             self.alive = False
 
-    def draw(self, screen_surface: pg.Surface):
+    def draw(self, screen_surface: pg.Surface) -> None:
         if self.alive:
             points = [
                 [
@@ -96,34 +106,68 @@ class Spark:
                     self.loc_y + math.sin(self.angle) * self.base_speed * self.scale,
                 ],
                 [
-                    self.loc_x + math.cos(self.angle + math.pi / 2) * self.base_speed * self.scale * 0.3,
-                    self.loc_y + math.sin(self.angle + math.pi / 2) * self.base_speed * self.scale * 0.3,
+                    self.loc_x
+                    + math.cos(self.angle + math.pi / 2)
+                    * self.base_speed
+                    * self.scale
+                    * 0.3,
+                    self.loc_y
+                    + math.sin(self.angle + math.pi / 2)
+                    * self.base_speed
+                    * self.scale
+                    * 0.3,
                 ],
                 [
-                    self.loc_x - math.cos(self.angle) * self.base_speed * self.scale * 3.5,
-                    self.loc_y - math.sin(self.angle) * self.base_speed * self.scale * 3.5,
+                    self.loc_x
+                    - math.cos(self.angle) * self.base_speed * self.scale * 3.5,
+                    self.loc_y
+                    - math.sin(self.angle) * self.base_speed * self.scale * 3.5,
                 ],
                 [
-                    self.loc_x + math.cos(self.angle - math.pi / 2) * self.base_speed * self.scale * 0.3,
-                    self.loc_y - math.sin(self.angle + math.pi / 2) * self.base_speed * self.scale * 0.3,
+                    self.loc_x
+                    + math.cos(self.angle - math.pi / 2)
+                    * self.base_speed
+                    * self.scale
+                    * 0.3,
+                    self.loc_y
+                    - math.sin(self.angle + math.pi / 2)
+                    * self.base_speed
+                    * self.scale
+                    * 0.3,
                 ],
             ]
             pg.draw.polygon(screen_surface, self.color, points)
 
 
 class SparkStyle:
-    def __init__(self, colors: List[Tuple[int, int, int]]) -> None:
-        self.colors: List[Tuple[int, int, int]] = colors
+    def __init__(self, colors: list[tuple[int, int, int]]) -> None:
+        self.colors: list[tuple[int, int, int]] = colors
 
 
 class FlameSparkStyle(SparkStyle):
     def __init__(self) -> None:
-        super().__init__(colors=[(255, 207, 119), (254, 126, 5), (239, 99, 5), (177, 72, 3), (255, 237, 168)])
+        super().__init__(
+            colors=[
+                (255, 207, 119),
+                (254, 126, 5),
+                (239, 99, 5),
+                (177, 72, 3),
+                (255, 237, 168),
+            ]
+        )
 
 
 class WeldingSparkStyle(SparkStyle):
     def __init__(self) -> None:
-        super().__init__(colors=[(255, 255, 255), (126, 205, 210), (252, 192, 46), (201, 230, 234), (236, 197, 104)])
+        super().__init__(
+            colors=[
+                (255, 255, 255),
+                (126, 205, 210),
+                (252, 192, 46),
+                (201, 230, 234),
+                (236, 197, 104),
+            ]
+        )
 
 
 class SparkBehavior:
@@ -159,14 +203,24 @@ class SlowLargeSpark(SparkBehavior):
 class FastSmallSpark(SparkBehavior):
     def __init__(self) -> None:
         super().__init__(
-            speed=0.5, speed_deviation=0.25, friction=0.01, friction_deviation=0.005, scale=5.0, speed_multiplier=5.0
+            speed=0.5,
+            speed_deviation=0.25,
+            friction=0.01,
+            friction_deviation=0.005,
+            scale=5.0,
+            speed_multiplier=5.0,
         )
 
 
 class FastSmallShortLivedSpark(SparkBehavior):
     def __init__(self) -> None:
         super().__init__(
-            speed=0.75, speed_deviation=0.25, friction=0.04, friction_deviation=0.005, scale=5.0, speed_multiplier=5.0
+            speed=0.75,
+            speed_deviation=0.25,
+            friction=0.04,
+            friction_deviation=0.005,
+            scale=5.0,
+            speed_multiplier=5.0,
         )
 
 
@@ -194,9 +248,9 @@ class NarrowConeCloudShape(CloudShape):
 class SparkCloud:
     def __init__(
         self,
-        pos: Tuple[int, int],
+        pos: tuple[int, int],
         shape: CloudShape,
-        pos_deviation: Tuple[int, int] = (0, 0),
+        pos_deviation: tuple[int, int] = (0, 0),
         style: SparkStyle = FlameSparkStyle(),
         behavior: SparkBehavior = SlowLargeSpark(),
         spark_count: int = 10,
@@ -210,8 +264,8 @@ class SparkCloud:
         self.spark_count_deviation = spark_count_deviation
         self.behavior = behavior
 
-    def emit_sparks(self) -> List[Spark]:
-        spark_list: List[Spark] = []
+    def emit_sparks(self) -> list[Spark]:
+        spark_list: list[Spark] = []
         sparks_to_create = self.spark_count + random.randint(
             -int(self.spark_count_deviation / 2), int(self.spark_count_deviation / 2)
         )
@@ -219,12 +273,20 @@ class SparkCloud:
             spark_list.append(
                 Spark(
                     loc=(
-                        self.pos[0] + random.randint(-self.pos_deviation[0], self.pos_deviation[0]),
-                        self.pos[1] + random.randint(-self.pos_deviation[1], self.pos_deviation[1]),
+                        self.pos[0]
+                        + random.randint(-self.pos_deviation[0], self.pos_deviation[0]),
+                        self.pos[1]
+                        + random.randint(-self.pos_deviation[1], self.pos_deviation[1]),
                     ),
-                    angle=math.radians(random.uniform(self.shape.angle_min, self.shape.angle_max)),
-                    base_speed=random.uniform(self.behavior.speed_min, self.behavior.speed_max),
-                    friction=random.uniform(self.behavior.friction_min, self.behavior.friction_max),
+                    angle=math.radians(
+                        random.uniform(self.shape.angle_min, self.shape.angle_max)
+                    ),
+                    base_speed=random.uniform(
+                        self.behavior.speed_min, self.behavior.speed_max
+                    ),
+                    friction=random.uniform(
+                        self.behavior.friction_min, self.behavior.friction_max
+                    ),
                     color=random.sample(self.style.colors, 1)[0],
                     scale=self.behavior.scale,
                     speed_multiplier=self.behavior.speed_multiplier,
