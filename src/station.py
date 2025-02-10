@@ -24,7 +24,7 @@ logger = setup_logging(log_level=Config.log_level)
 
 
 class StationGoalSprite(pg.sprite.Sprite):
-    def __init__(self, color: str, place: int, parent_rect: pg.Rect) -> None:
+    def __init__(self, color: str, place: int, parent_rect: pg.Rect | pg.FRect) -> None:
         super().__init__()
         self.image = Graphics.img_surfaces[f"{color}_goal_{place}"]
         self.rect = parent_rect
@@ -64,7 +64,8 @@ class Station(Cell):
         )
 
         if self.rect is None:
-            raise ValueError("Rect is None.")
+            msg = "Rect is None."
+            raise ValueError(msg)
 
         if self.angle in [0, 180]:
             self.tracks: list[Track | InsideTrack] = [
@@ -75,8 +76,9 @@ class Station(Cell):
                 InsideTrack(self.pos, self.rect, TrackType.VERT, self.angle),
             ]
         else:
+            msg = "Station's angle is incompatible with placing InsideTracks."
             raise ValueError(
-                "Station's angle is incompatible with placing InsideTracks."
+                msg,
             )
         self.create_goal_sprites()
 
@@ -94,7 +96,8 @@ class Station(Cell):
         elif self.train_color == TrainColor.PURPLE:
             goal_sprite_color = "purple"
         else:
-            raise ValueError(f"Missing goal sprite string for color {self.train_color}")
+            msg = f"Missing goal sprite string for color {self.train_color}"
+            raise ValueError(msg)
         if self.rect:
             self.goals = [
                 StationGoalSprite(goal_sprite_color, i + 1, self.rect)
@@ -117,7 +120,7 @@ class DepartureStation(Station):
         angle: int,
         number_of_trains_left: int,
         train_color: TrainColor,
-    ):
+    ) -> None:
         super().__init__(
             coords=coords,
             image=Graphics.img_surfaces["departure"],

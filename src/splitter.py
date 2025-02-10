@@ -17,7 +17,8 @@ class Splitter(Cell):
         self.saveable_attributes = SaveableAttributes(block_type="S", angle=self.angle)
 
         if self.rect is None:
-            raise ValueError("Rect is None.")
+            msg = "Rect is None."
+            raise ValueError(msg)
 
         if self.angle in [0, 180]:
             self.tracks.append(

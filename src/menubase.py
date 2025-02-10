@@ -84,16 +84,16 @@ class IndicatorItem:
         if self.activated:
             self.renderable = self.font.render(
                 f"{self.text:^{len(self.text) + 2 * self.padding_spaces}}",
-                True,
-                self.style.fg_active_color,
-                self.style.bg_active_color,
+                antialias=True,
+                color=self.style.fg_active_color,
+                bgcolor=self.style.bg_active_color,
             )
         else:
             self.renderable = self.font.render(
                 f"{self.text:^{len(self.text) + 2 * self.padding_spaces}}",
-                True,
-                self.style.fg_deactive_color,
-                self.style.bg_deactive_color,
+                antialias=True,
+                color=self.style.fg_deactive_color,
+                bgcolor=self.style.bg_deactive_color,
             )
 
     def activate(self) -> None:
@@ -107,7 +107,7 @@ class IndicatorItem:
 
 class Tooltip:
     def __init__(self, text: str, dest: tuple[int, int]) -> None:
-        self.surface: pg.Surface = Font.normal.render(text, True, WHITE)
+        self.surface: pg.Surface = Font.normal.render(text, antialias=True, color=WHITE)
         self.dest: tuple[int, int] = dest
 
 
@@ -131,8 +131,9 @@ class BaseMenu:
 
     def set_text(self, text: str, item_index: int) -> None:
         if item_index > len(self._indicator_items) - 1:
+            msg = f"Tried to set text for indicator item in index {item_index} when the maximum index is {len(self._indicator_items) - 1}"
             raise ValueError(
-                f"Tried to set text for indicator item in index {item_index} when the maximum index is {len(self._indicator_items) - 1}"
+                msg,
             )
         self._indicator_items[item_index].text = text
         self._indicator_items[item_index].render()
@@ -144,7 +145,7 @@ class BaseMenu:
     def activate_item(self, item_to_activate: int) -> None:
         if item_to_activate > len(self._indicator_items) - 1 or item_to_activate < 0:
             logger.warning(
-                f"Trying to activate menu item {item_to_activate} when there are only {len(self._indicator_items)} items available."
+                f"Trying to activate menu item {item_to_activate} when there are only {len(self._indicator_items)} items available.",
             )
             return
         for i, indicator_item in enumerate(self._indicator_items):
@@ -229,7 +230,7 @@ class VerticalMenu(BaseMenu):
                     padding_spaces=3,
                     style=menu_item.style,
                     dest=(self.topleft[0], self.topleft[1] + (i + 1) * self.row_height),
-                )
+                ),
             )
 
         super().__init__(self.topleft, self.tooltip, self.indicator_items)
@@ -264,7 +265,7 @@ class HorizontalMenu(BaseMenu):
                         self.topleft[0] + i * self.row_width,
                         self.topleft[1] + 1 * self.row_height,
                     ),
-                )
+                ),
             )
 
         super().__init__(self.topleft, self.tooltip, self.indicator_items)

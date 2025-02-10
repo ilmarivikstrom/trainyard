@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import pygame as pg
 from pygame import (
@@ -57,7 +57,7 @@ class UserControl:
     curr_movement: Direction = Direction.NONE
     prev_movement: Direction = Direction.NONE
 
-    events: list[Event] = []
+    events: ClassVar[list[Event]] = []
 
     @staticmethod
     def update_user_events() -> None:

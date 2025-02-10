@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import pygame as pg
 
 
@@ -10,7 +12,7 @@ class Sound:
     pg.mixer.init()
 
     base_path = "assets/sounds/"
-    song_paths: dict[str, str] = {
+    song_paths: ClassVar[dict[str, str]] = {
         "Song 1": base_path + "Loop.ogg",
         "Song 2": base_path + "Ludum-Dare-28-Track-7.ogg",
         "Song 3": base_path + "Ludum-Dare-30-Track-6.ogg",

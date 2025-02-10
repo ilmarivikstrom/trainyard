@@ -14,7 +14,8 @@ def setup_logging(log_level: str = "INFO") -> logging.Logger:
 def get_background_color_array() -> list[pg.Color]:
     color_array: list[pg.Color] = []
     with open(
-        "assets/sprites/day_night_array.csv", mode="r", encoding="utf-8"
+        "assets/sprites/day_night_array.csv",
+        encoding="utf-8",
     ) as array_file:
         for line in array_file.readlines():
             line_stripped = line.strip()

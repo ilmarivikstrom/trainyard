@@ -1,7 +1,9 @@
 """Field."""
 
 from __future__ import annotations
+
 import csv
+from typing import TYPE_CHECKING
 
 from src.cell import Cell, DrawingCell, RockCell
 from src.color_constants import TRAIN_YELLOW
@@ -19,12 +21,14 @@ from src.item_holders import (
 )
 from src.painter import Painter
 from src.saveable import Saveable
-from src.spark import Spark
 from src.splitter import Splitter
 from src.station import ArrivalStation, DepartureStation, Station
 from src.track import Track, TrackType
-from src.train import Train
 from src.utils import setup_logging
+
+if TYPE_CHECKING:
+    from src.spark import Spark
+    from src.train import Train
 
 logger = setup_logging(log_level=Config.log_level)
 
@@ -68,7 +72,8 @@ class Grid:
             self.splitters.add_one(item)
             self.all_items.append(item)
         else:
-            raise ValueError(f"Did not find a holder for item of type {type(item)}")
+            msg = f"Did not find a holder for item of type {type(item)}"
+            raise TypeError(msg)
 
 
 class Field:
@@ -98,7 +103,9 @@ class Field:
 
     def initialize_grid(self) -> None:
         with open(
-            f"assets/levels/level_{self.level}.csv", newline="", encoding="utf-8"
+            f"assets/levels/level_{self.level}.csv",
+            newline="",
+            encoding="utf-8",
         ) as level_file:
             level_reader = csv.reader(level_file, delimiter=";")
             for j, row in enumerate(level_reader):
@@ -107,12 +114,18 @@ class Field:
                     saveable = Saveable(item)
                     if saveable.type == "A":
                         arrival_station = ArrivalStation(
-                            coords, saveable.angle, saveable.num_goals, saveable.color
+                            coords,
+                            saveable.angle,
+                            saveable.num_goals,
+                            saveable.color,
                         )
                         self.grid.add(arrival_station)
                     elif saveable.type == "D":
                         departure_station = DepartureStation(
-                            coords, saveable.angle, saveable.num_goals, saveable.color
+                            coords,
+                            saveable.angle,
+                            saveable.num_goals,
+                            saveable.color,
                         )
                         self.grid.add(departure_station)
                     elif saveable.type == "E":
@@ -128,8 +141,9 @@ class Field:
                         splitter_cell = Splitter(coords, saveable.angle)
                         self.grid.add(splitter_cell)
                     else:
-                        raise ValueError(
-                            f"Saveable type was unexpected: '{saveable.type}"
+                        msg = f"Saveable type was unexpected: '{saveable.type}"
+                        raise RuntimeError(
+                            msg,
                         )
 
     def load_level(self, level: int) -> None:
@@ -200,11 +214,12 @@ class Field:
         drawing_cell = self.get_drawing_cell_at_pos(pos)
         if drawing_cell is None:
             logger.warning(
-                f"Tried to insert track on a non-existing drawing cell at {pos}"
+                f"Tried to insert track on a non-existing drawing cell at {pos}",
             )
             return False
         if drawing_cell.rect is None:
-            raise ValueError("Rect of drawing cell is None")
+            msg = "Rect of drawing cell is None"
+            raise ValueError(msg)
         track_to_be_added = Track(pos, drawing_cell.rect, track_type)
         if track_type in [
             existing_track.track_type for existing_track in drawing_cell.tracks

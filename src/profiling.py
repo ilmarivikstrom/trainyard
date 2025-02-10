@@ -56,5 +56,5 @@ class Profiler:
             f"Memory info: {self.process.memory_full_info()} \n"
             f"Memory percentage: {self.process.memory_percent()}\n\n\n"
             f"Profiler info:\n"
-            f"=========================\n"
+            f"=========================\n",
         )

@@ -1,10 +1,12 @@
 """Graphics."""
 
+from typing import ClassVar
+
 import pygame as pg
 
 
 class Graphics:
-    img_surfaces: dict[str, pg.Surface] = {}
+    img_surfaces: ClassVar[dict[str, pg.Surface]] = {}
 
     @staticmethod
     def load_resources() -> None:

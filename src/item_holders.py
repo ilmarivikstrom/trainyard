@@ -1,7 +1,6 @@
 """Item holders."""
 
 from __future__ import annotations
-from typing import Type
 
 import pygame as pg
 
@@ -13,7 +12,7 @@ from src.train import Train
 
 
 class GridItemHolderBase:
-    def __init__(self, item_type: Type[Cell | Train]) -> None:
+    def __init__(self, item_type: type[Cell | Train]) -> None:
         self.items: list[item_type] = []
         self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 

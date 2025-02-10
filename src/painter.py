@@ -20,7 +20,7 @@ logger = setup_logging(log_level=Config.log_level)
 
 class Painter(Cell):
     def __init__(self, coords: Coordinate, angle: int, color: TrainColor) -> None:
-        super().__init__(coords, Graphics.img_surfaces["painter"], angle, True)
+        super().__init__(coords, Graphics.img_surfaces["painter"], angle)
         self.color = color
         self.saveable_attributes = SaveableAttributes(
             block_type="P",
@@ -29,7 +29,8 @@ class Painter(Cell):
         )
 
         if self.rect is None:
-            raise ValueError("Rect is None.")
+            msg = "Rect is None."
+            raise ValueError(msg)
 
         if self.angle in [0, 180]:
             self.tracks: list[Track] = [Track(self.pos, self.rect, TrackType.HORI)]

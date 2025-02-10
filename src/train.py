@@ -30,13 +30,13 @@ class Train(pg.sprite.Sprite):
 
         self.image: pg.Surface = Graphics.img_surfaces[color.value]
         self.original_image: pg.Surface = self.image
-        self.rect: pg.Rect = self.image.get_rect()  # type: ignore
+        self.rect: pg.Rect = self.image.get_rect()
 
         self.rect.x = int(
             self.loc.x * Config.cell_size
             - 0.5 * Config.cell_size
             + Config.padding_x
-            + 48
+            + 48,
         )  # TODO: Get the location from somewhere else please.
         self.rect.y = (
             self.loc.y * Config.cell_size + Config.padding_y + 16
@@ -60,7 +60,8 @@ class Train(pg.sprite.Sprite):
 
     def determine_next_cell_coords_and_direction(self) -> None:
         if self.selected_track is None:
-            raise ValueError("Selected track is None.")
+            msg = "Selected track is None."
+            raise ValueError(msg)
         if self.direction == Direction.UP:
             if self.selected_track.track_type == TrackType.VERT:
                 self.next_cell_coords = (
@@ -81,7 +82,8 @@ class Train(pg.sprite.Sprite):
                 )
                 self.next_cell_direction = Direction.RIGHT
             else:
-                raise ValueError("Bad tracktype and/or direction.")
+                msg = "Bad tracktype and/or direction."
+                raise ValueError(msg)
         elif self.direction == Direction.DOWN:
             if self.selected_track.track_type == TrackType.VERT:
                 self.next_cell_coords = (
@@ -102,7 +104,8 @@ class Train(pg.sprite.Sprite):
                 )
                 self.next_cell_direction = Direction.RIGHT
             else:
-                raise ValueError("Bad tracktype and/or direction.")
+                msg = "Bad tracktype and/or direction."
+                raise ValueError(msg)
         elif self.direction == Direction.RIGHT:
             if self.selected_track.track_type == TrackType.HORI:
                 self.next_cell_coords = (
@@ -123,7 +126,8 @@ class Train(pg.sprite.Sprite):
                 )
                 self.next_cell_direction = Direction.DOWN
             else:
-                raise ValueError("Bad tracktype and/or direction.")
+                msg = "Bad tracktype and/or direction."
+                raise ValueError(msg)
         elif self.direction == Direction.LEFT:
             if self.selected_track.track_type == TrackType.HORI:
                 self.next_cell_coords = (
@@ -144,7 +148,8 @@ class Train(pg.sprite.Sprite):
                 )
                 self.next_cell_direction = Direction.DOWN
             else:
-                raise ValueError("Bad tracktype and/or direction.")
+                msg = "Bad tracktype and/or direction."
+                raise ValueError(msg)
 
     def reset(self) -> None:
         self.rect.x = self.original_pos[0]
@@ -170,7 +175,8 @@ class Train(pg.sprite.Sprite):
         if self.crashed:
             return
         if self.selected_track is None:
-            raise ValueError("Selected track is None.")
+            msg = "Selected track is None."
+            raise ValueError(msg)
         if self.selected_track.track_type == TrackType.VERT:
             if (
                 self.direction == Direction.DOWN
@@ -195,7 +201,8 @@ class Train(pg.sprite.Sprite):
                     self.current_navigation_index
                 ][1]
             else:
-                raise ValueError("Bad direction.")
+                msg = "Bad direction."
+                raise ValueError(msg)
             self.current_navigation_index += 1
         elif self.selected_track.track_type == TrackType.HORI:
             if (
@@ -221,7 +228,8 @@ class Train(pg.sprite.Sprite):
                     self.current_navigation_index
                 ][1]
             else:
-                raise ValueError("Bad direction.")
+                msg = "Bad direction."
+                raise ValueError(msg)
             self.current_navigation_index += 1
         elif self.selected_track.track_type == TrackType.TOP_LEFT:
             if (
@@ -234,8 +242,8 @@ class Train(pg.sprite.Sprite):
                     * math.sin(
                         0.5
                         * math.pi
-                        * (self.current_navigation_index / num_navigation_indices)
-                    )
+                        * (self.current_navigation_index / num_navigation_indices),
+                    ),
                 )
                 self.rect.centerx += self.selected_track.navigation[
                     self.current_navigation_index
@@ -253,8 +261,8 @@ class Train(pg.sprite.Sprite):
                     * math.sin(
                         0.5
                         * math.pi
-                        * (self.current_navigation_index / num_navigation_indices)
-                    )
+                        * (self.current_navigation_index / num_navigation_indices),
+                    ),
                 )
                 self.rect.centerx += self.selected_track.navigation_reversed[
                     self.current_navigation_index
@@ -263,7 +271,8 @@ class Train(pg.sprite.Sprite):
                     self.current_navigation_index
                 ][1]
             else:
-                raise ValueError("Bad direction.")
+                msg = "Bad direction."
+                raise ValueError(msg)
             self.current_navigation_index += 1
         elif self.selected_track.track_type == TrackType.TOP_RIGHT:
             if (
@@ -276,8 +285,8 @@ class Train(pg.sprite.Sprite):
                     * math.sin(
                         0.5
                         * math.pi
-                        * (self.current_navigation_index / num_navigation_indices)
-                    )
+                        * (self.current_navigation_index / num_navigation_indices),
+                    ),
                 )
                 self.rect.centerx += self.selected_track.navigation[
                     self.current_navigation_index
@@ -295,8 +304,8 @@ class Train(pg.sprite.Sprite):
                     * math.sin(
                         0.5
                         * math.pi
-                        * (self.current_navigation_index / num_navigation_indices)
-                    )
+                        * (self.current_navigation_index / num_navigation_indices),
+                    ),
                 )
                 self.rect.centerx += self.selected_track.navigation_reversed[
                     self.current_navigation_index
@@ -305,7 +314,8 @@ class Train(pg.sprite.Sprite):
                     self.current_navigation_index
                 ][1]
             else:
-                raise ValueError("Bad direction.")
+                msg = "Bad direction."
+                raise ValueError(msg)
             self.current_navigation_index += 1
         elif self.selected_track.track_type == TrackType.BOTTOM_LEFT:
             if (
@@ -318,8 +328,8 @@ class Train(pg.sprite.Sprite):
                     * math.sin(
                         0.5
                         * math.pi
-                        * (self.current_navigation_index / num_navigation_indices)
-                    )
+                        * (self.current_navigation_index / num_navigation_indices),
+                    ),
                 )
                 self.rect.centerx += self.selected_track.navigation[
                     self.current_navigation_index
@@ -337,8 +347,8 @@ class Train(pg.sprite.Sprite):
                     * math.sin(
                         0.5
                         * math.pi
-                        * (self.current_navigation_index / num_navigation_indices)
-                    )
+                        * (self.current_navigation_index / num_navigation_indices),
+                    ),
                 )
                 self.rect.centerx += self.selected_track.navigation_reversed[
                     self.current_navigation_index
@@ -347,7 +357,8 @@ class Train(pg.sprite.Sprite):
                     self.current_navigation_index
                 ][1]
             else:
-                raise ValueError("Bad direction.")
+                msg = "Bad direction."
+                raise ValueError(msg)
             self.current_navigation_index += 1
         elif self.selected_track.track_type == TrackType.BOTTOM_RIGHT:
             if (
@@ -360,8 +371,8 @@ class Train(pg.sprite.Sprite):
                     * math.sin(
                         0.5
                         * math.pi
-                        * (self.current_navigation_index / num_navigation_indices)
-                    )
+                        * (self.current_navigation_index / num_navigation_indices),
+                    ),
                 )
                 self.rect.centerx += self.selected_track.navigation[
                     self.current_navigation_index
@@ -379,8 +390,8 @@ class Train(pg.sprite.Sprite):
                     * math.sin(
                         0.5
                         * math.pi
-                        * (self.current_navigation_index / num_navigation_indices)
-                    )
+                        * (self.current_navigation_index / num_navigation_indices),
+                    ),
                 )
                 self.rect.centerx += self.selected_track.navigation_reversed[
                     self.current_navigation_index
@@ -389,7 +400,8 @@ class Train(pg.sprite.Sprite):
                     self.current_navigation_index
                 ][1]
             else:
-                raise ValueError("Bad direction.")
+                msg = "Bad direction."
+                raise ValueError(msg)
             self.current_navigation_index += 1
 
     def tick(self, trains_released: bool) -> None:

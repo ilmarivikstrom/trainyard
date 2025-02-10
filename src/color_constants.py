@@ -6,7 +6,7 @@ Color = namedtuple("RGB", "red, green, blue")
 
 
 class RGB(Color):
-    def hex_format(self):
+    def hex_format(self) -> str:
         return f"#{self.red:02X}{self.green:02X}{self.blue:02X}"
 
 

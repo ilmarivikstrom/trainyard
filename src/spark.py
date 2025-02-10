@@ -18,7 +18,7 @@ class Spark:
         color: tuple[int, int, int],
         scale: float = 1.0,
         speed_multiplier: float = 1.0,
-    ):
+    ) -> None:
         self.loc_x = loc[0]
         self.loc_y = loc[1]
         self.angle = angle
@@ -39,7 +39,9 @@ class Spark:
         )
 
     def bounce_from_edge(
-        self, allowed_area: pg.Rect, collide_rects: list[pg.Rect] | None
+        self,
+        allowed_area: pg.Rect,
+        collide_rects: list[pg.Rect] | None,
     ) -> None:
         if not allowed_area.collidepoint(self.loc_x, self.loc_y):
             to_top = abs(self.loc_y - allowed_area.top)
@@ -153,7 +155,7 @@ class FlameSparkStyle(SparkStyle):
                 (239, 99, 5),
                 (177, 72, 3),
                 (255, 237, 168),
-            ]
+            ],
         )
 
 
@@ -166,7 +168,7 @@ class WeldingSparkStyle(SparkStyle):
                 (252, 192, 46),
                 (201, 230, 234),
                 (236, 197, 104),
-            ]
+            ],
         )
 
 
@@ -267,7 +269,8 @@ class SparkCloud:
     def emit_sparks(self) -> list[Spark]:
         spark_list: list[Spark] = []
         sparks_to_create = self.spark_count + random.randint(
-            -int(self.spark_count_deviation / 2), int(self.spark_count_deviation / 2)
+            -int(self.spark_count_deviation / 2),
+            int(self.spark_count_deviation / 2),
         )
         for _ in range(sparks_to_create):
             spark_list.append(
@@ -279,17 +282,19 @@ class SparkCloud:
                         + random.randint(-self.pos_deviation[1], self.pos_deviation[1]),
                     ),
                     angle=math.radians(
-                        random.uniform(self.shape.angle_min, self.shape.angle_max)
+                        random.uniform(self.shape.angle_min, self.shape.angle_max),
                     ),
                     base_speed=random.uniform(
-                        self.behavior.speed_min, self.behavior.speed_max
+                        self.behavior.speed_min,
+                        self.behavior.speed_max,
                     ),
                     friction=random.uniform(
-                        self.behavior.friction_min, self.behavior.friction_max
+                        self.behavior.friction_min,
+                        self.behavior.friction_max,
                     ),
                     color=random.sample(self.style.colors, 1)[0],
                     scale=self.behavior.scale,
                     speed_multiplier=self.behavior.speed_multiplier,
-                )
+                ),
             )
         return spark_list
