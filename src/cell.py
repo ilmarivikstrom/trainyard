@@ -28,7 +28,7 @@ class Cell(pg.sprite.Sprite):
         self.pos = pos
         self.angle = angle
         self.image = pg.transform.rotate(image, angle)
-        self.rect = self.image.get_rect()
+        self.rect: pg.Rect = self.image.get_rect()
         self.rect.x = self.pos.x * Config.cell_size + Config.padding_x
         self.rect.y = self.pos.y * Config.cell_size + Config.padding_y
         self.mouse_on = False
@@ -36,8 +36,6 @@ class Cell(pg.sprite.Sprite):
 
     def check_mouse_collision(self) -> bool:
         mouse_entered_this_cell = False
-        if self.rect is None:
-            return False
         if self.rect.collidepoint(UserControl.mouse_pos.as_tuple_float()):
             if not self.mouse_on:
                 self.handle_mouse_cell_enter()

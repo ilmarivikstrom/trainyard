@@ -66,7 +66,8 @@ build_purge_menu = BuildPurgeMenu(topleft=(1 * 64, 16))
 edit_test_menu = EditTestMenu(topleft=(5 * 64, 16))
 running_crashed_complete_menu = RunningCrashedCompleteMenu(topleft=(10 * 64, 16))
 level_menu = LevelMenu(
-    topleft=(13 * 64, 16), num_levels=6
+    topleft=(13 * 64, 16),
+    num_levels=6,
 )  # Hardcoded number of levels (for now).
 track_menu = InfoMenu(topleft=(1 * 64, 10 * 64 + 16), tooltip_text="TRACKS", value="")
 tick_menu = InfoMenu(topleft=(3 * 64, 10 * 64 + 16), tooltip_text="TICKS", value="")
@@ -102,10 +103,10 @@ def execute_logic(state: State, field: Field) -> None:
     check_for_music_toggle_command()
     tick_departures(field)  # if is_released: for departure_stations
     check_train_departure_station_crashes(
-        field
+        field,
     )  # if is_released: for trains, for departure_stations
     select_tracks_for_trains(
-        field
+        field,
     )  # if is_released: for trains, for track, for endpoint
     delete_crashed_trains(field)  # if is_released: for trains
     check_train_arrivals(field)  # if is_released: for trains, for arrival_stations
@@ -513,8 +514,12 @@ def reset_to_beginning(state: State, field: Field) -> None:
 
 
 def tick_trains(field: Field) -> None:
-    for train in field.grid.trains.items:
-        train.tick(field.is_released)
+    if field.is_released:
+        for train in field.grid.trains.items:
+            train.tick()
+    else:
+        for train in field.grid.trains.items:
+            train.reset()
 
 
 def check_train_arrivals(field: Field) -> None:
@@ -826,11 +831,17 @@ def draw_arcs_and_endpoints(screen: Screen, track: Track):
     color = WHITE if track.bright else GRAY
     if track.track_type == TrackType.VERT:
         pg.draw.line(
-            screen.surface, color, track.cell_rect.midtop, track.cell_rect.midbottom
+            screen.surface,
+            color,
+            track.cell_rect.midtop,
+            track.cell_rect.midbottom,
         )
     elif track.track_type == TrackType.HORI:
         pg.draw.line(
-            screen.surface, color, track.cell_rect.midleft, track.cell_rect.midright
+            screen.surface,
+            color,
+            track.cell_rect.midleft,
+            track.cell_rect.midright,
         )
     elif track.track_type == TrackType.TOP_RIGHT:
         pygame.gfxdraw.arc(

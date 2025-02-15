@@ -63,10 +63,6 @@ class Station(Cell):
             angle=self.angle,
         )
 
-        if self.rect is None:
-            msg = "Rect is None."
-            raise ValueError(msg)
-
         if self.angle in [0, 180]:
             self.tracks: list[Track | InsideTrack] = [
                 InsideTrack(self.pos, self.rect, TrackType.HORI, self.angle),

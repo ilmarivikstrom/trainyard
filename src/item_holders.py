@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Type
-
 import pygame as pg
 
 from src.cell import Cell, DrawingCell, RockCell
@@ -21,7 +19,7 @@ GridItemTypeList = (
     | Splitter
     | Train
 )
-GridItemTypes = Type[
+GridItemTypes = type[
     DrawingCell
     | RockCell
     | ArrivalStation

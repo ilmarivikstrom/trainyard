@@ -404,11 +404,8 @@ class Train(pg.sprite.Sprite):
                 raise ValueError(msg)
             self.current_navigation_index += 1
 
-    def tick(self, trains_released: bool) -> None:
-        if trains_released:
-            self.move()
-        else:
-            self.reset()
+    def tick(self) -> None:
+        self.move()
 
     def crash(self) -> None:
         self.selected_track = None

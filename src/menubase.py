@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import pygame as pg
+from typing import TYPE_CHECKING, Any
 
 from src.color_constants import (
     GRAY5,
@@ -14,9 +14,13 @@ from src.color_constants import (
     WHITESMOKE,
 )
 from src.config import Config
-from src.coordinate import Coordinate
 from src.font import Font
 from src.utils import setup_logging
+
+if TYPE_CHECKING:
+    import pygame as pg
+
+    from src.coordinate import Coordinate
 
 logger = setup_logging(log_level=Config.log_level)
 
@@ -24,10 +28,10 @@ logger = setup_logging(log_level=Config.log_level)
 class IndicatorStyle:
     def __init__(
         self,
-        fg_active_color: Tuple[int, int, int] = GRAY5,
-        bg_active_color: Tuple[int, int, int] = TY_TELLOW,
-        fg_deactive_color: Tuple[int, int, int] = GRAY50,
-        bg_deactive_color: Tuple[int, int, int] = GRAY5,
+        fg_active_color: tuple[int, int, int] = GRAY5,
+        bg_active_color: tuple[int, int, int] = TY_TELLOW,
+        fg_deactive_color: tuple[int, int, int] = GRAY50,
+        bg_deactive_color: tuple[int, int, int] = GRAY5,
     ):
         self.fg_active_color = fg_active_color
         self.bg_active_color = bg_active_color
