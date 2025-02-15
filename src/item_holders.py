@@ -1,28 +1,47 @@
-from typing import List, Type, Union
+from typing import List, Type
 
 import pygame as pg
 
-from src.cell import Cell, DrawingCell, RockCell
+from src.cell import DrawingCell, RockCell
 from src.painter import Painter
 from src.splitter import Splitter
 from src.station import ArrivalStation, DepartureStation
 from src.train import Train
 
+GridItemTypeList = (
+    DrawingCell
+    | RockCell
+    | ArrivalStation
+    | DepartureStation
+    | Painter
+    | Splitter
+    | Train
+)
+GridItemTypes = Type[
+    DrawingCell
+    | RockCell
+    | ArrivalStation
+    | DepartureStation
+    | Painter
+    | Splitter
+    | Train
+]
+
 
 class GridItemHolderBase:
-    def __init__(self, item_type: Type[Union[Cell, Train]]) -> None:
-        self.items: List[item_type] = []
+    def __init__(self, item_type: GridItemTypes) -> None:
+        self.items: list[item_type] = []
         self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
-    def add_one(self, item: Cell) -> None:
+    def add_one(self, item: GridItemTypeList) -> None:
         self.items.append(item)
         self.sprites.add(item)
 
-    def add_many(self, items: List[Cell]) -> None:
+    def add_many(self, items: List[GridItemTypeList]) -> None:
         for item in items:
             self.add_one(item)
 
-    def remove_one(self, item: Cell) -> None:
+    def remove_one(self, item: GridItemTypeList) -> None:
         self.items.remove(item)
         self.sprites.remove(item)
 

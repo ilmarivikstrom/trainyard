@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 import pygame as pg
 
-from src.color_constants import GRAY5, WHITE, TRAIN_GREEN, TRAIN_YELLOW, TRAIN_RED, WHITESMOKE, GRAY50
+from src.color_constants import GRAY5, WHITE, TY_GREEN, TY_TELLOW, TY_RED, WHITESMOKE, GRAY50
 from src.coordinate import Coordinate
 from src.config import Config
 from src.font import Font
@@ -15,7 +15,7 @@ class IndicatorStyle:
     def __init__(
         self,
         fg_active_color: Tuple[int, int, int] = GRAY5,
-        bg_active_color: Tuple[int, int, int] = TRAIN_YELLOW,
+        bg_active_color: Tuple[int, int, int] = TY_TELLOW,
         fg_deactive_color: Tuple[int, int, int] = GRAY50,
         bg_deactive_color: Tuple[int, int, int] = GRAY5,
     ):
@@ -30,17 +30,17 @@ class IndicatorStyle:
 
 class YellowStyle(IndicatorStyle):
     def __init__(self):
-        super().__init__(bg_active_color=TRAIN_YELLOW)
+        super().__init__(bg_active_color=TY_TELLOW)
 
 
 class RedStyle(IndicatorStyle):
     def __init__(self):
-        super().__init__(bg_active_color=TRAIN_RED)
+        super().__init__(bg_active_color=TY_RED)
 
 
 class GreenStyle(IndicatorStyle):
     def __init__(self):
-        super().__init__(bg_active_color=TRAIN_GREEN)
+        super().__init__(bg_active_color=TY_GREEN)
 
 
 class WhiteStyle(IndicatorStyle):
@@ -164,11 +164,9 @@ class BaseMenu:
     def mouse_on(self, mouse_pos: Coordinate) -> bool:
         # TODO: Fix the following ugly hack, where the absolute position of tooltip and indicator items are calculated on the fly.
         if self.tooltip.surface.get_rect().move(self.topleft).collidepoint(mouse_pos.as_tuple_float()):
-            logger.info("Collides with tooltip.")
             return True
         for i, indicator_item in enumerate(self._indicator_items):
             if indicator_item.renderable.get_rect().move(indicator_item.dest).collidepoint(mouse_pos.as_tuple_float()):
-                logger.info(f"Collides with indicator item: {i}")
                 return True
         return False
 

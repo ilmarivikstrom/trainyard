@@ -22,15 +22,14 @@ def color_as_short_string(color: Union[TrainColor, str]) -> str:
 
 def blend_train_colors(color_1: TrainColor, color_2: TrainColor) -> TrainColor:
     if color_1 == color_2:
-        blended_train_color = color_1
+        return color_1
+    colors = [color_1, color_2]
+    if TrainColor.BLUE in colors and TrainColor.RED in colors:
+        blended_train_color = TrainColor.PURPLE
+    elif TrainColor.BLUE in colors and TrainColor.YELLOW in colors:
+        blended_train_color = TrainColor.GREEN
+    elif TrainColor.YELLOW in colors and TrainColor.RED in colors:
+        blended_train_color = TrainColor.ORANGE
     else:
-        colors = [color_1, color_2]
-        if TrainColor.BLUE in colors and TrainColor.RED in colors:
-            blended_train_color = TrainColor.PURPLE
-        elif TrainColor.BLUE in colors and TrainColor.YELLOW in colors:
-            blended_train_color = TrainColor.GREEN
-        elif TrainColor.YELLOW in colors and TrainColor.RED in colors:
-            blended_train_color = TrainColor.ORANGE
-        else:
-            blended_train_color = TrainColor.BROWN
+        blended_train_color = TrainColor.BROWN
     return blended_train_color

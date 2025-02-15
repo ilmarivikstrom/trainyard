@@ -2,7 +2,7 @@ import csv
 from typing import List, Optional, Union
 
 from src.cell import DrawingCell, RockCell, Cell
-from src.color_constants import TRAIN_YELLOW
+from src.color_constants import TY_TELLOW
 from src.config import Config
 from src.coordinate import Coordinate
 from src.fieldborder import FieldBorder
@@ -30,12 +30,12 @@ logger = setup_logging(log_level=Config.log_level)
 class Grid:
     def __init__(self):
         self.rocks = RockHolder()
-        self.drawing_cells: DrawingCellHolder = DrawingCellHolder()
-        self.arrivals: ArrivalHolder = ArrivalHolder()
-        self.departures: DepartureHolder = DepartureHolder()
-        self.painters: PainterHolder = PainterHolder()
-        self.splitters: SplitterHolder = SplitterHolder()
-        self.trains: TrainHolder = TrainHolder()
+        self.drawing_cells = DrawingCellHolder()
+        self.arrivals = ArrivalHolder()
+        self.departures = DepartureHolder()
+        self.painters = PainterHolder()
+        self.splitters = SplitterHolder()
+        self.trains = TrainHolder()
 
         self.all_items: List[Union[RockCell, DrawingCell, ArrivalStation, DepartureStation, Painter, Splitter]] = []
 
@@ -78,7 +78,7 @@ class Field:
         self.height_px = self.cells_y * Config.cell_size
 
         self.border: FieldBorder = FieldBorder(
-            color=TRAIN_YELLOW, topleft=(64, 128), width=self.width_px, height=self.height_px, thickness=1
+            color=TY_TELLOW, topleft=(64, 128), width=self.width_px, height=self.height_px, thickness=1
         )  # TODO: Field should have topleft coords and this guy should use them as well.
 
         self.sparks: List[Spark] = []
