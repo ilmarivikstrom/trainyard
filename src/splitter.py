@@ -13,7 +13,7 @@ logger = setup_logging(log_level=Config.log_level)
 
 class Splitter(Cell):
     def __init__(self, coords: Coordinate, angle: int) -> None:
-        super().__init__(coords, Graphics.img_surfaces["splitter"], angle, True)
+        super().__init__(coords, Graphics.img_surfaces["splitter"], angle)
         self.saveable_attributes = SaveableAttributes(block_type="S", angle=self.angle)
 
         if self.rect is None:

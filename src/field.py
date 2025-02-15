@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 from typing import TYPE_CHECKING
 
-from src.cell import Cell, DrawingCell, RockCell
+from src.cell import DrawingCell, RockCell
 from src.color_constants import TY_TELLOW
 from src.config import Config
 from src.coordinate import Coordinate
@@ -52,7 +52,15 @@ class Grid:
             | Splitter
         ] = []
 
-    def add(self, item: Cell) -> None:
+    def add(
+        self,
+        item: ArrivalStation
+        | DepartureStation
+        | RockCell
+        | DrawingCell
+        | Painter
+        | Splitter,
+    ) -> None:
         if isinstance(item, ArrivalStation):
             self.arrivals.add_one(item)
             self.all_items.append(item)
@@ -68,7 +76,7 @@ class Grid:
         elif isinstance(item, Painter):
             self.painters.add_one(item)
             self.all_items.append(item)
-        elif isinstance(item, Splitter):
+        elif isinstance(item, Splitter):  # type: ignore  # noqa: PGH003
             self.splitters.add_one(item)
             self.all_items.append(item)
         else:

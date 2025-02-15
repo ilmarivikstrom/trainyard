@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pygame as pg
 
-from src.cell import Cell, DrawingCell, RockCell
+from src.cell import DrawingCell, RockCell
 from src.painter import Painter
 from src.splitter import Splitter
 from src.station import ArrivalStation, DepartureStation
@@ -30,58 +30,125 @@ GridItemTypes = type[
 ]
 
 
-class GridItemHolderBase:
-    def __init__(self, item_type: type[Cell | Train]) -> None:
-        self.items: list[item_type] = []
+# class GridItemHolderBase:
+#     def __init__(self, item_type: type[Cell | Train]) -> None:
+#         self.items: list[item_type] = []
+#         self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+
+#     def add_one(self, item: GridItemTypeList) -> None:
+#         self.items.append(item)
+#         self.sprites.add(item)
+
+#     def add_many(self, items: list[Cell]) -> None:
+#         for item in items:
+#             self.add_one(item)
+
+#     def remove_one(self, item: GridItemTypeList) -> None:
+#         self.items.remove(item)
+#         self.sprites.remove(item)
+
+#     def remove_all(self) -> None:
+#         self.items.clear()
+#         self.sprites.empty()
+
+
+class DrawingCellHolder:
+    def __init__(self) -> None:
+        self.items: list[DrawingCell] = []
         self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
-    def add_one(self, item: GridItemTypeList) -> None:
+    def add_one(self, item: DrawingCell) -> None:
         self.items.append(item)
         self.sprites.add(item)
-
-    def add_many(self, items: list[Cell]) -> None:
-        for item in items:
-            self.add_one(item)
-
-    def remove_one(self, item: GridItemTypeList) -> None:
-        self.items.remove(item)
-        self.sprites.remove(item)
 
     def remove_all(self) -> None:
         self.items.clear()
         self.sprites.empty()
 
 
-class DrawingCellHolder(GridItemHolderBase):
+class RockHolder:
     def __init__(self) -> None:
-        super().__init__(DrawingCell)
+        self.items: list[RockCell] = []
+        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+
+    def add_one(self, item: RockCell) -> None:
+        self.items.append(item)
+        self.sprites.add(item)
+
+    def remove_all(self) -> None:
+        self.items.clear()
+        self.sprites.empty()
 
 
-class RockHolder(GridItemHolderBase):
+class ArrivalHolder:
     def __init__(self) -> None:
-        super().__init__(RockCell)
+        self.items: list[ArrivalStation] = []
+        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+
+    def add_one(self, item: ArrivalStation) -> None:
+        self.items.append(item)
+        self.sprites.add(item)
+
+    def remove_all(self) -> None:
+        self.items.clear()
+        self.sprites.empty()
 
 
-class ArrivalHolder(GridItemHolderBase):
+class DepartureHolder:
     def __init__(self) -> None:
-        super().__init__(ArrivalStation)
+        self.items: list[DepartureStation] = []
+        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+
+    def add_one(self, item: DepartureStation) -> None:
+        self.items.append(item)
+        self.sprites.add(item)
+
+    def remove_all(self) -> None:
+        self.items.clear()
+        self.sprites.empty()
 
 
-class DepartureHolder(GridItemHolderBase):
+class PainterHolder:
     def __init__(self) -> None:
-        super().__init__(DepartureStation)
+        self.items: list[Painter] = []
+        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+
+    def add_one(self, item: Painter) -> None:
+        self.items.append(item)
+        self.sprites.add(item)
+
+    def remove_all(self) -> None:
+        self.items.clear()
+        self.sprites.empty()
 
 
-class PainterHolder(GridItemHolderBase):
+class SplitterHolder:
     def __init__(self) -> None:
-        super().__init__(Painter)
+        self.items: list[Splitter] = []
+        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
+
+    def add_one(self, item: Splitter) -> None:
+        self.items.append(item)
+        self.sprites.add(item)
+
+    def remove_all(self) -> None:
+        self.items.clear()
+        self.sprites.empty()
 
 
-class SplitterHolder(GridItemHolderBase):
+class TrainHolder:
     def __init__(self) -> None:
-        super().__init__(Splitter)
+        self.items: list[Train] = []
+        self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
+    def add_one(self, item: Train) -> None:
+        self.items.append(item)
+        self.sprites.add(item)
 
-class TrainHolder(GridItemHolderBase):
-    def __init__(self) -> None:
-        super().__init__(Train)
+    def remove_one(self, item: Train) -> None:
+        self.items.remove(item)
+        self.sprites.remove(item)
+
+    def remove_all(self) -> None:
+        self.items.clear()
+        self.sprites.empty()
