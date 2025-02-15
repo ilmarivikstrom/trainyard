@@ -11,7 +11,7 @@ from src.itemholders import (
     SplitterHolder,
     TrainHolder,
 )
-from src.levelitems.drawingcell import DrawingCell
+from src.levelitems.drawable import Drawable
 from src.levelitems.painter import Painter
 from src.levelitems.rock import Rock
 from src.levelitems.splitter import Splitter
@@ -21,7 +21,7 @@ from src.levelitems.station import ArrivalStation, DepartureStation
 class Grid:
     def __init__(self) -> None:
         self.rocks = RockHolder()
-        self.drawing_cells = DrawingCellHolder()
+        self.drawbles = DrawingCellHolder()
         self.arrivals = ArrivalHolder()
         self.departures = DepartureHolder()
         self.painters = PainterHolder()
@@ -29,17 +29,12 @@ class Grid:
         self.trains = TrainHolder()
 
         self.all_items: list[
-            Rock | DrawingCell | ArrivalStation | DepartureStation | Painter | Splitter
+            Rock | Drawable | ArrivalStation | DepartureStation | Painter | Splitter
         ] = []
 
     def add(
         self,
-        item: ArrivalStation
-        | DepartureStation
-        | Rock
-        | DrawingCell
-        | Painter
-        | Splitter,
+        item: ArrivalStation | DepartureStation | Rock | Drawable | Painter | Splitter,
     ) -> None:
         if isinstance(item, ArrivalStation):
             self.arrivals.add_one(item)
@@ -50,8 +45,8 @@ class Grid:
         elif isinstance(item, Rock):
             self.rocks.add_one(item)
             self.all_items.append(item)
-        elif isinstance(item, DrawingCell):
-            self.drawing_cells.add_one(item)
+        elif isinstance(item, Drawable):
+            self.drawbles.add_one(item)
             self.all_items.append(item)
         elif isinstance(item, Painter):
             self.painters.add_one(item)

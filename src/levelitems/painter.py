@@ -5,17 +5,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from src.config import Config
-from src.graphics import Graphics
+from src.gfx.graphics import Graphics
 from src.levelitems.cell import Cell
 from src.saveable import SaveableAttributes
-from src.track import Track, TrackType
+from src.track.track import Track, TrackType
 from src.utils.utils import setup_logging
 
 if TYPE_CHECKING:
     from src.coordinate import Coordinate
     from src.traincolor import TrainColor
 
-logger = setup_logging(log_level=Config.log_level)
+logger = setup_logging(log_level=Config.LOG_LEVEL)
 
 
 class Painter(Cell):

@@ -4,7 +4,7 @@ import pygame as pg
 
 from src.config import Config
 from src.field import Field
-from src.graphics import Graphics
+from src.gfx.graphics import Graphics
 from src.phases.exit import exit_phase
 from src.phases.gameplay import gameplay_phase
 from src.screen import Screen
@@ -12,7 +12,7 @@ from src.sound import Sound
 from src.state import Phase, State
 from src.utils.utils import setup_logging
 
-logger = setup_logging(log_level=Config.log_level)
+logger = setup_logging(log_level=Config.LOG_LEVEL)
 
 
 class GameLoop:
@@ -28,7 +28,7 @@ class GameLoop:
         Sound.init_music(song_name="Song 9")
 
     def loop(self) -> None:
-        if Config.play_music:
+        if Config.PLAY_MUSIC:
             Sound.play_music()
         while True:
             if self.state.game_phase == Phase.MAIN_MENU:
@@ -40,4 +40,5 @@ class GameLoop:
 
             self.state.global_status.current_tick += 1
             pg.display.update()
-            self.clock.tick(Config.FPS)
+            self.clock.tick_busy_loop(Config.SPEED)
+            logger.info(self.clock.get_fps())

@@ -7,10 +7,10 @@ import pygame as pg
 from src.config import Config
 from src.coordinate import Coordinate
 from src.direction import Direction
-from src.graphics import Graphics
-from src.levelitems.drawingcell import Cell, DrawingCell
+from src.gfx.graphics import Graphics
+from src.levelitems.drawable import Cell, Drawable
 from src.sound import Sound
-from src.track import Track, TrackType
+from src.track.track import Track, TrackType
 from src.traincolor import TrainColor
 from src.utils.utils import rot_center
 
@@ -33,19 +33,19 @@ class Train(pg.sprite.Sprite):
         self.rect: pg.Rect = self.image.get_rect()
 
         self.rect.x = int(
-            self.loc.x * Config.cell_size
-            - 0.5 * Config.cell_size
-            + Config.padding_x
+            self.loc.x * Config.CELL_SIZE
+            - 0.5 * Config.CELL_SIZE
+            + Config.PADDING_X
             + 48,
         )  # TODO: Get the location from somewhere else please.
         self.rect.y = (
-            self.loc.y * Config.cell_size + Config.padding_y + 16
+            self.loc.y * Config.CELL_SIZE + Config.PADDING_Y + 16
         )  # TODO: Get the location from somewhere else please.
 
         self.original_direction: Direction = direction
         self.angle: float = self.direction.value
         self.last_collided_cells: list[Cell] = []
-        self.last_flipped_cell: DrawingCell | None = None
+        self.last_flipped_cell: Drawable | None = None
 
         self.selected_track: Track | None = selected_track
 
@@ -412,6 +412,6 @@ class Train(pg.sprite.Sprite):
         self.crashed = True
         Sound.play_sound_on_any_channel(Sound.crash)
 
-    def add_last_collided_cell(self, drawing_cell: Cell) -> None:
-        self.last_collided_cells.append(drawing_cell)
+    def add_last_collided_cell(self, drawble: Cell) -> None:
+        self.last_collided_cells.append(drawble)
         self.last_collided_cells = self.last_collided_cells[-2:]

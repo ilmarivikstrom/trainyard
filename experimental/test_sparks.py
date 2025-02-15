@@ -1,9 +1,11 @@
 import math
 import random
 import sys
+
 import pygame as pg
-from pygame.locals import QUIT, KEYDOWN, K_ESCAPE
-from src.spark import Spark
+from pygame.locals import K_ESCAPE, KEYDOWN, QUIT
+
+from src.gfx.spark import Spark
 
 clock = pg.time.Clock()
 
@@ -32,24 +34,34 @@ while True:
 
     mx, my = pg.mouse.get_pos()
 
-    spark_colors = [(255, 207, 119), (254, 126, 5), (239, 99, 5), (177, 72, 3), (255, 237, 168)]
+    spark_colors = [
+        (255, 207, 119),
+        (254, 126, 5),
+        (239, 99, 5),
+        (177, 72, 3),
+        (255, 237, 168),
+    ]
 
     if iteration < 1:
         for i in range(100):
             sparks.append(
                 Spark(
-                    loc=(mx + random.randint(0, 20) - 10, my + random.randint(0, 20) - 10),
+                    loc=(
+                        mx + random.randint(0, 20) - 10,
+                        my + random.randint(0, 20) - 10,
+                    ),
                     angle=math.radians(random.randint(0, 360)),
                     # speed=random.uniform(1, 10),
                     base_speed=random.choices(
-                        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [0.2, 0.2, 0.2, 0.2, 0.1, 0.05, 0.02, 0.01, 0.01, 0.01]
+                        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                        [0.2, 0.2, 0.2, 0.2, 0.1, 0.05, 0.02, 0.01, 0.01, 0.01],
                     )[0],
                     # friction=0.2,
                     friction=random.uniform(0.15, 0.25),
                     color=random.sample(spark_colors, 1)[0],
                     scale=1.0,
                     speed_multiplier=1.0,
-                )
+                ),
             )
 
     iteration += 1

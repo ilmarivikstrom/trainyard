@@ -2,13 +2,13 @@
 
 from src.config import Config
 from src.coordinate import Coordinate
-from src.graphics import Graphics
+from src.gfx.graphics import Graphics
 from src.levelitems.cell import Cell
 from src.saveable import SaveableAttributes
-from src.track import InsideTrack, TrackType
+from src.track.track import InsideTrack, TrackType
 from src.utils.utils import setup_logging
 
-logger = setup_logging(log_level=Config.log_level)
+logger = setup_logging(log_level=Config.LOG_LEVEL)
 
 
 class Splitter(Cell):

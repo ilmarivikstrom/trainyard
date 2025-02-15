@@ -1,16 +1,16 @@
-"""Drawing cell."""
+"""Drawable cell."""
 
 from src.coordinate import Coordinate
-from src.graphics import Graphics
+from src.gfx.graphics import Graphics
 from src.levelitems.cell import Cell
 from src.saveable import SaveableAttributes
 from src.sound import Sound
-from src.track import TrackType
+from src.track.track import TrackType
 
 MAXIMUM_TRACKS = 2
 
 
-class DrawingCell(Cell):
+class Drawable(Cell):
     def __init__(self, coords: Coordinate) -> None:
         super().__init__(coords, Graphics.img_surfaces["bg_tile"], 0)
         self.saveable_attributes = SaveableAttributes(block_type="E")

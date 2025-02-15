@@ -7,10 +7,10 @@ from src.color_constants import GRAY10
 from src.config import Config
 from src.screen import Screen
 from src.state import Phase, State
-from src.user_control import UserControl
+from src.user.control import UserControl
 from src.utils.utils import setup_logging
 
-logger = setup_logging(log_level=Config.log_level)
+logger = setup_logging(log_level=Config.LOG_LEVEL)
 
 
 def mainmenu_phase(state: State, screen: Screen) -> None:

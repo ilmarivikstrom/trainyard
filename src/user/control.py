@@ -1,4 +1,4 @@
-"""User control."""
+"""Control."""
 
 from __future__ import annotations
 
@@ -6,13 +6,6 @@ from typing import TYPE_CHECKING, ClassVar
 
 import pygame as pg
 from pygame import (
-    K_1,
-    K_2,
-    K_3,
-    K_4,
-    K_5,
-    K_6,
-    K_7,
     K_ESCAPE,
     K_LSHIFT,
     K_RETURN,
@@ -30,7 +23,7 @@ from src.utils.utils import setup_logging
 if TYPE_CHECKING:
     from pygame.event import Event
 
-logger = setup_logging(log_level=Config.log_level)
+logger = setup_logging(log_level=Config.LOG_LEVEL)
 
 
 class UserControl:
@@ -51,6 +44,8 @@ class UserControl:
 
     pressed_keys: pg.key.ScancodeWrapper = pg.key.ScancodeWrapper()
 
+    just_released: pg.key.ScancodeWrapper = pg.key.ScancodeWrapper()
+
     spacebar_down: bool = False
     wait_for_space_up: bool = False
 
@@ -68,22 +63,9 @@ class UserControl:
         UserControl.mouse_pos = Coordinate.from_tuple(pg.mouse.get_pos())
         UserControl.pressed_keys = pg.key.get_pressed()
         UserControl.mouse_pressed = pg.mouse.get_pressed()
+        UserControl.just_released = pg.key.get_just_released()
 
         if not UserControl.mouse_pressed[0]:
             UserControl.curr_movement = Direction.NONE
             UserControl.prev_movement = Direction.NONE
             UserControl.prev_cell = None
-        if UserControl.pressed_keys[K_1]:
-            Config.FPS = Config.FPS_list[0]
-        elif UserControl.pressed_keys[K_2]:
-            Config.FPS = Config.FPS_list[1]
-        elif UserControl.pressed_keys[K_3]:
-            Config.FPS = Config.FPS_list[2]
-        elif UserControl.pressed_keys[K_4]:
-            Config.FPS = Config.FPS_list[3]
-        elif UserControl.pressed_keys[K_5]:
-            Config.FPS = Config.FPS_list[4]
-        elif UserControl.pressed_keys[K_6]:
-            Config.FPS = Config.FPS_list[5]
-        elif UserControl.pressed_keys[K_7]:
-            Config.FPS = Config.FPS_list[6]

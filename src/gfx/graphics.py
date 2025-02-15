@@ -32,7 +32,6 @@ class Graphics:
             "train_brown": pg.image.load(
                 "assets/sprites/train_brown.png",
             ).convert_alpha(),
-            "bg": pg.image.load("assets/sprites/bg.png").convert_alpha(),
             "bg_tile": pg.image.load("assets/sprites/bg_tile.png").convert_alpha(),
             "rock": pg.image.load("assets/sprites/rock.png").convert_alpha(),
             "track_s_bright": pg.image.load(

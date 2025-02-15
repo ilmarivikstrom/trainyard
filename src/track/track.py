@@ -8,7 +8,7 @@ import pygame as pg
 
 from src.coordinate import Coordinate
 from src.direction import Direction
-from src.graphics import Graphics
+from src.gfx.graphics import Graphics
 
 NAVIGATION_DOWN = [(0, 1)] * 64
 NAVIGATION_UP = [(-navigation[0], -navigation[1]) for navigation in NAVIGATION_DOWN]

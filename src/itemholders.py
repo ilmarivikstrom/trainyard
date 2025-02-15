@@ -7,20 +7,20 @@ from typing import TYPE_CHECKING
 import pygame as pg
 
 if TYPE_CHECKING:
-    from src.levelitems.drawingcell import DrawingCell
+    from src.levelitems.drawable import Drawable
     from src.levelitems.painter import Painter
     from src.levelitems.rock import Rock
     from src.levelitems.splitter import Splitter
     from src.levelitems.station import ArrivalStation, DepartureStation
-    from src.train import Train
+    from src.train.train import Train
 
 
 class DrawingCellHolder:
     def __init__(self) -> None:
-        self.items: list[DrawingCell] = []
+        self.items: list[Drawable] = []
         self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
-    def add_one(self, item: DrawingCell) -> None:
+    def add_one(self, item: Drawable) -> None:
         self.items.append(item)
         self.sprites.add(item)
 

@@ -20,12 +20,20 @@ from pygame.constants import (
     K_p,
 )
 
-from src.color_constants import GRAY, RED1, TY_GREEN, TY_RED, TY_TELLOW, WHITE
+from src.color_constants import GRAY, RED1, TY_BG, TY_GREEN, TY_RED, TY_TELLOW, WHITE
 from src.config import Config
 from src.direction import Direction, turn_left, turn_right
 from src.field import Field, TrackType
-from src.graphics import Graphics
-from src.levelitems.drawingcell import DrawingCell
+from src.gfx.spark import (
+    CircleCloudShape,
+    FastSmallShortLivedSpark,
+    FlameSparkStyle,
+    SlowLargeSpark,
+    SparkCloud,
+    WeldingSparkStyle,
+    WideConeCloudShape,
+)
+from src.levelitems.drawable import Drawable
 from src.levelitems.painter import Painter
 from src.levelitems.splitter import Splitter
 from src.levelitems.station import (
@@ -42,19 +50,10 @@ from src.menus.menus import (
 )
 from src.screen import Screen
 from src.sound import Sound
-from src.spark import (
-    CircleCloudShape,
-    FastSmallShortLivedSpark,
-    FlameSparkStyle,
-    SlowLargeSpark,
-    SparkCloud,
-    WeldingSparkStyle,
-    WideConeCloudShape,
-)
 from src.state import Phase, State
-from src.train import Train
+from src.train.train import Train
 from src.traincolor import blend_train_colors
-from src.user_control import UserControl
+from src.user.control import UserControl
 from src.utils.utils import setup_logging
 
 if TYPE_CHECKING:
@@ -62,9 +61,9 @@ if TYPE_CHECKING:
     from src.levelitems.rock import Rock
     from src.levelitems.splitter import Splitter
     from src.screen import Screen
-    from src.track import Track
+    from src.track.track import Track
 
-logger = setup_logging(log_level=Config.log_level)
+logger = setup_logging(log_level=Config.LOG_LEVEL)
 
 
 build_purge_menu = BuildPurgeMenu(topleft=(1 * 64, 16))
@@ -95,6 +94,7 @@ def execute_logic(state: State, field: Field) -> None:
     check_for_pg_gameplay_events()
     check_for_level_change(field)
     check_for_exit_command(state)
+    check_for_speed_change_command()
     check_and_set_delete_mode(state)
     check_and_save_field(field)
     check_and_toggle_profiling(state)
@@ -139,8 +139,8 @@ def execute_logic(state: State, field: Field) -> None:
 
 def draw_game_objects(field: Field, screen: Screen) -> None:
     draw_background_basecolor(screen)  # Background
-    field.grid.drawing_cells.sprites.draw(screen.surface)  # Empty cells (base).
-    draw_drawing_cells_tracks(screen, field)  # Tracks (on empty cells).
+    field.grid.drawbles.sprites.draw(screen.surface)  # Empty cells (base).
+    draw_drawables_tracks(screen, field)  # Tracks (on empty cells).
     field.grid.trains.sprites.draw(screen.surface)  # Trains.
     field.grid.rocks.sprites.draw(screen.surface)
 
@@ -278,6 +278,15 @@ def check_for_exit_command(state: State) -> None:
             return
 
 
+def check_for_speed_change_command() -> None:
+    if UserControl.just_released[pg.K_KP_PLUS]:
+        Config.SPEED = Config.SPEED * 2
+        logger.info(f"New speed: {Config.SPEED}")
+    elif UserControl.just_released[pg.K_KP_MINUS]:
+        Config.SPEED = int(Config.SPEED / 2)
+        logger.info(f"New speed: {Config.SPEED}")
+
+
 def check_for_next_music_command() -> None:
     for event in UserControl.events:
         if event.type == KEYDOWN:
@@ -291,14 +300,14 @@ def check_for_next_music_command() -> None:
 
 def check_for_track_flip_command(field: Field) -> None:
     for event in UserControl.events:
-        if event.type == MOUSEBUTTONDOWN and event.button == 3:
-            for drawing_cell in field.grid.drawing_cells.items:
+        if event.type == MOUSEBUTTONDOWN and event.button == Config.MOUSE_RIGHT:
+            for drawble in field.grid.drawbles.items:
                 if (
-                    drawing_cell.mouse_on
+                    drawble.mouse_on
                     and not field.is_released
-                    and len(drawing_cell.cell_tracks) > 1
+                    and len(drawble.cell_tracks) > 1
                 ):
-                    drawing_cell.flip_tracks()
+                    drawble.flip_tracks()
             return
 
 
@@ -306,7 +315,7 @@ def check_for_music_toggle_command() -> None:
     for event in UserControl.events:
         if event.type == KEYDOWN and event.key == K_p:
             Sound.toggle_music(ms=500)
-            Config.play_music = not Config.play_music
+            Config.PLAY_MUSIC = not Config.PLAY_MUSIC
             return
 
 
@@ -404,7 +413,7 @@ def update_info_menu(field: Field) -> None:
 def update_track_menu(field: Field) -> None:
     tracks = 0
     for item in field.grid.all_items:
-        if isinstance(item, DrawingCell):
+        if isinstance(item, Drawable):
             tracks += len(item.cell_tracks)
     track_menu.set_text(text=str(tracks), item_index=0)
 
@@ -652,11 +661,11 @@ def check_for_new_track_placement(state: State, field: Field) -> None:
             )
         if did_insert:
             Sound.play_sound_on_any_channel(Sound.track_place)
-            drawing_cell = field.get_drawing_cell_at_pos(UserControl.prev_cell)
-            if drawing_cell is not None:
+            drawble = field.get_drawble_at_pos(UserControl.prev_cell)
+            if drawble is not None:
                 generate_track_insert_sparks(
                     field,
-                    drawing_cell.rect.center,
+                    drawble.rect.center,
                 )
         UserControl.mouse_entered_new_cell = False
 
@@ -711,8 +720,8 @@ def check_and_mark_prev_cell(field: Field) -> None:
 def check_and_delete_field_tracks(state: State, field: Field) -> None:
     if field.is_released:
         return
-    for drawing_cell in field.grid.drawing_cells.items:
-        check_and_delete_drawing_cell_tracks(state, drawing_cell)
+    for drawble in field.grid.drawbles.items:
+        check_and_delete_drawble_tracks(state, drawble)
 
 
 def add_new_train(field: Field, train: Train) -> None:
@@ -720,17 +729,17 @@ def add_new_train(field: Field, train: Train) -> None:
     field.grid.trains.sprites.add(train)
 
 
-def check_and_delete_drawing_cell_tracks(
+def check_and_delete_drawble_tracks(
     state: State,
-    drawing_cell: DrawingCell,
+    drawble: Drawable,
 ) -> None:
     mouse_pressed_cell_while_in_delete_mode = (
-        drawing_cell.mouse_on
+        drawble.mouse_on
         and UserControl.mouse_pressed[0]
         and state.gameplay.in_delete_mode
     )
     if mouse_pressed_cell_while_in_delete_mode:
-        drawing_cell.cell_tracks.clear()
+        drawble.cell_tracks.clear()
 
 
 def check_and_flip_cell_tracks(field: Field) -> None:
@@ -738,18 +747,18 @@ def check_and_flip_cell_tracks(field: Field) -> None:
         return
     for cell in field.grid.all_items:
         for train in field.grid.trains.items:
-            if train.current_navigation_index % 16 != 0:
+            if train.current_navigation_index % (Config.CELL_SIZE / 2) != 0:
                 return
             cell_contains_train_and_has_multiple_tracks = (
-                cell.rect
-                and cell.rect.contains(train.rect)
-                and train.current_navigation_index >= 23  # Over halfway.
+                cell.rect.contains(train.rect)
+                and train.current_navigation_index
+                >= (Config.CELL_SIZE / 2)  # Over halfway.
                 and train.last_flipped_cell != cell
                 and len(cell.cell_tracks) == 2
             )
             if cell_contains_train_and_has_multiple_tracks and isinstance(
                 cell,
-                DrawingCell,
+                Drawable,
             ):
                 cell.flip_tracks()
                 train.last_flipped_cell = cell
@@ -775,7 +784,8 @@ def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
 
 
 def draw_background_basecolor(screen: Screen) -> None:
-    screen.surface.blit(Graphics.img_surfaces["bg"], dest=(0, 0))
+    # screen.surface.blit(Graphics.img_surfaces["bg"], dest=(0, 0))
+    screen.surface.fill(TY_BG)
 
 
 def draw_station_goals(screen: Screen, field: Field) -> None:
@@ -795,9 +805,9 @@ def draw_checkmarks(screen: Screen, field: Field) -> None:
         )
 
 
-def draw_drawing_cells_tracks(screen: Screen, field: Field) -> None:
-    for drawing_cell in field.grid.drawing_cells.items:
-        draw_drawing_cell_tracks(screen, drawing_cell)
+def draw_drawables_tracks(screen: Screen, field: Field) -> None:
+    for drawble in field.grid.drawbles.items:
+        draw_drawable_tracks(screen, drawble)
 
 
 def draw_stations(field: Field, screen: Screen) -> None:
@@ -828,7 +838,7 @@ def draw_arcs_and_endpoints(screen: Screen, track: Track) -> None:
             screen.surface,
             track.cell_rect.right,
             track.cell_rect.top,
-            int(Config.cell_size / 2),
+            int(Config.CELL_SIZE / 2),
             90,
             180,
             color,
@@ -838,7 +848,7 @@ def draw_arcs_and_endpoints(screen: Screen, track: Track) -> None:
             screen.surface,
             track.cell_rect.left,
             track.cell_rect.top,
-            int(Config.cell_size / 2),
+            int(Config.CELL_SIZE / 2),
             0,
             90,
             color,
@@ -848,7 +858,7 @@ def draw_arcs_and_endpoints(screen: Screen, track: Track) -> None:
             screen.surface,
             track.cell_rect.left,
             track.cell_rect.bottom,
-            int(Config.cell_size / 2),
+            int(Config.CELL_SIZE / 2),
             270,
             360,
             color,
@@ -858,7 +868,7 @@ def draw_arcs_and_endpoints(screen: Screen, track: Track) -> None:
             screen.surface,
             track.cell_rect.right,
             track.cell_rect.bottom,
-            int(Config.cell_size / 2),
+            int(Config.CELL_SIZE / 2),
             180,
             270,
             color,
@@ -868,11 +878,11 @@ def draw_arcs_and_endpoints(screen: Screen, track: Track) -> None:
         pygame.gfxdraw.pixel(screen.surface, int(endpoint.x), int(endpoint.y), RED1)
 
 
-def draw_drawing_cell_tracks(screen: Screen, drawing_cell: DrawingCell) -> None:
-    for track in drawing_cell.cell_tracks:
+def draw_drawable_tracks(screen: Screen, drawble: Drawable) -> None:
+    for track in drawble.cell_tracks:
         if track.image:
             screen.surface.blit(track.image, dest=track.cell_rect)
-        if Config.draw_arcs:
+        if Config.DRAW_ARCS:
             draw_arcs_and_endpoints(screen, track)
 
 

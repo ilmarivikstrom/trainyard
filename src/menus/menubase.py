@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
     from src.coordinate import Coordinate
 
-logger = setup_logging(log_level=Config.log_level)
+logger = setup_logging(log_level=Config.LOG_LEVEL)
 
 
 class IndicatorStyle:

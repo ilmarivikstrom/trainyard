@@ -8,19 +8,19 @@ import pygame as pg
 
 from src.config import Config
 from src.direction import Direction
-from src.graphics import Graphics
+from src.gfx.graphics import Graphics
 from src.levelitems.cell import Cell
 from src.saveable import SaveableAttributes
 from src.sound import Sound
-from src.track import InsideTrack, Track, TrackType
-from src.train import Train
+from src.track.track import InsideTrack, Track, TrackType
+from src.train.train import Train
 from src.traincolor import TrainColor
 from src.utils.utils import setup_logging
 
 if TYPE_CHECKING:
     from src.coordinate import Coordinate
 
-logger = setup_logging(log_level=Config.log_level)
+logger = setup_logging(log_level=Config.LOG_LEVEL)
 
 
 class StationGoalSprite(pg.sprite.Sprite):
@@ -126,7 +126,7 @@ class DepartureStation(Station):
     def tick(self, current_tick: int) -> Train | None:
         station_needs_to_release = self.number_of_trains_left > 0 and (
             self.last_release_tick is None
-            or current_tick - self.last_release_tick == 64
+            or current_tick - self.last_release_tick == Config.CELL_SIZE
         )
         if not station_needs_to_release:
             return None

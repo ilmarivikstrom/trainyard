@@ -7,13 +7,13 @@ import pygame as pg
 from src.config import Config
 from src.coordinate import Coordinate
 from src.direction import Direction
-from src.user_control import UserControl
+from src.user.control import UserControl
 from src.utils.utils import setup_logging
 
 if TYPE_CHECKING:
-    from src.track import Track
+    from src.track.track import Track
 
-logger = setup_logging(log_level=Config.log_level)
+logger = setup_logging(log_level=Config.LOG_LEVEL)
 
 MAXIMUM_TRACKS = 2
 
@@ -30,8 +30,8 @@ class Cell(pg.sprite.Sprite):
         self.angle = angle
         self.image = pg.transform.rotate(image, angle)
         self.rect: pg.Rect = self.image.get_rect()
-        self.rect.x = self.pos.x * Config.cell_size + Config.padding_x
-        self.rect.y = self.pos.y * Config.cell_size + Config.padding_y
+        self.rect.x = self.pos.x * Config.CELL_SIZE + Config.PADDING_X
+        self.rect.y = self.pos.y * Config.CELL_SIZE + Config.PADDING_Y
         self.mouse_on = False
         self.cell_tracks: list[Track] = []
 

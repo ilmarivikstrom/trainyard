@@ -1,7 +1,7 @@
 """Rock."""
 
 from src.coordinate import Coordinate
-from src.graphics import Graphics
+from src.gfx.graphics import Graphics
 from src.levelitems.cell import Cell
 from src.saveable import SaveableAttributes
 

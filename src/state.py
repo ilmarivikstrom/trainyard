@@ -7,7 +7,7 @@ from src.config import Config
 from src.utils.profiling import Profiler
 from src.utils.utils import setup_logging
 
-logger = setup_logging(log_level=Config.log_level)
+logger = setup_logging(log_level=Config.LOG_LEVEL)
 
 
 class Phase(Enum):
