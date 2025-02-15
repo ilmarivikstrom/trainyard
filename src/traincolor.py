@@ -9,11 +9,9 @@ class TrainColor(Enum):
     RED = "train_red"
     BLUE = "train_blue"
     YELLOW = "train_yellow"
-
     ORANGE = "train_orange"
     PURPLE = "train_purple"
     GREEN = "train_green"
-
     BROWN = "train_brown"
 
 

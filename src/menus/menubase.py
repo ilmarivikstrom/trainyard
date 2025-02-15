@@ -15,7 +15,7 @@ from src.color_constants import (
 )
 from src.config import Config
 from src.font import Font
-from src.utils import setup_logging
+from src.utils.utils import setup_logging
 
 if TYPE_CHECKING:
     import pygame as pg

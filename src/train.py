@@ -12,7 +12,7 @@ from src.graphics import Graphics
 from src.sound import Sound
 from src.track import Track, TrackType
 from src.traincolor import TrainColor
-from src.utils import rot_center
+from src.utils.utils import rot_center
 
 
 class Train(pg.sprite.Sprite):

@@ -9,7 +9,7 @@ from src.config import Config
 from src.graphics import Graphics
 from src.saveable import SaveableAttributes
 from src.track import Track, TrackType
-from src.utils import setup_logging
+from src.utils.utils import setup_logging
 
 if TYPE_CHECKING:
     from src.coordinate import Coordinate

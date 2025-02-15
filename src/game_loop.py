@@ -5,12 +5,12 @@ import pygame as pg
 from src.config import Config
 from src.field import Field
 from src.graphics import Graphics
-from src.phase_exit import exit_phase
-from src.phase_gameplay import gameplay_phase
+from src.phases.gameplay import gameplay_phase
+from src.phases.phase_exit import exit_phase
 from src.screen import Screen
 from src.sound import Sound
 from src.state import Phase, State
-from src.utils import setup_logging
+from src.utils.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
 

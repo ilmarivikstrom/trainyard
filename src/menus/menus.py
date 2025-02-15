@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from src.config import Config
 from src.font import Font
-from src.menubase import (
+from src.menus.menubase import (
     GreenStyle,
     HorizontalMenu,
     IndicatorItem,
@@ -13,7 +13,7 @@ from src.menubase import (
     WhiteStyle,
     YellowStyle,
 )
-from src.utils import setup_logging
+from src.utils.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
 

@@ -2,32 +2,16 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pygame as pg
 
-from src.cell import DrawingCell, RockCell
-from src.painter import Painter
-from src.splitter import Splitter
-from src.station import ArrivalStation, DepartureStation
-from src.train import Train
-
-GridItemTypeList = (
-    DrawingCell
-    | RockCell
-    | ArrivalStation
-    | DepartureStation
-    | Painter
-    | Splitter
-    | Train
-)
-GridItemTypes = type[
-    DrawingCell
-    | RockCell
-    | ArrivalStation
-    | DepartureStation
-    | Painter
-    | Splitter
-    | Train
-]
+if TYPE_CHECKING:
+    from src.cell import DrawingCell, RockCell
+    from src.levelitems.painter import Painter
+    from src.levelitems.splitter import Splitter
+    from src.levelitems.station import ArrivalStation, DepartureStation
+    from src.train import Train
 
 
 class DrawingCellHolder:

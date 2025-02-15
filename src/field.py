@@ -10,77 +10,18 @@ from src.color_constants import TY_TELLOW
 from src.config import Config
 from src.coordinate import Coordinate
 from src.fieldborder import FieldBorder
-from src.item_holders import (
-    ArrivalHolder,
-    DepartureHolder,
-    DrawingCellHolder,
-    PainterHolder,
-    RockHolder,
-    SplitterHolder,
-    TrainHolder,
-)
-from src.painter import Painter
+from src.grid import Grid
+from src.levelitems.painter import Painter
+from src.levelitems.splitter import Splitter
+from src.levelitems.station import ArrivalStation, DepartureStation
 from src.saveable import Saveable
-from src.splitter import Splitter
-from src.station import ArrivalStation, DepartureStation
 from src.track import Track, TrackType
-from src.utils import setup_logging
+from src.utils.utils import setup_logging
 
 if TYPE_CHECKING:
     from src.spark import Spark
 
 logger = setup_logging(log_level=Config.log_level)
-
-
-class Grid:
-    def __init__(self) -> None:
-        self.rocks = RockHolder()
-        self.drawing_cells = DrawingCellHolder()
-        self.arrivals = ArrivalHolder()
-        self.departures = DepartureHolder()
-        self.painters = PainterHolder()
-        self.splitters = SplitterHolder()
-        self.trains = TrainHolder()
-
-        self.all_items: list[
-            RockCell
-            | DrawingCell
-            | ArrivalStation
-            | DepartureStation
-            | Painter
-            | Splitter
-        ] = []
-
-    def add(
-        self,
-        item: ArrivalStation
-        | DepartureStation
-        | RockCell
-        | DrawingCell
-        | Painter
-        | Splitter,
-    ) -> None:
-        if isinstance(item, ArrivalStation):
-            self.arrivals.add_one(item)
-            self.all_items.append(item)
-        elif isinstance(item, DepartureStation):
-            self.departures.add_one(item)
-            self.all_items.append(item)
-        elif isinstance(item, RockCell):
-            self.rocks.add_one(item)
-            self.all_items.append(item)
-        elif isinstance(item, DrawingCell):
-            self.drawing_cells.add_one(item)
-            self.all_items.append(item)
-        elif isinstance(item, Painter):
-            self.painters.add_one(item)
-            self.all_items.append(item)
-        elif isinstance(item, Splitter):  # type: ignore  # noqa: PGH003
-            self.splitters.add_one(item)
-            self.all_items.append(item)
-        else:
-            msg = f"Did not find a holder for item of type {type(item)}"
-            raise TypeError(msg)
 
 
 class Field:

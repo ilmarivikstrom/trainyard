@@ -6,7 +6,7 @@ from src.coordinate import Coordinate
 from src.graphics import Graphics
 from src.saveable import SaveableAttributes
 from src.track import InsideTrack, TrackType
-from src.utils import setup_logging
+from src.utils.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
 

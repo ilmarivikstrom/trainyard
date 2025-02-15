@@ -25,7 +25,7 @@ from pygame import (
 from src.config import Config
 from src.coordinate import Coordinate
 from src.direction import Direction
-from src.utils import setup_logging
+from src.utils.utils import setup_logging
 
 if TYPE_CHECKING:
     from pygame.event import Event

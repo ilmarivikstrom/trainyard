@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from enum import Enum
 
 from src.config import Config
-from src.profiling import Profiler
-from src.utils import setup_logging
+from src.utils.profiling import Profiler
+from src.utils.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
 

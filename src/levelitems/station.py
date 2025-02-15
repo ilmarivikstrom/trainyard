@@ -15,7 +15,7 @@ from src.sound import Sound
 from src.track import InsideTrack, Track, TrackType
 from src.train import Train
 from src.traincolor import TrainColor
-from src.utils import setup_logging
+from src.utils.utils import setup_logging
 
 if TYPE_CHECKING:
     from src.coordinate import Coordinate

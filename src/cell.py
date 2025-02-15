@@ -10,7 +10,7 @@ from src.saveable import SaveableAttributes
 from src.sound import Sound
 from src.track import Track, TrackType
 from src.user_control import UserControl
-from src.utils import setup_logging
+from src.utils.utils import setup_logging
 
 logger = setup_logging(log_level=Config.log_level)
 

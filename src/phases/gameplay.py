@@ -26,14 +26,20 @@ from src.config import Config
 from src.direction import Direction, turn
 from src.field import Field, TrackType
 from src.graphics import Graphics
-from src.menus import (
+from src.levelitems.painter import Painter
+from src.levelitems.splitter import Splitter
+from src.levelitems.station import (
+    ArrivalStation,
+    CheckmarkSprite,
+    DepartureStation,
+)
+from src.menus.menus import (
     BuildPurgeMenu,
     EditTestMenu,
     InfoMenu,
     LevelMenu,
     RunningCrashedCompleteMenu,
 )
-from src.painter import Painter
 from src.screen import Screen
 from src.sound import Sound
 from src.spark import (
@@ -45,18 +51,16 @@ from src.spark import (
     WeldingSparkStyle,
     WideConeCloudShape,
 )
-from src.splitter import Splitter
 from src.state import Phase, State
-from src.station import ArrivalStation, CheckmarkSprite, DepartureStation
 from src.train import Train
 from src.traincolor import blend_train_colors
 from src.user_control import UserControl
-from src.utils import setup_logging
+from src.utils.utils import setup_logging
 
 if TYPE_CHECKING:
-    from src.painter import Painter
+    from src.levelitems.painter import Painter
+    from src.levelitems.splitter import Splitter
     from src.screen import Screen
-    from src.splitter import Splitter
     from src.track import Track
 
 logger = setup_logging(log_level=Config.log_level)
