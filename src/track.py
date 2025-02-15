@@ -275,16 +275,18 @@ class InsideTrack(Track):
         self.parent_rect = parent_rect
         self.endpoints = [Coordinate.from_tuple(parent_rect.center)]
 
-        if self.angle == 0:
+        if self.angle == Direction.RIGHT.value:
             self.endpoints.append(Coordinate.from_tuple(self.parent_rect.midright))
-        elif self.angle == 90:
+        elif self.angle == Direction.UP.value:
             self.endpoints.append(Coordinate.from_tuple(self.parent_rect.midtop))
-        elif self.angle == 180:
+        elif self.angle == Direction.LEFT.value:
             self.endpoints.append(Coordinate.from_tuple(self.parent_rect.midleft))
-        elif self.angle == 270:
+        elif self.angle == Direction.DOWN.value:
             self.endpoints.append(Coordinate.from_tuple(self.parent_rect.midbottom))
         else:
-            msg = f"InsideTrack angle is wrong: {self.angle}. Expected from : [0, 90, 180, 270]"
+            msg = (
+                f"InsideTrack angle is not mappable to Direction. Angle: {self.angle}."
+            )
             raise ValueError(
                 msg,
             )

@@ -698,7 +698,7 @@ def select_tracks_for_trains(field: Field) -> None:
 def check_and_mark_prev_cell(field: Field) -> None:
     if field.is_released:
         return
-    for cell in field.grid.all_items:  # TODO: Check all cells.
+    for cell in field.grid.all_items:
         if cell.check_mouse_collision():
             UserControl.mouse_entered_new_cell = True
 
@@ -738,7 +738,7 @@ def check_and_flip_cell_tracks(field: Field) -> None:
             cell_contains_train_and_has_multiple_tracks = (
                 cell.rect
                 and cell.rect.contains(train.rect)
-                and train.current_navigation_index >= 23
+                and train.current_navigation_index >= 23  # Over halfway.
                 and train.last_flipped_cell != cell
                 and len(cell.cell_tracks) == 2
             )
@@ -763,7 +763,8 @@ def merge_trains(train_1: Train, train_2: Train, field: Field) -> None:
     field.grid.trains.items.remove(train_2)
     train_2.kill()
     logger.info(
-        f"Removed a train! Trains remaining: {len(field.grid.trains.items)} or {len(field.grid.trains.sprites)}",
+        f"Removed a train! Trains remaining: {len(field.grid.trains.items)}"
+        " or {len(field.grid.trains.sprites)}",
     )
     Sound.play_sound_on_any_channel(Sound.merge)
 

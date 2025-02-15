@@ -104,7 +104,7 @@ class Field:
             width=self.width_px,
             height=self.height_px,
             thickness=1,
-        )  # TODO: Field should have topleft coords and this guy should use them as well.
+        )  # TODO: Field should have topleft coords and this should use them as well.
 
         self.sparks: list[Spark] = []
 

@@ -32,7 +32,7 @@ class IndicatorStyle:
         bg_active_color: tuple[int, int, int] = TY_TELLOW,
         fg_deactive_color: tuple[int, int, int] = GRAY50,
         bg_deactive_color: tuple[int, int, int] = GRAY5,
-    ):
+    ) -> None:
         self.fg_active_color = fg_active_color
         self.bg_active_color = bg_active_color
         self.fg_deactive_color = fg_deactive_color
@@ -43,17 +43,17 @@ class IndicatorStyle:
 
 
 class YellowStyle(IndicatorStyle):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(bg_active_color=TY_TELLOW)
 
 
 class RedStyle(IndicatorStyle):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(bg_active_color=TY_RED)
 
 
 class GreenStyle(IndicatorStyle):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(bg_active_color=TY_GREEN)
 
 
@@ -131,7 +131,8 @@ class BaseMenu:
 
     def set_text(self, text: str, item_index: int) -> None:
         if item_index > len(self._indicator_items) - 1:
-            msg = f"Tried to set text for indicator item in index {item_index} when the maximum index is {len(self._indicator_items) - 1}"
+            msg = f"Tried to set text for indicator item in index {item_index}"
+            " when the maximum index is {len(self._indicator_items) - 1}"
             raise ValueError(
                 msg,
             )
@@ -145,7 +146,8 @@ class BaseMenu:
     def activate_item(self, item_to_activate: int) -> None:
         if item_to_activate > len(self._indicator_items) - 1 or item_to_activate < 0:
             logger.warning(
-                f"Trying to activate menu item {item_to_activate} when there are only {len(self._indicator_items)} items available.",
+                f"Trying to activate menu item {item_to_activate} when"
+                " there are only {len(self._indicator_items)} items available.",
             )
             return
         for i, indicator_item in enumerate(self._indicator_items):
@@ -186,7 +188,7 @@ class BaseMenu:
             screen_surface.blit(indicator_item.renderable, indicator_item.dest)
 
     def mouse_on(self, mouse_pos: Coordinate) -> bool:
-        # TODO: Fix the following ugly hack, where the absolute position of tooltip and indicator items are calculated on the fly.
+        # TODO: Get absolute position of tooltip and indicat items NOT on the fly.
         if (
             self.tooltip.surface.get_rect()
             .move(self.topleft)

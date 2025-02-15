@@ -268,7 +268,7 @@ class SparkCloud:
 
     def emit_sparks(self) -> list[Spark]:
         spark_list: list[Spark] = []
-        sparks_to_create = self.spark_count + random.randint(
+        sparks_to_create = self.spark_count + random.randint(  # noqa: S311
             -int(self.spark_count_deviation / 2),
             int(self.spark_count_deviation / 2),
         )

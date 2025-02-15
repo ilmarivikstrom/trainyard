@@ -20,6 +20,7 @@ class Direction(Enum):
     RIGHTDOWN = 315
 
 
+# TODO: Turn left, turn right.
 def turn(old_dir: Direction, left: bool = False, right: bool = False) -> Direction:
     if (not left and not right) or (left and right):
         logger.error(
