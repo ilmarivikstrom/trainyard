@@ -20,31 +20,25 @@ class Direction(Enum):
     RIGHTDOWN = 315
 
 
-# TODO: Turn left, turn right.
-def turn(old_dir: Direction, left: bool = False, right: bool = False) -> Direction:
-    if (not left and not right) or (left and right):
-        logger.error(
-            f"Values for left and right were {left} and {right}. Returning Direction.NONE",
-        )
-        return Direction.NONE
+def turn_left(old_dir: Direction) -> Direction:
     if old_dir == Direction.RIGHT:
-        if left:
-            return Direction.UP
-        if right:
-            return Direction.DOWN
+        return Direction.UP
     if old_dir == Direction.UP:
-        if left:
-            return Direction.LEFT
-        if right:
-            return Direction.RIGHT
+        return Direction.LEFT
     if old_dir == Direction.LEFT:
-        if left:
-            return Direction.DOWN
-        if right:
-            return Direction.UP
+        return Direction.DOWN
     if old_dir == Direction.DOWN:
-        if left:
-            return Direction.RIGHT
-        if right:
-            return Direction.LEFT
+        return Direction.RIGHT
+    return Direction.NONE
+
+
+def turn_right(old_dir: Direction) -> Direction:
+    if old_dir == Direction.RIGHT:
+        return Direction.DOWN
+    if old_dir == Direction.UP:
+        return Direction.RIGHT
+    if old_dir == Direction.LEFT:
+        return Direction.UP
+    if old_dir == Direction.DOWN:
+        return Direction.LEFT
     return Direction.NONE

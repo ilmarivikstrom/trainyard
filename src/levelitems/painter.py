@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from src.cell import Cell
 from src.config import Config
 from src.graphics import Graphics
+from src.levelitems.cell import Cell
 from src.saveable import SaveableAttributes
 from src.track import Track, TrackType
 from src.utils.utils import setup_logging

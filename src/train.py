@@ -4,11 +4,11 @@ import math
 
 import pygame as pg
 
-from src.cell import Cell, DrawingCell
 from src.config import Config
 from src.coordinate import Coordinate
 from src.direction import Direction
 from src.graphics import Graphics
+from src.levelitems.drawingcell import Cell, DrawingCell
 from src.sound import Sound
 from src.track import Track, TrackType
 from src.traincolor import TrainColor

@@ -20,12 +20,12 @@ from pygame.constants import (
     K_p,
 )
 
-from src.cell import DrawingCell, RockCell
 from src.color_constants import GRAY, RED1, TY_GREEN, TY_RED, TY_TELLOW, WHITE
 from src.config import Config
-from src.direction import Direction, turn
+from src.direction import Direction, turn_left, turn_right
 from src.field import Field, TrackType
 from src.graphics import Graphics
+from src.levelitems.drawingcell import DrawingCell
 from src.levelitems.painter import Painter
 from src.levelitems.splitter import Splitter
 from src.levelitems.station import (
@@ -59,6 +59,7 @@ from src.utils.utils import setup_logging
 
 if TYPE_CHECKING:
     from src.levelitems.painter import Painter
+    from src.levelitems.rock import Rock
     from src.levelitems.splitter import Splitter
     from src.screen import Screen
     from src.track import Track
@@ -164,13 +165,13 @@ def check_train_splitters(field: Field) -> None:
                     train.loc,
                     train.color,
                     splitter.cell_tracks[1],
-                    direction=turn(train.direction, left=True),
+                    direction=turn_left(train.direction),
                 )
                 new_train_1.rect.x = train.rect.x
                 new_train_1.rect.y = train.rect.y
                 trains_to_add.append(new_train_1)
                 train.selected_track = splitter.cell_tracks[2]
-                train.direction = turn(train.direction, right=True)
+                train.direction = turn_right(train.direction)
                 train.angle = train.direction.value
                 Sound.play_sound_on_any_channel(Sound.pop)
 
@@ -194,10 +195,10 @@ def draw_crash_sparks(field: Field, screen: Screen) -> None:
 def get_solid_cells(
     field: Field,
 ) -> list[
-    ArrivalStation | DepartureStation | Painter | RockCell | Splitter
+    ArrivalStation | DepartureStation | Painter | Rock | Splitter
 ]:  # TODO: Store solid cells in some structure instead of getting them every loop.
     solid_cells: list[
-        ArrivalStation | DepartureStation | Painter | RockCell | Splitter
+        ArrivalStation | DepartureStation | Painter | Rock | Splitter
     ] = []
     solid_cells.extend(field.grid.arrivals.items)
     solid_cells.extend(field.grid.departures.items)

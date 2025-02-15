@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING
 import pygame as pg
 
 if TYPE_CHECKING:
-    from src.cell import DrawingCell, RockCell
+    from src.levelitems.drawingcell import DrawingCell
     from src.levelitems.painter import Painter
+    from src.levelitems.rock import Rock
     from src.levelitems.splitter import Splitter
     from src.levelitems.station import ArrivalStation, DepartureStation
     from src.train import Train
@@ -30,10 +31,10 @@ class DrawingCellHolder:
 
 class RockHolder:
     def __init__(self) -> None:
-        self.items: list[RockCell] = []
+        self.items: list[Rock] = []
         self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
-    def add_one(self, item: RockCell) -> None:
+    def add_one(self, item: Rock) -> None:
         self.items.append(item)
         self.sprites.add(item)
 

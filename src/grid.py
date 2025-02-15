@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from src.cell import DrawingCell, RockCell
 from src.itemholders import (
     ArrivalHolder,
     DepartureHolder,
@@ -12,7 +11,9 @@ from src.itemholders import (
     SplitterHolder,
     TrainHolder,
 )
+from src.levelitems.drawingcell import DrawingCell
 from src.levelitems.painter import Painter
+from src.levelitems.rock import Rock
 from src.levelitems.splitter import Splitter
 from src.levelitems.station import ArrivalStation, DepartureStation
 
@@ -28,19 +29,14 @@ class Grid:
         self.trains = TrainHolder()
 
         self.all_items: list[
-            RockCell
-            | DrawingCell
-            | ArrivalStation
-            | DepartureStation
-            | Painter
-            | Splitter
+            Rock | DrawingCell | ArrivalStation | DepartureStation | Painter | Splitter
         ] = []
 
     def add(
         self,
         item: ArrivalStation
         | DepartureStation
-        | RockCell
+        | Rock
         | DrawingCell
         | Painter
         | Splitter,
@@ -51,7 +47,7 @@ class Grid:
         elif isinstance(item, DepartureStation):
             self.departures.add_one(item)
             self.all_items.append(item)
-        elif isinstance(item, RockCell):
+        elif isinstance(item, Rock):
             self.rocks.add_one(item)
             self.all_items.append(item)
         elif isinstance(item, DrawingCell):

@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 
 import pygame as pg
 
-from src.cell import Cell
 from src.config import Config
 from src.direction import Direction
 from src.graphics import Graphics
+from src.levelitems.cell import Cell
 from src.saveable import SaveableAttributes
 from src.sound import Sound
 from src.track import InsideTrack, Track, TrackType

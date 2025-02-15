@@ -5,13 +5,14 @@ from __future__ import annotations
 import csv
 from typing import TYPE_CHECKING
 
-from src.cell import DrawingCell, RockCell
 from src.color_constants import TY_TELLOW
 from src.config import Config
 from src.coordinate import Coordinate
 from src.fieldborder import FieldBorder
 from src.grid import Grid
+from src.levelitems.drawingcell import DrawingCell
 from src.levelitems.painter import Painter
+from src.levelitems.rock import Rock
 from src.levelitems.splitter import Splitter
 from src.levelitems.station import ArrivalStation, DepartureStation
 from src.saveable import Saveable
@@ -80,7 +81,7 @@ class Field:
                         drawing_cell = DrawingCell(coords)
                         self.grid.add(drawing_cell)
                     elif saveable.type == "R":
-                        rock_cell = RockCell(coords)
+                        rock_cell = Rock(coords)
                         self.grid.add(rock_cell)
                     elif saveable.type == "P":
                         painter_cell = Painter(coords, saveable.angle, saveable.color)
@@ -137,9 +138,7 @@ class Field:
         self,
         i: int,
         j: int,
-    ) -> (
-        DrawingCell | RockCell | ArrivalStation | DepartureStation | Painter | Splitter
-    ):
+    ) -> DrawingCell | Rock | ArrivalStation | DepartureStation | Painter | Splitter:
         return self.grid.all_items[self.get_grid_cell_list_index(i, j)]
 
     def _get_drawing_cell_at_indices(self, i: int, j: int) -> DrawingCell | None:

@@ -1,18 +1,37 @@
+"""Invoke tasks."""
+
+import logging
+import os
 import shutil
 
-from invoke.tasks import Call, task
+from invoke import Call, task
 
 
 @task
 def clean(call: Call) -> None:
-    print(call)
-    dirs_to_delete = ["src/__pycache__", "build/", "dist/"]
+    logging.info(call)
+    dirs_to_delete = ["build/", "dist/"]
+    not_founds: list[str] = []
+
+    for root, dirs, _ in os.walk("src", topdown=False):
+        if "__pycache__" in dirs:
+            dir_to_delete = os.path.join(root, "__pycache__")
+            try:
+                shutil.rmtree(dir_to_delete)
+                logging.info(f"Deleted directory {dir_to_delete}.")
+            except FileNotFoundError:
+                not_founds.append(dir_to_delete)
+
     for dir_to_delete in dirs_to_delete:
         try:
             shutil.rmtree(dir_to_delete)
-            print(f"Deleted directory {dir_to_delete}.")
-        except FileNotFoundError:
-            print(f"Directory {dir_to_delete} not found.")
+            logging.info(f"Deleted directory {dir_to_delete}.")
+        except FileNotFoundError:  # noqa: PERF203
+            not_founds.append(dir_to_delete)
+
+    logging.info("Directories not found:")
+    for not_found in not_founds:
+        logging.info(f" - {not_found}")
 
 
 @task

@@ -5,8 +5,8 @@ import pygame as pg
 from src.config import Config
 from src.field import Field
 from src.graphics import Graphics
+from src.phases.exit import exit_phase
 from src.phases.gameplay import gameplay_phase
-from src.phases.phase_exit import exit_phase
 from src.screen import Screen
 from src.sound import Sound
 from src.state import Phase, State
