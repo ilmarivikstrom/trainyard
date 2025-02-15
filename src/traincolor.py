@@ -1,5 +1,8 @@
+"""Train color."""
+
+from __future__ import annotations
+
 from enum import Enum
-from typing import Union
 
 
 class TrainColor(Enum):
@@ -14,7 +17,7 @@ class TrainColor(Enum):
     BROWN = "train_brown"
 
 
-def color_as_short_string(color: Union[TrainColor, str]) -> str:
+def color_as_short_string(color: TrainColor | str) -> str:
     if isinstance(color, TrainColor):
         return str(color).rsplit(".", maxsplit=1)[-1][0].lower()
     return ""

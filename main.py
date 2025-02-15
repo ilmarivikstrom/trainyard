@@ -1,3 +1,5 @@
+"""Entry point."""
+
 import pygame as pg
 
 from src.config import Config
@@ -7,8 +9,9 @@ logger = setup_logging(log_level=Config.log_level)
 
 
 def main() -> None:
-    _, _ = pg.init()  # pylint: disable=no-member;
-    from src.game_loop import GameLoop  # pylint: disable=import-outside-toplevel;
+    _, _ = pg.init()
+    from src.game_loop import GameLoop
+
     game_loop = GameLoop()
     game_loop.loop()
 

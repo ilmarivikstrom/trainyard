@@ -1,3 +1,5 @@
+"""Splitter."""
+
 from src.cell import Cell
 from src.config import Config
 from src.coordinate import Coordinate
@@ -15,13 +17,46 @@ class Splitter(Cell):
         self.saveable_attributes = SaveableAttributes(block_type="S", angle=self.angle)
 
         if self.rect is None:
-            raise ValueError("Rect is None.")
+            msg = "Rect is None."
+            raise ValueError(msg)
 
         if self.angle in [0, 180]:
-            self.tracks.append(InsideTrack(self.pos, self.rect, TrackType.HORI, self.angle))
-            self.tracks.append(InsideTrack(self.pos, self.rect, TrackType.VERT, (self.angle - 90) % 360))
-            self.tracks.append(InsideTrack(self.pos, self.rect, TrackType.VERT, (self.angle + 90) % 360))
+            self.tracks.append(
+                InsideTrack(self.pos, self.rect, TrackType.HORI, self.angle),
+            )
+            self.tracks.append(
+                InsideTrack(
+                    self.pos,
+                    self.rect,
+                    TrackType.VERT,
+                    (self.angle - 90) % 360,
+                ),
+            )
+            self.tracks.append(
+                InsideTrack(
+                    self.pos,
+                    self.rect,
+                    TrackType.VERT,
+                    (self.angle + 90) % 360,
+                ),
+            )
         elif self.angle in [90, 270]:
-            self.tracks.append(InsideTrack(self.pos, self.rect, TrackType.VERT, self.angle))
-            self.tracks.append(InsideTrack(self.pos, self.rect, TrackType.HORI, (self.angle - 90) % 360))
-            self.tracks.append(InsideTrack(self.pos, self.rect, TrackType.HORI, (self.angle + 90) % 360))
+            self.tracks.append(
+                InsideTrack(self.pos, self.rect, TrackType.VERT, self.angle),
+            )
+            self.tracks.append(
+                InsideTrack(
+                    self.pos,
+                    self.rect,
+                    TrackType.HORI,
+                    (self.angle - 90) % 360,
+                ),
+            )
+            self.tracks.append(
+                InsideTrack(
+                    self.pos,
+                    self.rect,
+                    TrackType.HORI,
+                    (self.angle + 90) % 360,
+                ),
+            )

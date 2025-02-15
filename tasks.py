@@ -1,5 +1,6 @@
 import shutil
-from invoke.tasks import task, Call
+
+from invoke.tasks import Call, task
 
 
 @task

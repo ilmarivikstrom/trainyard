@@ -1,4 +1,4 @@
-from typing import Tuple
+"""Field border."""
 
 import pygame as pg
 from pygame.locals import SRCALPHA
@@ -6,10 +6,15 @@ from pygame.locals import SRCALPHA
 
 class FieldBorder:
     def __init__(
-        self, color: Tuple[int, int, int], topleft: Tuple[int, int], width: int, height: int, thickness: int
+        self,
+        color: tuple[int, int, int],
+        topleft: tuple[int, int],
+        width: int,
+        height: int,
+        thickness: int,
     ) -> None:
-        self.color: Tuple[int, int, int] = color
-        self.topleft: Tuple[int, int] = topleft
+        self.color: tuple[int, int, int] = color
+        self.topleft: tuple[int, int] = topleft
         self.width: int = width
         self.height: int = height
         self._thickness: int = thickness
@@ -17,9 +22,20 @@ class FieldBorder:
         self.calculate_position()
 
     def calculate_position(self) -> None:
-        self.surface = pg.Surface((self.width + 2 * self._thickness, self.height + 2 * self._thickness), SRCALPHA)
-        self.rect = (0, 0, self.width + 2 * self._thickness, self.height + 2 * self._thickness)
-        self.location = (self.topleft[0] - 1 * self._thickness, self.topleft[1] - 1 * self._thickness)
+        self.surface = pg.Surface(
+            (self.width + 2 * self._thickness, self.height + 2 * self._thickness),
+            SRCALPHA,
+        )
+        self.rect = (
+            0,
+            0,
+            self.width + 2 * self._thickness,
+            self.height + 2 * self._thickness,
+        )
+        self.location = (
+            self.topleft[0] - 1 * self._thickness,
+            self.topleft[1] - 1 * self._thickness,
+        )
 
     def set_thickness(self, thickness: int) -> None:
         self._thickness = thickness

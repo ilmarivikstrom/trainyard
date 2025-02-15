@@ -1,11 +1,13 @@
+"""Color constants."""
+
 from collections import OrderedDict, namedtuple
 
 Color = namedtuple("RGB", "red, green, blue")
 
 
 class RGB(Color):
-    def hex_format(self):
-        return "#{:02X}{:02X}{:02X}".format(self.red, self.green, self.blue)
+    def hex_format(self) -> str:
+        return f"#{self.red:02X}{self.green:02X}{self.blue:02X}"
 
 
 TY_RED = RGB(192, 35, 97)

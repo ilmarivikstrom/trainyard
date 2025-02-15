@@ -1,8 +1,12 @@
-from typing import List, Type
+"""Item holders."""
+
+from __future__ import annotations
+
+from typing import Type
 
 import pygame as pg
 
-from src.cell import DrawingCell, RockCell
+from src.cell import Cell, DrawingCell, RockCell
 from src.painter import Painter
 from src.splitter import Splitter
 from src.station import ArrivalStation, DepartureStation
@@ -29,7 +33,7 @@ GridItemTypes = Type[
 
 
 class GridItemHolderBase:
-    def __init__(self, item_type: GridItemTypes) -> None:
+    def __init__(self, item_type: type[Cell | Train]) -> None:
         self.items: list[item_type] = []
         self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
 
@@ -37,7 +41,7 @@ class GridItemHolderBase:
         self.items.append(item)
         self.sprites.add(item)
 
-    def add_many(self, items: List[GridItemTypeList]) -> None:
+    def add_many(self, items: list[Cell]) -> None:
         for item in items:
             self.add_one(item)
 

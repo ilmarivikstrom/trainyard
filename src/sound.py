@@ -1,4 +1,8 @@
-from typing import Dict
+"""Sound."""
+
+from __future__ import annotations
+
+from typing import ClassVar
 
 import pygame as pg
 
@@ -8,7 +12,7 @@ class Sound:
     pg.mixer.init()
 
     base_path = "assets/sounds/"
-    song_paths: Dict[str, str] = {
+    song_paths: ClassVar[dict[str, str]] = {
         "Song 1": base_path + "Loop.ogg",
         "Song 2": base_path + "Ludum-Dare-28-Track-7.ogg",
         "Song 3": base_path + "Ludum-Dare-30-Track-6.ogg",
@@ -60,7 +64,6 @@ class Sound:
         pg.mixer.music.load(Sound.song_paths[song_name])
         pg.mixer.music.set_volume(0.03 * Sound.master_volume)
         Sound.current_song_name = song_name
-
 
     @staticmethod
     def play_music() -> None:
