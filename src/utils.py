@@ -11,26 +11,6 @@ def setup_logging(log_level: str = "INFO") -> logging.Logger:
     return logging.getLogger()
 
 
-def get_background_color_array() -> list[pg.Color]:
-    color_array: list[pg.Color] = []
-    with open(
-        "assets/sprites/day_night_array.csv",
-        encoding="utf-8",
-    ) as array_file:
-        for line in array_file.readlines():
-            line_stripped = line.strip()
-            tuple_items = line_stripped.split(",")
-            color_tuple = (
-                int(tuple_items[0]),
-                int(tuple_items[1]),
-                int(tuple_items[2]),
-                int(tuple_items[3]),
-            )
-            color = pg.Color(color_tuple)
-            color_array.append(color)
-    return color_array
-
-
 def rot_center(original_image: pg.Surface, angle_degrees: float) -> pg.Surface:
     """Rotate an image while keeping its center and size."""
     orig_rect = original_image.get_rect()
