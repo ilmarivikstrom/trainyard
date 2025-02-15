@@ -30,28 +30,6 @@ GridItemTypes = type[
 ]
 
 
-# class GridItemHolderBase:
-#     def __init__(self, item_type: type[Cell | Train]) -> None:
-#         self.items: list[item_type] = []
-#         self.sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
-
-#     def add_one(self, item: GridItemTypeList) -> None:
-#         self.items.append(item)
-#         self.sprites.add(item)
-
-#     def add_many(self, items: list[Cell]) -> None:
-#         for item in items:
-#             self.add_one(item)
-
-#     def remove_one(self, item: GridItemTypeList) -> None:
-#         self.items.remove(item)
-#         self.sprites.remove(item)
-
-#     def remove_all(self) -> None:
-#         self.items.clear()
-#         self.sprites.empty()
-
-
 class DrawingCellHolder:
     def __init__(self) -> None:
         self.items: list[DrawingCell] = []

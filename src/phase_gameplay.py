@@ -154,21 +154,18 @@ def check_train_splitters(field: Field) -> None:
     trains_to_add: list[Train] = []
     for train in field.grid.trains.items:
         for splitter in field.grid.splitters.items:
-            if splitter.rect is None:
-                msg = "Rect is None."
-                raise ValueError(msg)
             if train.rect.center == splitter.rect.center:
                 logger.info("At center.")
                 new_train_1 = Train(
                     train.loc,
                     train.color,
-                    splitter.tracks[1],
+                    splitter.cell_tracks[1],
                     direction=turn(train.direction, left=True),
                 )
                 new_train_1.rect.x = train.rect.x
                 new_train_1.rect.y = train.rect.y
                 trains_to_add.append(new_train_1)
-                train.selected_track = splitter.tracks[2]
+                train.selected_track = splitter.cell_tracks[2]
                 train.direction = turn(train.direction, right=True)
                 train.angle = train.direction.value
                 Sound.play_sound_on_any_channel(Sound.pop)
@@ -181,9 +178,6 @@ def check_train_splitters(field: Field) -> None:
 def check_train_painters(field: Field) -> None:
     for train in field.grid.trains.items:
         for painter in field.grid.painters.items:
-            if painter.rect is None:
-                msg = "Rect is None."
-                raise ValueError(msg)
             if train.rect.center == painter.rect.center:
                 train.repaint(painter.color)
 
@@ -211,11 +205,7 @@ def get_solid_cells(
 
 def update_all_sparks(field: Field) -> None:
     solid_items = get_solid_cells(field)
-    solid_rects: list[pg.Rect] = [
-        solid_item.rect
-        for solid_item in solid_items
-        if solid_item.rect is not None and isinstance(solid_item.rect, pg.Rect)
-    ]
+    solid_rects: list[pg.Rect] = [solid_item.rect for solid_item in solid_items]
     for i, spark in sorted(enumerate(field.sparks), reverse=True):
         spark.move(1, pg.Rect(64, 128, field.width_px, field.height_px), solid_rects)
         if not spark.alive:
@@ -301,7 +291,7 @@ def check_for_track_flip_command(field: Field) -> None:
                 if (
                     drawing_cell.mouse_on
                     and not field.is_released
-                    and len(drawing_cell.tracks) > 1
+                    and len(drawing_cell.cell_tracks) > 1
                 ):
                     drawing_cell.flip_tracks()
             return
@@ -410,7 +400,7 @@ def update_track_menu(field: Field) -> None:
     tracks = 0
     for item in field.grid.all_items:
         if isinstance(item, DrawingCell):
-            tracks += len(item.tracks)
+            tracks += len(item.cell_tracks)
     track_menu.set_text(text=str(tracks), item_index=0)
 
 
@@ -430,10 +420,7 @@ def check_and_toggle_profiling(state: State) -> None:
 
 def determine_arrival_station_checkmarks(field: Field) -> None:
     for arrival_station in field.grid.arrivals.items:
-        if (
-            arrival_station.number_of_trains_left == 0
-            and arrival_station.rect is not None
-        ):
+        if arrival_station.number_of_trains_left == 0:
             arrival_station.checkmark = CheckmarkSprite(arrival_station.rect)
 
 
@@ -468,10 +455,9 @@ def check_train_merges(field: Field) -> None:
 def delete_crashed_trains(field: Field) -> None:
     if not field.is_released:
         return
-    trains_to_remove: list[Train] = []
-    for train in field.grid.trains.items:
-        if train.crashed:
-            trains_to_remove.append(train)
+    trains_to_remove: list[Train] = [
+        train for train in field.grid.trains.items if train.crashed
+    ]
     for train in trains_to_remove:
         field.grid.trains.sprites.remove(train)
         field.grid.trains.items.remove(train)
@@ -527,9 +513,6 @@ def check_train_arrivals(field: Field) -> None:
         return
     for train in field.grid.trains.items:
         for arrival_station in field.grid.arrivals.items:
-            if arrival_station.rect is None:
-                msg = f"The rect of {arrival_station} is None."
-                raise ValueError(msg)
             if not train.rect.collidepoint(arrival_station.rect.center):
                 continue
             if (
@@ -665,7 +648,7 @@ def check_for_new_track_placement(state: State, field: Field) -> None:
         if did_insert:
             Sound.play_sound_on_any_channel(Sound.track_place)
             drawing_cell = field.get_drawing_cell_at_pos(UserControl.prev_cell)
-            if drawing_cell is not None and drawing_cell.rect is not None:
+            if drawing_cell is not None:
                 generate_track_insert_sparks(
                     field,
                     drawing_cell.rect.center,
@@ -688,10 +671,10 @@ def select_tracks_for_trains(field: Field) -> None:
         if train.current_navigation_index == len(train.selected_track.navigation):
             train.last_flipped_cell = None  # Experimental.
             train.determine_next_cell_coords_and_direction()
-            next_cell_tracks = field.get_grid_cell_at(
+            next_cell_tracks: list[Track] = field.get_grid_cell_at(
                 train.next_cell_coords[0],
                 train.next_cell_coords[1],
-            ).tracks
+            ).cell_tracks
             if len(next_cell_tracks) == 0:
                 train.crash()
                 field.num_crashed += 1
@@ -724,9 +707,6 @@ def check_and_delete_field_tracks(state: State, field: Field) -> None:
     if field.is_released:
         return
     for drawing_cell in field.grid.drawing_cells.items:
-        if drawing_cell.rect is None:
-            msg = "The cell's rect is None. Exiting."
-            raise ValueError(msg)
         check_and_delete_drawing_cell_tracks(state, drawing_cell)
 
 
@@ -745,7 +725,7 @@ def check_and_delete_drawing_cell_tracks(
         and state.gameplay.in_delete_mode
     )
     if mouse_pressed_cell_while_in_delete_mode:
-        drawing_cell.tracks.clear()
+        drawing_cell.cell_tracks.clear()
 
 
 def check_and_flip_cell_tracks(field: Field) -> None:
@@ -760,7 +740,7 @@ def check_and_flip_cell_tracks(field: Field) -> None:
                 and cell.rect.contains(train.rect)
                 and train.current_navigation_index >= 23
                 and train.last_flipped_cell != cell
-                and len(cell.tracks) == 2
+                and len(cell.cell_tracks) == 2
             )
             if cell_contains_train_and_has_multiple_tracks and isinstance(
                 cell,
@@ -801,11 +781,7 @@ def draw_station_goals(screen: Screen, field: Field) -> None:
 
 def draw_checkmarks(screen: Screen, field: Field) -> None:
     for arrival_station in field.grid.arrivals.items:
-        if (
-            arrival_station.checkmark is None
-            or arrival_station.checkmark.image is None
-            or arrival_station.rect is None
-        ):
+        if arrival_station.checkmark is None or arrival_station.checkmark.image is None:
             continue
         screen.surface.blit(
             source=arrival_station.checkmark.image,
@@ -815,8 +791,6 @@ def draw_checkmarks(screen: Screen, field: Field) -> None:
 
 def draw_drawing_cells_tracks(screen: Screen, field: Field) -> None:
     for drawing_cell in field.grid.drawing_cells.items:
-        if drawing_cell.rect is None:
-            raise ValueError("The cell's rect is None. Exiting.")
         draw_drawing_cell_tracks(screen, drawing_cell)
 
 
@@ -827,7 +801,7 @@ def draw_stations(field: Field, screen: Screen) -> None:
     draw_checkmarks(screen, field)
 
 
-def draw_arcs_and_endpoints(screen: Screen, track: Track):
+def draw_arcs_and_endpoints(screen: Screen, track: Track) -> None:
     color = WHITE if track.bright else GRAY
     if track.track_type == TrackType.VERT:
         pg.draw.line(
@@ -889,7 +863,7 @@ def draw_arcs_and_endpoints(screen: Screen, track: Track):
 
 
 def draw_drawing_cell_tracks(screen: Screen, drawing_cell: DrawingCell) -> None:
-    for track in drawing_cell.tracks:
+    for track in drawing_cell.cell_tracks:
         if track.image:
             screen.surface.blit(track.image, dest=track.cell_rect)
         if Config.draw_arcs:
@@ -910,8 +884,6 @@ def check_train_departure_station_crashes(field: Field) -> None:
         return
     for train in field.grid.trains.items:
         for departure_station in field.grid.departures.items:
-            if departure_station.rect is None:
-                raise ValueError("Rect is None.")
             if (
                 departure_station.rect.collidepoint(train.rect.center)
                 and train.angle != departure_station.angle

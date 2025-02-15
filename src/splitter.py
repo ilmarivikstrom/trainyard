@@ -16,15 +16,11 @@ class Splitter(Cell):
         super().__init__(coords, Graphics.img_surfaces["splitter"], angle)
         self.saveable_attributes = SaveableAttributes(block_type="S", angle=self.angle)
 
-        if self.rect is None:
-            msg = "Rect is None."
-            raise ValueError(msg)
-
         if self.angle in [0, 180]:
-            self.tracks.append(
+            self.cell_tracks.append(
                 InsideTrack(self.pos, self.rect, TrackType.HORI, self.angle),
             )
-            self.tracks.append(
+            self.cell_tracks.append(
                 InsideTrack(
                     self.pos,
                     self.rect,
@@ -32,7 +28,7 @@ class Splitter(Cell):
                     (self.angle - 90) % 360,
                 ),
             )
-            self.tracks.append(
+            self.cell_tracks.append(
                 InsideTrack(
                     self.pos,
                     self.rect,
@@ -41,10 +37,10 @@ class Splitter(Cell):
                 ),
             )
         elif self.angle in [90, 270]:
-            self.tracks.append(
+            self.cell_tracks.append(
                 InsideTrack(self.pos, self.rect, TrackType.VERT, self.angle),
             )
-            self.tracks.append(
+            self.cell_tracks.append(
                 InsideTrack(
                     self.pos,
                     self.rect,
@@ -52,7 +48,7 @@ class Splitter(Cell):
                     (self.angle - 90) % 360,
                 ),
             )
-            self.tracks.append(
+            self.cell_tracks.append(
                 InsideTrack(
                     self.pos,
                     self.rect,

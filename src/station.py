@@ -53,7 +53,7 @@ class Station(Cell):
         self.original_number_of_trains = number_of_trains_left
         self.block_short_char = block_short_char
         self.goals: list[StationGoalSprite] = []
-        self.goal_sprites = pg.sprite.Group()  # type: ignore
+        self.goal_sprites: pg.sprite.Group[pg.sprite.Sprite] = pg.sprite.Group()
         self.checkmark: CheckmarkSprite | None = None
         self.last_release_tick: int | None = None
         self.saveable_attributes = SaveableAttributes(
@@ -63,18 +63,15 @@ class Station(Cell):
             angle=self.angle,
         )
 
+        self.cell_tracks: list[Track] = []
+
         if self.angle in [0, 180]:
-            self.tracks: list[Track | InsideTrack] = [
+            self.cell_tracks.append(
                 InsideTrack(self.pos, self.rect, TrackType.HORI, self.angle),
-            ]
+            )
         elif self.angle in [90, 270]:
-            self.tracks: list[Track | InsideTrack] = [
+            self.cell_tracks.append(
                 InsideTrack(self.pos, self.rect, TrackType.VERT, self.angle),
-            ]
-        else:
-            msg = "Station's angle is incompatible with placing InsideTracks."
-            raise ValueError(
-                msg,
             )
         self.create_goal_sprites()
 
@@ -138,7 +135,12 @@ class DepartureStation(Station):
         logger.debug("Train released.")
         self.last_release_tick = current_tick
         Sound.play_sound_on_any_channel(Sound.pop)
-        return Train(self.pos, self.train_color, self.tracks[0], Direction(self.angle))
+        return Train(
+            self.pos,
+            self.train_color,
+            self.cell_tracks[0],
+            Direction(self.angle),
+        )
 
 
 class ArrivalStation(Station):

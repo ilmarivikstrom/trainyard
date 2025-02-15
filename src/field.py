@@ -22,13 +22,12 @@ from src.item_holders import (
 from src.painter import Painter
 from src.saveable import Saveable
 from src.splitter import Splitter
-from src.station import ArrivalStation, DepartureStation, Station
+from src.station import ArrivalStation, DepartureStation
 from src.track import Track, TrackType
 from src.utils import setup_logging
 
 if TYPE_CHECKING:
     from src.spark import Spark
-    from src.train import Train
 
 logger = setup_logging(log_level=Config.log_level)
 
@@ -198,14 +197,7 @@ class Field:
         i: int,
         j: int,
     ) -> (
-        DrawingCell
-        | RockCell
-        | ArrivalStation
-        | DepartureStation
-        | Train
-        | Station
-        | Painter
-        | Splitter
+        DrawingCell | RockCell | ArrivalStation | DepartureStation | Painter | Splitter
     ):
         return self.grid.all_items[self.get_grid_cell_list_index(i, j)]
 
@@ -225,20 +217,17 @@ class Field:
                 f"Tried to insert track on a non-existing drawing cell at {pos}",
             )
             return False
-        if drawing_cell.rect is None:
-            msg = "Rect of drawing cell is None"
-            raise ValueError(msg)
         track_to_be_added = Track(pos, drawing_cell.rect, track_type)
         if track_type in [
-            existing_track.track_type for existing_track in drawing_cell.tracks
+            existing_track.track_type for existing_track in drawing_cell.cell_tracks
         ]:
-            drawing_cell.tracks.clear()
-            drawing_cell.tracks.append(track_to_be_added)
+            drawing_cell.cell_tracks.clear()
+            drawing_cell.cell_tracks.append(track_to_be_added)
         else:
-            drawing_cell.tracks.append(track_to_be_added)
-            drawing_cell.tracks = drawing_cell.tracks[-2:]
-        if len(drawing_cell.tracks) > 1:
-            track_types = [track.track_type for track in drawing_cell.tracks]
+            drawing_cell.cell_tracks.append(track_to_be_added)
+            drawing_cell.cell_tracks = drawing_cell.cell_tracks[-2:]
+        if len(drawing_cell.cell_tracks) > 1:
+            track_types = [track.track_type for track in drawing_cell.cell_tracks]
             if not (
                 (
                     TrackType.BOTTOM_LEFT in track_types
@@ -250,7 +239,9 @@ class Field:
                 )
                 or (TrackType.VERT in track_types and TrackType.HORI in track_types)
             ):
-                drawing_cell.tracks[0].bright = False
-                drawing_cell.tracks[0].image = drawing_cell.tracks[0].images["dark"]
+                drawing_cell.cell_tracks[0].bright = False
+                drawing_cell.cell_tracks[0].image = drawing_cell.cell_tracks[0].images[
+                    "dark"
+                ]
         logger.info(f"Added track to pos {pos}")
         return True

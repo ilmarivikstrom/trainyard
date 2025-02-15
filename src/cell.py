@@ -32,7 +32,7 @@ class Cell(pg.sprite.Sprite):
         self.rect.x = self.pos.x * Config.cell_size + Config.padding_x
         self.rect.y = self.pos.y * Config.cell_size + Config.padding_y
         self.mouse_on = False
-        self.tracks: list[Track] = []
+        self.cell_tracks: list[Track] = []
 
     def check_mouse_collision(self) -> bool:
         mouse_entered_this_cell = False
@@ -90,14 +90,14 @@ class DrawingCell(Cell):
         )
 
     def flip_tracks(self) -> None:
-        if len(self.tracks) < MAXIMUM_TRACKS:
+        if len(self.cell_tracks) < MAXIMUM_TRACKS:
             return
-        track_types = [track.track_type for track in self.tracks]
+        track_types = [track.track_type for track in self.cell_tracks]
         if self.unflippable_tracks(track_types):
             return
-        for track in self.tracks:
+        for track in self.cell_tracks:
             track.toggle_bright()
-        self.tracks.reverse()
+        self.cell_tracks.reverse()
         Sound.play_sound_on_any_channel(Sound.track_flip)
 
 
